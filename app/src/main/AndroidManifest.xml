@@ -12,6 +12,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Cafe_manager">
         <activity
+            android:name=".ui.payment.PaymentActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.order.OrderActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.menu.MenuActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.table.TableActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
