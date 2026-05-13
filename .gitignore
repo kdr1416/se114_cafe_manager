@@ -13,3 +13,10 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Local Claude workspace artifacts
+/.claude/
+
+# Local planning / handoff docs not needed in git
+/CONTEXT_HANDOFF.md
+/context se114 project/*.md
