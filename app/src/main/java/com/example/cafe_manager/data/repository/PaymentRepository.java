@@ -5,9 +5,8 @@ import android.content.Context;
 import androidx.lifecycle.LiveData;
 
 import com.example.cafe_manager.data.local.AppDatabase;
-import com.example.cafe_manager.data.local.dao.OrderDao;
 import com.example.cafe_manager.data.local.dao.PaymentDao;
-import com.example.cafe_manager.data.local.dao.TableDao;
+import com.example.cafe_manager.data.local.dao.PaymentTransactionDao;
 import com.example.cafe_manager.data.local.entity.PaymentEntity;
 import com.example.cafe_manager.util.AppExecutors;
 import com.example.cafe_manager.util.Constants;
@@ -15,17 +14,14 @@ import com.example.cafe_manager.util.RepositoryCallback;
 
 public class PaymentRepository {
 
-    private final AppDatabase db;
     private final PaymentDao paymentDao;
-    private final OrderDao orderDao;
-    private final TableDao tableDao;
+    private final PaymentTransactionDao paymentTransactionDao;
     private final AppExecutors appExecutors;
 
     public PaymentRepository(Context context) {
-        this.db = AppDatabase.getInstance(context);
+        AppDatabase db = AppDatabase.getInstance(context);
         this.paymentDao = db.paymentDao();
-        this.orderDao = db.orderDao();
-        this.tableDao = db.tableDao();
+        this.paymentTransactionDao = db.paymentTransactionDao();
         this.appExecutors = AppExecutors.getInstance();
     }
 
@@ -43,30 +39,33 @@ public class PaymentRepository {
     ) {
         appExecutors.diskIO().execute(() -> {
             try {
-                db.runInTransaction(() -> {
-                    long paidAt = System.currentTimeMillis();
+                long paidAt = System.currentTimeMillis();
 
-                    // 1. Insert PaymentEntity
-                    PaymentEntity payment = new PaymentEntity();
-                    payment.setOrderId(orderId);
-                    payment.setPaymentMethod(paymentMethod);
-                    payment.setSubtotal(subtotal);
-                    payment.setDiscountAmount(discount);
-                    payment.setFinalAmount(finalAmount);
-                    payment.setPaidAt(paidAt);
-                    payment.setStatus(Constants.PAYMENT_SUCCESS);
-                    paymentDao.insert(payment);
+                PaymentEntity payment = new PaymentEntity();
+                payment.setOrderId(orderId);
+                payment.setPaymentMethod(paymentMethod);
+                payment.setSubtotal(subtotal);
+                payment.setDiscountAmount(discount);
+                payment.setFinalAmount(finalAmount);
+                payment.setPaidAt(paidAt);
+                payment.setStatus(Constants.PAYMENT_SUCCESS);
 
-                    // 2. Update order → PAID + paidAt
-                    orderDao.updateStatusWithPaidAt(orderId, Constants.ORDER_PAID, paidAt);
+                paymentTransactionDao.payOrderAtomic(
+                        payment,
+                        orderId,
+                        tableId,
+                        Constants.ORDER_PAID,
+                        Constants.TABLE_EMPTY,
+                        paidAt
+                );
 
-                    // 3. Update bàn → EMPTY
-                    tableDao.updateStatus(tableId, Constants.TABLE_EMPTY);
-                });
-
-                callback.onSuccess(true);
+                appExecutors.mainThread().execute(() ->
+                        callback.onSuccess(true)
+                );
             } catch (Exception e) {
-                callback.onError(e);
+                appExecutors.mainThread().execute(() ->
+                        callback.onError(e)
+                );
             }
         });
     }

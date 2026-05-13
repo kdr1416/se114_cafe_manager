@@ -14,7 +14,7 @@ public interface ProductDao {
     @Query("SELECT * FROM products WHERE is_active = 1 ORDER BY product_name ASC")
     LiveData<List<ProductEntity>> getAllActive();
 
-    @Query("SELECT * FROM products WHERE product_id = :categoryId AND is_active = 1 ORDER BY product_name ASC")
+    @Query("SELECT * FROM products WHERE category_id = :categoryId AND is_active = 1 ORDER BY product_name ASC")
     LiveData<List<ProductEntity>> getByCategoryId(int categoryId);
 
 
