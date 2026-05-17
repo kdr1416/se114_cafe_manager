@@ -34,8 +34,20 @@ public class MenuRepository {
         return productDao.getAllActive();
     }
 
+    public LiveData<List<ProductEntity>> getAllProducts() {
+        return productDao.getAll();
+    }
+
+    public LiveData<List<CategoryEntity>> getAllCategories() {
+        return categoryDao.getAll();
+    }
+
     public LiveData<List<ProductEntity>> getProductsByCategory(int categoryId) {
         return productDao.getByCategoryId(categoryId);
+    }
+
+    public LiveData<List<ProductEntity>> getProductsByCategoryIncludingInactive(int categoryId) {
+        return productDao.getByCategoryIdIncludingInactive(categoryId);
     }
 
     public void insertProduct(ProductEntity product) {

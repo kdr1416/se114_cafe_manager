@@ -1,9 +1,130 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+
+    <!-- Base application theme -->
     <style name="Base.Theme.Cafe_manager" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/accent</item>
+        <item name="colorOnPrimary">@color/text_on_accent</item>
+        <item name="colorPrimaryContainer">@color/accent_soft</item>
+        <item name="colorOnPrimaryContainer">@color/accent_dark</item>
+
+        <item name="colorSecondary">@color/accent_dark</item>
+        <item name="colorOnSecondary">@color/text_on_accent</item>
+
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorSurfaceVariant">@color/surface_soft</item>
+        <item name="colorOnSurfaceVariant">@color/text_soft</item>
+
+        <item name="colorOutline">@color/border</item>
+
+        <item name="android:windowBackground">@color/bg_primary</item>
+        <item name="android:statusBarColor">@color/bg_primary</item>
+        <item name="android:navigationBarColor">@color/bg_primary</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+        <item name="android:fontFamily">sans-serif</item>
     </style>
 
     <style name="Theme.Cafe_manager" parent="Base.Theme.Cafe_manager" />
+
+    <!-- ============================
+         TextAppearance
+         ============================ -->
+
+    <style name="TextAppearance.Cafe.Title" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">@dimen/text_title</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <style name="TextAppearance.Cafe.Subtitle" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">@dimen/text_subtitle</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.Cafe.Body" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="TextAppearance.Cafe.BodyBold" parent="TextAppearance.Cafe.Body">
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.Cafe.Caption" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:textColor">@color/text_soft</item>
+        <item name="android:textSize">@dimen/text_caption</item>
+    </style>
+
+    <style name="TextAppearance.Cafe.SectionLabel" parent="TextAppearance.Cafe.Caption">
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="TextAppearance.Cafe.Display" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">@dimen/text_display</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">-0.03</item>
+    </style>
+
+    <style name="TextAppearance.Cafe.Price" parent="TextAppearance.Cafe.BodyBold">
+        <item name="android:textColor">@color/accent</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <!-- ============================
+         Widgets
+         ============================ -->
+
+    <style name="Widget.Cafe.Card" parent="">
+        <item name="android:background">@drawable/bg_card</item>
+        <item name="android:padding">@dimen/spacing_lg</item>
+    </style>
+
+    <style name="Widget.Cafe.Button.Primary" parent="Widget.Material3.Button">
+        <item name="android:background">@drawable/bg_button_primary</item>
+        <item name="android:textColor">@color/text_on_accent</item>
+        <item name="android:textAppearance">@style/TextAppearance.Cafe.BodyBold</item>
+        <item name="android:minHeight">@dimen/height_button</item>
+        <item name="android:paddingHorizontal">@dimen/spacing_lg</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <style name="Widget.Cafe.Button.Secondary" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:background">@drawable/bg_button_secondary</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textAppearance">@style/TextAppearance.Cafe.BodyBold</item>
+        <item name="android:minHeight">@dimen/height_button</item>
+        <item name="android:paddingHorizontal">@dimen/spacing_lg</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <style name="Widget.Cafe.Badge" parent="">
+        <item name="android:paddingHorizontal">10dp</item>
+        <item name="android:paddingVertical">@dimen/spacing_xs</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="Widget.Cafe.Chip" parent="">
+        <item name="android:paddingHorizontal">@dimen/spacing_md</item>
+        <item name="android:paddingVertical">@dimen/spacing_sm</item>
+        <item name="android:textAppearance">@style/TextAppearance.Cafe.Caption</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">@drawable/bg_chip_selector</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="android:textColor">@color/text_soft</item>
+    </style>
 </resources>

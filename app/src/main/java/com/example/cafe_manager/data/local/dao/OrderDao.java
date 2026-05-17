@@ -7,16 +7,22 @@ import androidx.room.Query;
 
 import com.example.cafe_manager.data.local.entity.OrderEntity;
 
+import java.util.List;
+
 @Dao
 public interface OrderDao {
 
     @Insert
     long insert(OrderEntity order);
+
     @Query("SELECT * FROM orders WHERE table_id = :tableId AND status = :status ORDER BY order_id DESC LIMIT 1")
     LiveData<OrderEntity> getActiveByTableIdLive(int tableId, String status);
 
     @Query("SELECT * FROM orders WHERE table_id = :tableId AND status = :status ORDER BY order_id DESC LIMIT 1")
     OrderEntity getActiveByTableId(int tableId, String status);
+
+    @Query("SELECT * FROM orders WHERE status = :status ORDER BY created_at DESC")
+    LiveData<List<OrderEntity>> getAllByStatus(String status);
 
     @Query("SELECT * FROM orders WHERE order_id = :orderId")
     OrderEntity getById(int orderId);

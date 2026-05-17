@@ -92,6 +92,22 @@ public class OrderRepository {
         return orderDao.getActiveByTableId(tableId, Constants.ORDER_CONFIRMED);
     }
 
+    public LiveData<OrderEntity> getActiveOrderByTableLive(int tableId) {
+        return orderDao.getActiveByTableIdLive(tableId, Constants.ORDER_CONFIRMED);
+    }
+
+    public LiveData<OrderEntity> getOrderLive(int orderId) {
+        return orderDao.getByIdLive(orderId);
+    }
+
+    public LiveData<List<OrderEntity>> getActiveOrders() {
+        return orderDao.getAllByStatus(Constants.ORDER_CONFIRMED);
+    }
+
+    public LiveData<List<OrderEntity>> getOrdersByStatus(String status) {
+        return orderDao.getAllByStatus(status);
+    }
+
     public LiveData<List<OrderItemEntity>> getItemsByOrderId(int orderId) {
         return orderItemDao.getByOrderId(orderId);
     }

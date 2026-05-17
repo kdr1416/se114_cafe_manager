@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Bottom footer panel dùng chung cho OrderActivity / PaymentActivity / InvoiceActivity.
+    - tv_label: nhãn (vd "Tổng tiền")
+    - tv_amount: số tiền
+    - btn_primary: text + click handler từ Activity
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/surface"
+    android:padding="@dimen/spacing_lg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_card"
+        android:padding="@dimen/spacing_lg">
+
+        <TextView
+            android:id="@+id/tv_total_label"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/label_total"
+            android:textAppearance="@style/TextAppearance.Cafe.Body"
+            android:textColor="@color/text_soft" />
+
+        <TextView
+            android:id="@+id/tv_total_amount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.Cafe.Subtitle"
+            tools:text="119.000đ" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_primary"
+        style="@style/Widget.Cafe.Button.Primary"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/height_button"
+        android:layout_marginTop="@dimen/spacing_md"
+        tools:text="Xác nhận" />
+</LinearLayout>
