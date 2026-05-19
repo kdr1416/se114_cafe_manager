@@ -6,7 +6,8 @@ import java.util.Locale;
 
 public class DateTimeUtils {
 
-    private static final String DEFAULT_PATTERN = "dd/MM/yyyy HH:mm";
+    // Định dạng theo yêu cầu: "HH:mm · dd/MM/yyyy"
+    private static final String DEFAULT_PATTERN = "HH:mm · dd/MM/yyyy";
 
     public static String formatDateTime(long timestamp) {
         if (timestamp <= 0) {
