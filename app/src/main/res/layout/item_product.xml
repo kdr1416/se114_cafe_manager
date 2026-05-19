@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+
+    xmlns:tools="http://schemas.android.com/tools"
+
+    android:layout_width="match_parent"
+
+    android:layout_height="wrap_content"
+
+    android:orientation="vertical"
+
+    android:background="@drawable/bg_card"
+
+    android:padding="@dimen/spacing_md"
+
+    android:layout_margin="@dimen/spacing_xs">
+
+	<ImageView
+
+        android:id="@+id/iv_media"
+
+        android:layout_width="match_parent"
+
+        android:layout_height="@dimen/media_height"
+
+        android:background="@drawable/bg_media"
+
+        android:padding="@dimen/spacing_lg"
+
+        android:src="@drawable/ic_coffee"
+
+        android:contentDescription="@null"
+
+        app:tint="@color/accent" />
+
+	<TextView
+
+        android:id="@+id/tv_product_name"
+
+        android:layout_width="wrap_content"
+
+        android:layout_height="wrap_content"
+
+        android:textAppearance="@style/TextAppearance.Cafe.BodyBold"
+
+        android:layout_marginTop="@dimen/spacing_md"
+
+        tools:text="Cà phê sữa đá" />
+
+	<TextView
+
+        android:id="@+id/tv_product_price"
+
+        android:layout_width="wrap_content"
+
+        android:layout_height="wrap_content"
+
+        android:textAppearance="@style/TextAppearance.Cafe.Price"
+
+        android:layout_marginTop="@dimen/spacing_xs"
+
+        tools:text="35.000đ" />
+
+	<LinearLayout
+
+        android:layout_width="match_parent"
+
+        android:layout_height="wrap_content"
+
+        android:orientation="horizontal"
+
+        android:gravity="center_vertical"
+
+        android:layout_marginTop="@dimen/spacing_md">
+
+		<TextView
+
+            android:id="@+id/tv_category_tag"
+
+            style="@style/Widget.Cafe.Badge"
+
+            android:layout_width="wrap_content"
+
+            android:layout_height="wrap_content"
+
+            android:background="@drawable/bg_badge_accent"
+
+            android:textColor="@color/accent"
+
+            tools:text="Cà phê" />
+
+		<View
+
+            android:layout_width="0dp"
+
+            android:layout_height="1dp"
+
+            android:layout_weight="1" />
+
+		<ImageButton
+
+            android:id="@+id/btn_add"
+
+            android:layout_width="32dp"
+
+            android:layout_height="32dp"
+
+            android:src="@drawable/ic_plus"
+
+            android:background="@drawable/bg_quantity_btn_plus"
+
+            android:scaleType="centerInside"
+
+            android:contentDescription="@string/content_desc_add"
+
+            app:tint="@color/text_on_accent" />
+
+	</LinearLayout>
+
+</LinearLayout>
