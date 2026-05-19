@@ -20,3 +20,13 @@ local.properties
 # Local planning / handoff docs not needed in git
 /CONTEXT_HANDOFF.md
 /context se114 project/*.md
+/app/src/main/java/com/example/cafe_manager/TableActivity.java
+/app/src/main/java/com/example/cafe_manager/TableAdapter.java
+/app/src/main/java/com/example/cafe_manager/ui/menu/CategoryAdapter.java
+/app/src/main/java/com/example/cafe_manager/ui/menu/MenuActivity.java
+/app/src/main/java/com/example/cafe_manager/ui/menu/ProductAdapter.java
+/app/src/main/res/activity_menu.xml
+/app/src/main/res/item_category_chip.xml
+/app/src/main/res/item_product.xml
+/app/src/main/res/layout/activity_table.xml
+/app/src/main/res/layout/item_table.xml
