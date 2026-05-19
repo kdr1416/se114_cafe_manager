@@ -20,3 +20,4 @@ local.properties
 # Local planning / handoff docs not needed in git
 /CONTEXT_HANDOFF.md
 /context se114 project/*.md
+.vs/
