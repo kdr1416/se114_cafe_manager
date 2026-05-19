@@ -12,6 +12,9 @@ import com.example.cafe_manager.R;
 
 public class TableActivity extends AppCompatActivity {
 
+    public static final String EXTRA_TABLE_ID = "extra_table_id";
+    public static final String EXTRA_TABLE_NAME = "extra_table_name";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

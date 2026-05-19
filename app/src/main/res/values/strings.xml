@@ -21,8 +21,9 @@
     <string name="format_items_selected">%1$d món đã chọn</string>
 
     <!-- Order screen -->
-    <string name="title_order_with_table">Chi tiết order · %1$s</string>
-    <string name="caption_order">Kiểm tra món trước khi xác nhận</string>
+    <string name="title_order_with_table">Đặt đơn · %1$s</string>
+    <string name="header_order_title">Xác nhận đơn hàng</string>
+    <string name="header_order_caption">Vui lòng kiểm tra lại các món đã gọi</string>
     <string name="empty_order">Chưa có món nào. Quay lại để gọi món.</string>
     <string name="label_total">Tổng tiền</string>
     <string name="btn_confirm_order">Xác nhận order</string>
@@ -30,6 +31,11 @@
     <string name="msg_order_failed">Xác nhận order thất bại</string>
     <string name="label_unit_price">%1$s / món</string>
     <string name="label_amount">Thành tiền</string>
+    <string name="label_order_note">Ghi chú đơn hàng</string>
+    <string name="hint_order_note">Ví dụ: Ít đường, không đá...</string>
+    <string name="label_discount_membership">Mã giảm giá / Thành viên</string>
+    <string name="hint_enter_discount">Nhập mã ưu đãi hoặc ID thẻ</string>
+    <string name="btn_apply_code">Áp dụng</string>
 
     <!-- Payment screen -->
     <string name="title_payment_with_table">Thanh toán · %1$s</string>

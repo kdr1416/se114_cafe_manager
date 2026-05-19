@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card"
+    android:padding="@dimen/spacing_lg"
+    android:layout_marginBottom="@dimen/spacing_md">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="@dimen/thumb_size"
+            android:layout_height="@dimen/thumb_size"
+            android:src="@drawable/ic_coffee"
+            android:background="@drawable/bg_media"
+            android:padding="@dimen/spacing_md"
+            android:contentDescription="@null"
+            app:tint="@color/accent" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="@dimen/spacing_md">
+
+            <TextView
+                android:id="@+id/tv_product_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Cafe.BodyBold"
+                tools:text="Cà phê sữa đá" />
+
+            <TextView
+                android:id="@+id/tv_unit_price"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                android:layout_marginTop="@dimen/spacing_xs"
+                tools:text="35.000đ / món" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageButton
+                android:id="@+id/btn_decrease"
+                android:layout_width="@dimen/height_qty_btn"
+                android:layout_height="@dimen/height_qty_btn"
+                android:src="@drawable/ic_minus"
+                android:background="@drawable/bg_quantity_btn"
+                android:scaleType="centerInside"
+                android:contentDescription="@string/content_desc_decrease" />
+
+            <TextView
+                android:id="@+id/tv_quantity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="24dp"
+                android:gravity="center"
+                android:textAppearance="@style/TextAppearance.Cafe.BodyBold"
+                android:layout_marginHorizontal="@dimen/spacing_sm"
+                tools:text="1" />
+
+            <ImageButton
+                android:id="@+id/btn_increase"
+                android:layout_width="@dimen/height_qty_btn"
+                android:layout_height="@dimen/height_qty_btn"
+                android:src="@drawable/ic_plus"
+                android:background="@drawable/bg_quantity_btn_plus"
+                android:scaleType="centerInside"
+                android:contentDescription="@string/content_desc_increase"
+                app:tint="@color/text_on_accent" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/border"
+        android:layout_marginTop="@dimen/spacing_md" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="@dimen/spacing_md">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="19dp"
+            android:layout_weight="1"
+            android:text="@string/label_amount"
+            android:textAppearance="@style/TextAppearance.Cafe.Caption" />
+
+        <TextView
+            android:id="@+id/tv_subtotal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.Cafe.BodyBold"
+            tools:text="35.000đ" />
+    </LinearLayout>
+</LinearLayout>

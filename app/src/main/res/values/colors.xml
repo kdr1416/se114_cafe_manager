@@ -31,6 +31,9 @@
     <color name="warning">#FFD97745</color>
     <color name="warning_soft">#FFFFF2EA</color>
 
+    <!-- Error / Danger -->
+    <color name="error">#FFE11D48</color>
+
     <!-- Optional info color -->
     <color name="info">#FF2563EB</color>
 
