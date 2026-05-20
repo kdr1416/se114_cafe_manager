@@ -1,29 +1,175 @@
 package com.example.cafe_manager.ui.table;
 
+import android.content.Intent;
+
 import android.os.Bundle;
 
+import android.view.View;
+
+import android.widget.TextView;
+
 import androidx.activity.EdgeToEdge;
+
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+
+import androidx.lifecycle.ViewModelProvider;
+
+import androidx.recyclerview.widget.GridLayoutManager;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafe_manager.R;
 
+import com.example.cafe_manager.data.local.entity.TableEntity;
+
+import com.example.cafe_manager.ui.menu.MenuActivity;
+
+import com.example.cafe_manager.ui.order.OrderActivity;
+
+import com.example.cafe_manager.util.Constants;
+
+import com.example.cafe_manager.viewmodel.TableViewModel;
+
 public class TableActivity extends AppCompatActivity {
 
-    public static final String EXTRA_TABLE_ID = "extra_table_id";
-    public static final String EXTRA_TABLE_NAME = "extra_table_name";
+    public static final String EXTRA_TABLE_ID = "table_id";
+
+    public static final String EXTRA_TABLE_NAME = "table_name";
+
+    private TableViewModel viewModel;
+
+    private TableAdapter adapter;
+
+    private TextView tvActiveCount;
+
+    private TextView tvEmptyCount;
 
     @Override
+
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
+
         EdgeToEdge.enable(this);
+
         setContentView(R.layout.activity_table);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+
+        setupTopBar();
+
+        setupBottomNav();
+
+        tvActiveCount = findViewById(R.id.tv_active_count);
+
+        tvEmptyCount = findViewById(R.id.tv_empty_count);
+
+        setupRecyclerView();
+
+        setupViewModel();
+
     }
+
+    private void setupTopBar() {
+
+        View topBar = findViewById(R.id.top_bar);
+
+        TextView title = topBar.findViewById(R.id.tv_title);
+
+        TextView caption = topBar.findViewById(R.id.tv_caption);
+
+        View btnBack = topBar.findViewById(R.id.btn_back);
+
+        View btnRight = topBar.findViewById(R.id.btn_right);
+
+        title.setText(R.string.title_tables);
+
+        caption.setText(R.string.caption_tables);
+
+        btnBack.setVisibility(View.GONE);   // entry screen, không back
+
+        btnRight.setVisibility(View.VISIBLE); // search icon (MVP: chưa wire)
+
+    }
+
+    private void setupBottomNav() {
+
+        View bottomNav = findViewById(R.id.bottom_nav);
+
+        bottomNav.findViewById(R.id.nav_tables).setSelected(true);
+
+        // TODO Member 4: gắn click cho nav_orders → OrdersListActivity
+
+        // TODO Member 4: gắn click cho nav_menu  → AdminMenuActivity
+
+    }
+
+    private void setupRecyclerView() {
+
+        RecyclerView rv = findViewById(R.id.rv_tables);
+
+        rv.setLayoutManager(new GridLayoutManager(this, 2));
+
+        adapter = new TableAdapter(this::onTableClicked);
+
+        rv.setAdapter(adapter);
+
+    }
+
+    private void setupViewModel() {
+
+        viewModel = new ViewModelProvider(this).get(TableViewModel.class);
+
+        viewModel.getTables().observe(this, list -> {
+
+            if (list != null) adapter.submitList(list);
+
+        });
+
+        viewModel.getOccupiedCount().observe(this, c -> updateActiveStat());
+
+        viewModel.getTotalCount().observe(this, c -> updateActiveStat());
+
+        viewModel.getEmptyCount().observe(this, empty -> {
+
+            if (empty != null) tvEmptyCount.setText(String.valueOf(empty));
+
+        });
+
+    }
+
+    private void updateActiveStat() {
+
+        Integer total = viewModel.getTotalCount().getValue();
+
+        Integer occupied = viewModel.getOccupiedCount().getValue();
+
+        if (total != null && occupied != null) {
+
+            tvActiveCount.setText(getString(R.string.format_total_tables, occupied, total));
+
+        }
+
+    }
+
+    private void onTableClicked(TableEntity table) {
+
+        Intent intent;
+
+        if (Constants.TABLE_EMPTY.equals(table.getStatus())) {
+
+            intent = new Intent(this, MenuActivity.class);
+
+        } else {
+
+            intent = new Intent(this, OrderActivity.class);
+
+        }
+
+        intent.putExtra(EXTRA_TABLE_ID, table.getTableId());
+
+        intent.putExtra(EXTRA_TABLE_NAME, table.getTableName());
+
+        startActivity(intent);
+
+    }
+
 }
