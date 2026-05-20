@@ -1,10 +1,131 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.order.OrderActivity">
+    android:orientation="vertical"
+    android:background="@color/bg_primary">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <!-- Tiêu đề Đặt đơn được quản lý bởi top_bar -->
+    <include
+        android:id="@+id/top_bar"
+        layout="@layout/component_top_bar" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/spacing_lg">
+
+            <!-- Vùng hiển thị danh sách món -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="120dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_order_items"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clipToPadding="false"
+                    android:nestedScrollingEnabled="false"
+                    android:paddingHorizontal="@dimen/spacing_lg"
+                    android:paddingTop="@dimen/spacing_lg"
+                    tools:listitem="@layout/item_order_item" />
+
+                <include
+                    android:id="@+id/empty_state"
+                    layout="@layout/component_empty_state"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+            <!-- Vùng Ghi chú và Mã giảm giá/Thành viên (Chỉ hiện khi có món) -->
+            <LinearLayout
+                android:id="@+id/layout_extras"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_lg"
+                android:layout_marginHorizontal="@dimen/spacing_lg"
+                android:layout_marginTop="@dimen/spacing_md"
+                android:background="@drawable/bg_card"
+                android:elevation="2dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_order_note"
+                    android:textAppearance="@style/TextAppearance.Cafe.BodyBold" />
+
+                <EditText
+                    android:id="@+id/edt_order_note"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="80dp"
+                    android:gravity="top"
+                    android:background="@drawable/bg_input"
+                    android:hint="@string/hint_order_note"
+                    android:padding="@dimen/spacing_md"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:textAppearance="@style/TextAppearance.Cafe.Body"
+                    android:importantForAutofill="no"
+                    android:inputType="textMultiLine" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/border_soft"
+                    android:layout_marginVertical="@dimen/spacing_lg" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_discount_membership"
+                    android:textAppearance="@style/TextAppearance.Cafe.BodyBold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="@dimen/spacing_sm">
+
+                    <EditText
+                        android:id="@+id/edt_discount_code"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_input"
+                        android:hint="@string/hint_enter_discount"
+                        android:padding="@dimen/spacing_md"
+                        android:textAppearance="@style/TextAppearance.Cafe.Body"
+                        android:inputType="textCapCharacters"
+                        android:importantForAutofill="no" />
+
+                    <Button
+                        android:id="@+id/btn_apply_discount"
+                        style="@style/Widget.Cafe.Button.Secondary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="@dimen/spacing_sm"
+                        android:text="@string/btn_apply_code"
+                        android:paddingHorizontal="@dimen/spacing_md" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Footer chứa tổng tiền (đỏ) và nút xác nhận -->
+    <include
+        android:id="@+id/footer"
+        layout="@layout/component_bottom_total_panel" />
+
+</LinearLayout>
