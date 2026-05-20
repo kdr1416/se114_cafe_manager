@@ -22,6 +22,7 @@
 
     <!-- Order screen -->
     <string name="title_order_with_table">Đặt đơn · %1$s</string>
+    <string name="caption_order">Kiểm tra món trước khi xác nhận</string>
     <string name="header_order_title">Xác nhận đơn hàng</string>
     <string name="header_order_caption">Vui lòng kiểm tra lại các món đã gọi</string>
     <string name="empty_order">Chưa có món nào. Quay lại để gọi món.</string>
@@ -45,7 +46,7 @@
     <string name="label_discount">Giảm giá</string>
     <string name="label_final_amount">Tổng cộng</string>
     <string name="label_discount_code">Mã giảm giá</string>
-    <string name="hint_discount_code">Nhập mã giảm giá</string>
+    <string name="hint_discount_code">Nhập số tiền giảm</string>
     <string name="btn_apply">Áp dụng</string>
     <string name="label_payment_method">Phương thức thanh toán</string>
     <string name="payment_cash">Tiền mặt</string>
@@ -57,6 +58,7 @@
     <string name="btn_confirm_payment">Xác nhận thanh toán</string>
     <string name="msg_payment_success">Thanh toán thành công</string>
     <string name="msg_payment_failed">Thanh toán thất bại</string>
+    <string name="format_item_summary">%1$s × %2$d</string>
 
     <!-- Invoice screen -->
     <string name="title_invoice">Hóa đơn</string>

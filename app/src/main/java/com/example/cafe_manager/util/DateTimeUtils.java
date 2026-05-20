@@ -8,7 +8,7 @@ public class DateTimeUtils {
 
     // Định dạng theo yêu cầu: "HH:mm · dd/MM/yyyy"
     private static final String DEFAULT_PATTERN = "HH:mm · dd/MM/yyyy";
-
+    //new SimpleDateFormat("HH:mm · dd/MM/yyyy", new Locale("vi", "VN")).format(new Date(timestamp))
     public static String formatDateTime(long timestamp) {
         if (timestamp <= 0) {
             return "";
