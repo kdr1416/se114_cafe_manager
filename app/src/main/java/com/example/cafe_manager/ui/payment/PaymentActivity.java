@@ -222,4 +222,3 @@ public class PaymentActivity extends AppCompatActivity {
                 : getColor(R.color.text_mute));
     }
 }
-```
