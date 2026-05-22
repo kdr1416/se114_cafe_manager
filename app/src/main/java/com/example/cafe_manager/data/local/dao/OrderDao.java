@@ -1,5 +1,9 @@
 package com.example.cafe_manager.data.local.dao;
 
+import androidx.room.Transaction;
+import androidx.lifecycle.LiveData;
+import com.example.cafe_manager.model.OrderWithItems;
+import java.util.List;
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Insert;
@@ -38,5 +42,9 @@ public interface OrderDao {
 
     @Query("UPDATE orders SET total_amount = :totalAmount WHERE order_id = :orderId")
     void updateTotal(int orderId, double totalAmount);
+
+    @Transaction
+    @Query("SELECT * FROM orders WHERE status = :status ORDER BY created_at DESC")
+    LiveData<List<OrderWithItems>> getOrdersWithItemsByStatus(String status);
 
 }
