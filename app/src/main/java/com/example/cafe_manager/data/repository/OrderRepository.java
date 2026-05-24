@@ -109,6 +109,10 @@ public class OrderRepository {
         return orderDao.getAllByStatus(status);
     }
 
+    public LiveData<List<OrderWithItems>> getActiveOrdersWithItems(String status) {
+        return orderDao.getOrdersWithItemsByStatus(status);
+    }
+
     public LiveData<List<OrderItemEntity>> getItemsByOrderId(int orderId) {
         return orderItemDao.getByOrderId(orderId);
     }

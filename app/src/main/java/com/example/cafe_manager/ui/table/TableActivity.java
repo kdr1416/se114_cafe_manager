@@ -22,9 +22,11 @@ import com.example.cafe_manager.R;
 
 import com.example.cafe_manager.data.local.entity.TableEntity;
 
+import com.example.cafe_manager.ui.admin.AdminMenuActivity;
+
 import com.example.cafe_manager.ui.menu.MenuActivity;
 
-import com.example.cafe_manager.ui.order.OrderActivity;
+import com.example.cafe_manager.ui.orderslist.OrdersListActivity;
 
 import com.example.cafe_manager.util.Constants;
 
@@ -91,16 +93,16 @@ public class TableActivity extends AppCompatActivity {
     }
 
     private void setupBottomNav() {
-
         View bottomNav = findViewById(R.id.bottom_nav);
+        View navTables = bottomNav.findViewById(R.id.nav_tables);
+        View navOrders = bottomNav.findViewById(R.id.nav_orders);
+        View navMenu = bottomNav.findViewById(R.id.nav_menu);
+        navTables.setSelected(true);
+        navOrders.setOnClickListener(v -> startActivity(new Intent(this, OrdersListActivity.class)));
 
-        bottomNav.findViewById(R.id.nav_tables).setSelected(true);
-
-        // TODO Member 4: gắn click cho nav_orders → OrdersListActivity
-
-        // TODO Member 4: gắn click cho nav_menu  → AdminMenuActivity
-
+        navMenu.setOnClickListener(v -> startActivity(new Intent(this, AdminMenuActivity.class)));
     }
+
 
     private void setupRecyclerView() {
 
@@ -152,24 +154,25 @@ public class TableActivity extends AppCompatActivity {
 
     private void onTableClicked(TableEntity table) {
 
-        Intent intent;
-
         if (Constants.TABLE_EMPTY.equals(table.getStatus())) {
 
-            intent = new Intent(this, MenuActivity.class);
+            Intent intent = new Intent(this, MenuActivity.class);
+
+            intent.putExtra(EXTRA_TABLE_ID, table.getTableId());
+
+            intent.putExtra(EXTRA_TABLE_NAME, table.getTableName());
+
+            startActivity(intent);
 
         } else {
 
-            intent = new Intent(this, OrderActivity.class);
+            // OCCUPIED: mở OrdersList để chọn order cần thu tiền
+
+            Intent intent = new Intent(this, OrdersListActivity.class);
+
+            startActivity(intent);
 
         }
 
-        intent.putExtra(EXTRA_TABLE_ID, table.getTableId());
-
-        intent.putExtra(EXTRA_TABLE_NAME, table.getTableName());
-
-        startActivity(intent);
-
     }
-
 }
