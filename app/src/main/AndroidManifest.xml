@@ -16,6 +16,12 @@
             android:name=".ui.payment.InvoiceActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.admin.AdminMenuActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".ui.orderslist.OrdersListActivity"
+            android:exported="false"/>
+        <activity
             android:name=".ui.payment.PaymentActivity"
             android:exported="false" />
         <activity
