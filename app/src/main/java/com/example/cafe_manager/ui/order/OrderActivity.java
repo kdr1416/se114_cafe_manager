@@ -75,7 +75,13 @@ public class OrderActivity extends AppCompatActivity {
         btnConfirm = footer.findViewById(R.id.btn_primary);
 
         tvLabel.setText(R.string.label_total);
-        btnConfirm.setText(R.string.btn_confirm_order);
+
+        // Button text + caption tuỳ mode
+        if (com.example.cafe_manager.manager.CartManager.getInstance().isAddMode()) {
+            btnConfirm.setText("Thêm vào order");
+        } else {
+            btnConfirm.setText(R.string.btn_confirm_order);
+        }
         btnConfirm.setOnClickListener(v -> onConfirmClicked());
     }
 
@@ -136,11 +142,15 @@ public class OrderActivity extends AppCompatActivity {
         });
 
         viewModel.getLoading().observe(this, loading -> {
-            btnConfirm.setEnabled(loading != null && !loading
-                    && !viewModel.isCartEmpty());
-            btnConfirm.setText(Boolean.TRUE.equals(loading)
-                    ? "Đang xử lý..."
-                    : getString(R.string.btn_confirm_order));
+            boolean isLoading = Boolean.TRUE.equals(loading);
+            btnConfirm.setEnabled(!isLoading && !viewModel.isCartEmpty());
+            if (isLoading) {
+                btnConfirm.setText("Đang xử lý...");
+            } else if (viewModel.isAddMode()) {
+                btnConfirm.setText("Thêm vào order");
+            } else {
+                btnConfirm.setText(getString(R.string.btn_confirm_order));
+            }
         });
 
         viewModel.getConfirmSuccess().observe(this, orderId -> {
@@ -164,8 +174,14 @@ public class OrderActivity extends AppCompatActivity {
         if (viewModel.isCartEmpty()) {
             return;
         }
-        String note = edtNote.getText().toString().trim();
-        viewModel.confirmOrder(note);
+        if (viewModel.isAddMode()) {
+            // Mode "gọi thêm món" — gắn vào order existing
+            viewModel.addItemsToExistingOrder();
+        } else {
+            // Order mới
+            String note = edtNote.getText().toString().trim();
+            viewModel.confirmOrder(note);
+        }
     }
 
     private void navigateBackToTables() {

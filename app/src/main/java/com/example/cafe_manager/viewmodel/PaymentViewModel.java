@@ -7,8 +7,12 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.cafe_manager.data.local.entity.PromotionEntity;
 import com.example.cafe_manager.data.repository.PaymentRepository;
+import com.example.cafe_manager.data.repository.PromotionRepository;
+import com.example.cafe_manager.util.AppExecutors;
 import com.example.cafe_manager.util.Constants;
+import com.example.cafe_manager.util.CurrencyUtils;
 import com.example.cafe_manager.util.OrderCalculator;
 import com.example.cafe_manager.util.RepositoryCallback;
 import com.example.cafe_manager.util.StatusUtils;
@@ -16,6 +20,7 @@ import com.example.cafe_manager.util.StatusUtils;
 public class PaymentViewModel extends AndroidViewModel {
 
     private final PaymentRepository paymentRepository;
+    private final PromotionRepository promotionRepository;
 
     private int orderId = -1;
     private int tableId = -1;
@@ -31,10 +36,12 @@ public class PaymentViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> loadingLiveData = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> paySuccessLiveData = new MutableLiveData<>();
     private final MutableLiveData<String> errorMessageLiveData = new MutableLiveData<>();
+    private final MutableLiveData<String> promoMessageLiveData = new MutableLiveData<>();
 
     public PaymentViewModel(@NonNull Application application) {
         super(application);
         this.paymentRepository = new PaymentRepository(application);
+        this.promotionRepository = new PromotionRepository(application);
     }
 
     // ========================
@@ -83,12 +90,20 @@ public class PaymentViewModel extends AndroidViewModel {
         return errorMessageLiveData;
     }
 
+    public LiveData<String> getPromoMessage() {
+        return promoMessageLiveData;
+    }
+
     public void clearPaySuccess() {
         paySuccessLiveData.setValue(null);
     }
 
     public void clearErrorMessage() {
         errorMessageLiveData.setValue(null);
+    }
+
+    public void clearPromoMessage() {
+        promoMessageLiveData.setValue(null);
     }
 
     // ========================
@@ -104,6 +119,68 @@ public class PaymentViewModel extends AndroidViewModel {
 
         discountAmountLiveData.setValue(normalized);
         recomputeFinalAmount();
+    }
+
+    /**
+     * Apply discount theo input từ user: có thể là số (raw VND) hoặc mã giảm giá.
+     * Trống → discount = 0.
+     * Số → set raw VND.
+     * Chuỗi không phải số → query promotion code (async).
+     */
+    public void applyPromotionCode(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            setDiscount(0);
+            promoMessageLiveData.setValue("Đã xoá giảm giá.");
+            return;
+        }
+
+        String input = text.trim();
+
+        // Thử parse số trước
+        try {
+            double value = Double.parseDouble(input);
+            setDiscount(value);
+            promoMessageLiveData.setValue(
+                    "Đã áp dụng giảm giá: " + CurrencyUtils.formatVnd(value));
+            return;
+        } catch (NumberFormatException ignored) {
+            // không phải số → thử như mã promo
+        }
+
+        // Query DB trên background
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            final PromotionEntity promo = promotionRepository.getByCode(input);
+            AppExecutors.getInstance().mainThread().execute(() -> {
+                if (promo == null) {
+                    promoMessageLiveData.setValue("Mã giảm giá không hợp lệ.");
+                    return;
+                }
+                if (!promo.isActive()) {
+                    promoMessageLiveData.setValue("Mã giảm giá đã ngưng sử dụng.");
+                    return;
+                }
+                if (promo.getExpiresAt() > 0
+                        && promo.getExpiresAt() < System.currentTimeMillis()) {
+                    promoMessageLiveData.setValue("Mã giảm giá đã hết hạn.");
+                    return;
+                }
+
+                double discount;
+                if (Constants.PROMO_CASH.equals(promo.getType())) {
+                    discount = promo.getValue();
+                } else if (Constants.PROMO_PERCENT.equals(promo.getType())) {
+                    discount = subtotal * promo.getValue() / 100.0;
+                } else {
+                    promoMessageLiveData.setValue("Loại mã không được hỗ trợ.");
+                    return;
+                }
+
+                setDiscount(discount);
+                promoMessageLiveData.setValue(
+                        "Áp dụng mã " + promo.getCode() + ": -"
+                                + CurrencyUtils.formatVnd(discount));
+            });
+        });
     }
 
     public void selectPaymentMethod(String paymentMethod) {

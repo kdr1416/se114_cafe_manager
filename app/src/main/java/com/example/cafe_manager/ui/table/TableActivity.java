@@ -1,11 +1,14 @@
 package com.example.cafe_manager.ui.table;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 
 import android.os.Bundle;
 
 import android.view.View;
 
+import android.widget.ImageButton;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -22,7 +25,13 @@ import com.example.cafe_manager.R;
 
 import com.example.cafe_manager.data.local.entity.TableEntity;
 
+import com.example.cafe_manager.manager.CartManager;
+import com.example.cafe_manager.manager.SessionManager;
+
 import com.example.cafe_manager.ui.admin.AdminMenuActivity;
+import com.example.cafe_manager.ui.auth.LoginActivity;
+import com.example.cafe_manager.ui.dashboard.DashboardActivity;
+import com.example.cafe_manager.ui.history.HistoryActivity;
 
 import com.example.cafe_manager.ui.menu.MenuActivity;
 
@@ -80,16 +89,70 @@ public class TableActivity extends AppCompatActivity {
 
         View btnBack = topBar.findViewById(R.id.btn_back);
 
-        View btnRight = topBar.findViewById(R.id.btn_right);
+        ImageButton btnRight = topBar.findViewById(R.id.btn_right);
 
         title.setText(R.string.title_tables);
 
-        caption.setText(R.string.caption_tables);
+        // Greeting với tên user (nếu có session)
+        String fullName = SessionManager.getInstance(this).getFullName();
+        if (fullName == null || fullName.isEmpty()) {
+            caption.setText(R.string.caption_tables);
+        } else {
+            caption.setText("Xin chào, " + fullName);
+        }
 
         btnBack.setVisibility(View.GONE);   // entry screen, không back
 
-        btnRight.setVisibility(View.VISIBLE); // search icon (MVP: chưa wire)
+        // Right icon → popup menu: Lịch sử / Báo cáo / Đăng xuất
+        btnRight.setVisibility(View.VISIBLE);
+        btnRight.setImageResource(R.drawable.ic_menu_book);
+        btnRight.setOnClickListener(this::showOptionsMenu);
 
+    }
+
+    private void showOptionsMenu(View anchor) {
+        PopupMenu popup = new PopupMenu(this, anchor);
+        popup.getMenu().add(0, 1, 0, "Lịch sử giao dịch");
+        popup.getMenu().add(0, 2, 0, "Báo cáo doanh thu");
+        popup.getMenu().add(0, 3, 0, "Đăng xuất");
+
+        popup.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case 1:
+                    startActivity(new Intent(this, HistoryActivity.class));
+                    return true;
+                case 2:
+                    startActivity(new Intent(this, DashboardActivity.class));
+                    return true;
+                case 3:
+                    showLogoutDialog();
+                    return true;
+                default:
+                    return false;
+            }
+        });
+        popup.show();
+    }
+
+    private void showLogoutDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Đăng xuất?")
+                .setMessage("Bạn sẽ phải đăng nhập lại để tiếp tục.")
+                .setPositiveButton("Đăng xuất", (d, w) -> performLogout())
+                .setNegativeButton("Huỷ", null)
+                .show();
+    }
+
+    private void performLogout() {
+        SessionManager.getInstance(this).logout();
+        CartManager.getInstance().clearCart();
+
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                | Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     private void setupBottomNav() {
@@ -154,6 +217,9 @@ public class TableActivity extends AppCompatActivity {
 
     private void onTableClicked(TableEntity table) {
 
+        // Reset cart trước mọi flow mới — đảm bảo không kế thừa state cũ
+        CartManager.getInstance().clearCart();
+
         if (Constants.TABLE_EMPTY.equals(table.getStatus())) {
 
             Intent intent = new Intent(this, MenuActivity.class);
@@ -166,7 +232,7 @@ public class TableActivity extends AppCompatActivity {
 
         } else {
 
-            // OCCUPIED: mở OrdersList để chọn order cần thu tiền
+            // OCCUPIED: mở OrdersList để chọn order cần thu tiền (hoặc gọi thêm)
 
             Intent intent = new Intent(this, OrdersListActivity.class);
 

@@ -22,6 +22,9 @@ public final class Constants {
     public static final String PRODUCT_ACTIVE = "ACTIVE";
     public static final String PRODUCT_INACTIVE = "INACTIVE";
 
+    public static final String PROMO_CASH = "CASH";
+    public static final String PROMO_PERCENT = "PERCENT";
+
     public static final String ICON_COFFEE = "COFFEE";
     public static final String ICON_TEA = "TEA";
     public static final String ICON_FOOD = "FOOD";

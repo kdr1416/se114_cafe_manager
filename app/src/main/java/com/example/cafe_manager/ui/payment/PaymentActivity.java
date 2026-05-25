@@ -125,20 +125,11 @@ public class PaymentActivity extends AppCompatActivity {
     }
 
     private void setupDiscount() {
-        // Áp dụng qua nút "Áp dụng" — đơn giản, không cần TextWatcher
+        // Áp dụng mã giảm giá hoặc số tiền raw qua nút "Áp dụng".
+        // ViewModel tự xử lý: nếu là số → raw VND, nếu là mã → query DB validate.
         btnApply.setOnClickListener(v -> {
             String text = etDiscount.getText().toString().trim();
-            double value = 0;
-            if (!text.isEmpty()) {
-                try {
-                    value = Double.parseDouble(text);
-                } catch (NumberFormatException e) {
-                    Toast.makeText(this, "Số tiền giảm không hợp lệ",
-                            Toast.LENGTH_SHORT).show();
-                    return;
-                }
-            }
-            paymentVm.setDiscount(value);
+            paymentVm.applyPromotionCode(text);
         });
     }
 
@@ -193,6 +184,14 @@ public class PaymentActivity extends AppCompatActivity {
             if (msg != null && !msg.isEmpty()) {
                 Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
                 paymentVm.clearErrorMessage();
+            }
+        });
+
+        // Promo message (success or invalid)
+        paymentVm.getPromoMessage().observe(this, msg -> {
+            if (msg != null && !msg.isEmpty()) {
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+                paymentVm.clearPromoMessage();
             }
         });
 

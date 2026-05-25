@@ -113,8 +113,80 @@ public class OrderRepository {
         return orderDao.getOrdersWithItemsByStatus(status);
     }
 
+    public LiveData<List<OrderWithItems>> getPaidOrdersInRange(long fromMs, long toMs) {
+        return orderDao.getPaidOrdersInRange(Constants.ORDER_PAID, fromMs, toMs);
+    }
+
+    public LiveData<Integer> countPaidInRange(long fromMs, long toMs) {
+        return orderDao.countPaidInRange(Constants.ORDER_PAID, fromMs, toMs);
+    }
+
     public LiveData<List<OrderItemEntity>> getItemsByOrderId(int orderId) {
         return orderItemDao.getByOrderId(orderId);
+    }
+
+    /**
+     * Atomic: thêm items vào order existing + cộng dồn total.
+     * Dùng khi nhân viên gọi thêm món cho bàn đang OCCUPIED.
+     */
+    public void addItemsToOrder(
+            int orderId,
+            List<CartItem> cartItems,
+            RepositoryCallback<Long> callback
+    ) {
+        appExecutors.diskIO().execute(() -> {
+            try {
+                double deltaAmount = 0;
+                List<OrderItemEntity> newItems = new ArrayList<>();
+
+                for (CartItem c : cartItems) {
+                    deltaAmount += c.getSubtotal();
+
+                    OrderItemEntity item = new OrderItemEntity();
+                    item.setProductId(c.getProductId());
+                    item.setProductNameSnapshot(c.getProductName());
+                    item.setQuantity(c.getQuantity());
+                    item.setUnitPrice(c.getUnitPrice());
+                    item.setSubtotal(c.getSubtotal());
+                    item.setNote(c.getNote());
+
+                    newItems.add(item);
+                }
+
+                orderTransactionDao.addItemsToOrderAtomic(orderId, newItems, deltaAmount);
+
+                appExecutors.mainThread().execute(() ->
+                        callback.onSuccess((long) orderId));
+            } catch (Exception e) {
+                appExecutors.mainThread().execute(() ->
+                        callback.onError(e));
+            }
+        });
+    }
+
+    /**
+     * Atomic: cancel order → status=CANCELLED + bàn=EMPTY.
+     */
+    public void cancelOrder(
+            int orderId,
+            int tableId,
+            RepositoryCallback<Boolean> callback
+    ) {
+        appExecutors.diskIO().execute(() -> {
+            try {
+                orderTransactionDao.cancelOrderAtomic(
+                        orderId,
+                        tableId,
+                        Constants.ORDER_CANCELLED,
+                        Constants.TABLE_EMPTY
+                );
+                appExecutors.mainThread().execute(() ->
+                        callback.onSuccess(true));
+            } catch (Exception e) {
+                appExecutors.mainThread().execute(() ->
+                        callback.onError(e));
+            }
+        });
     }
 
 }

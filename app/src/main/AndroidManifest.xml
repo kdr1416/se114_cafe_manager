@@ -12,33 +12,52 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Cafe_manager">
 
+        <!-- LAUNCHER giờ là LoginActivity -->
         <activity
-            android:name=".ui.payment.InvoiceActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.admin.AdminMenuActivity"
-            android:exported="false"/>
-        <activity
-            android:name=".ui.orderslist.OrdersListActivity"
-            android:exported="false"/>
-        <activity
-            android:name=".ui.payment.PaymentActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.order.OrderActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.menu.MenuActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".ui.table.TableActivity"
-            android:exported="true">
+            android:name=".ui.auth.LoginActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.table.TableActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.menu.MenuActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.order.OrderActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.payment.PaymentActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.payment.InvoiceActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.orderslist.OrdersListActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.admin.AdminMenuActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.history.HistoryActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.dashboard.DashboardActivity"
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"

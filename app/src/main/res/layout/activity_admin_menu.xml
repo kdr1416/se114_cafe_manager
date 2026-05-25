@@ -92,6 +92,7 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- Search EditText -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/height_input"
@@ -108,13 +109,21 @@
                     android:contentDescription="@null"
                     app:tint="@color/text_mute" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/hint_search_admin"
-                    android:textColor="@color/text_mute"
+                <EditText
+                    android:id="@+id/et_search"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent"
+                    android:hint="@string/hint_search_admin"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_mute"
                     android:textSize="@dimen/text_body"
-                    android:layout_marginStart="@dimen/spacing_sm" />
+                    android:layout_marginStart="@dimen/spacing_sm"
+                    android:inputType="text"
+                    android:imeOptions="actionSearch"
+                    android:singleLine="true"
+                    android:autofillHints="off" />
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView
@@ -132,6 +141,11 @@
                 android:layout_marginTop="@dimen/spacing_md"
                 android:nestedScrollingEnabled="false"
                 tools:listitem="@layout/item_admin_product" />
+
+            <include
+                android:id="@+id/empty_state"
+                layout="@layout/component_empty_state"
+                android:visibility="gone" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

@@ -11,6 +11,8 @@ public class CartManager {
     private static CartManager instance;
 
     private int currentTableId = -1;
+    /** -1 = order mới; > 0 = đang thêm món vào order existing có ID này. */
+    private int pendingOrderId = -1;
     private final List<CartItem> cartItems = new ArrayList<>();
 
     private CartManager() {
@@ -37,6 +39,22 @@ public class CartManager {
 
     public void clearCurrentTable() {
         currentTableId = -1;
+    }
+
+    // ========================
+    // Pending order (cho luồng "thêm món vào order existing")
+    // ========================
+
+    public void setPendingOrderId(int orderId) {
+        this.pendingOrderId = orderId;
+    }
+
+    public int getPendingOrderId() {
+        return pendingOrderId;
+    }
+
+    public boolean isAddMode() {
+        return pendingOrderId > 0;
     }
 
     // ========================
@@ -161,6 +179,7 @@ public class CartManager {
     public void clearCart() {
         cartItems.clear();
         currentTableId = -1;
+        pendingOrderId = -1;
     }
 
     // ========================

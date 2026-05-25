@@ -1,115 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-
     xmlns:app="http://schemas.android.com/apk/res-auto"
-
     xmlns:tools="http://schemas.android.com/tools"
-
     android:id="@+id/root"
-
     android:layout_width="match_parent"
-
     android:layout_height="match_parent"
-
     android:orientation="vertical"
-
     android:background="@color/bg_primary">
 
-	<include
-
+    <include
         android:id="@+id/top_bar"
-
         layout="@layout/component_top_bar" />
 
-	<!-- Search bar (decorative cho MVP) -->
-
-	<LinearLayout
-
+    <!-- Search bar (real EditText for filtering) -->
+    <LinearLayout
         android:layout_width="match_parent"
-
         android:layout_height="@dimen/height_input"
-
         android:orientation="horizontal"
-
         android:gravity="center_vertical"
-
         android:background="@drawable/bg_input"
-
         android:paddingHorizontal="@dimen/spacing_md"
-
         android:layout_marginHorizontal="@dimen/spacing_lg"
-
         android:layout_marginTop="@dimen/spacing_sm">
 
-		<ImageView
-
+        <ImageView
             android:layout_width="@dimen/icon_md"
-
             android:layout_height="@dimen/icon_md"
-
             android:src="@drawable/ic_search"
-
             android:contentDescription="@null"
-
             app:tint="@color/text_mute" />
 
-		<TextView
-
-            android:layout_width="wrap_content"
-
-            android:layout_height="wrap_content"
-
-            android:text="@string/hint_search_menu"
-
-            android:textColor="@color/text_mute"
-
+        <EditText
+            android:id="@+id/et_search"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:hint="@string/hint_search_menu"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_mute"
             android:textSize="@dimen/text_body"
+            android:layout_marginStart="@dimen/spacing_sm"
+            android:inputType="text"
+            android:imeOptions="actionSearch"
+            android:singleLine="true"
+            android:autofillHints="off" />
+    </LinearLayout>
 
-            android:layout_marginStart="@dimen/spacing_sm" />
-
-	</LinearLayout>
-
-	<!-- Category chips -->
-
-	<androidx.recyclerview.widget.RecyclerView
-
+    <!-- Category chips -->
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_categories"
-
         android:layout_width="match_parent"
-
         android:layout_height="wrap_content"
-
         android:layout_marginTop="@dimen/spacing_md"
-
         android:paddingHorizontal="@dimen/spacing_lg"
-
         android:clipToPadding="false"
-
         tools:listitem="@layout/item_category_chip" />
 
-	<!-- Products grid -->
-
-	<androidx.recyclerview.widget.RecyclerView
-
-        android:id="@+id/rv_products"
-
+    <!-- Products grid + empty state stack -->
+    <FrameLayout
         android:layout_width="match_parent"
-
         android:layout_height="0dp"
+        android:layout_weight="1">
 
-        android:layout_weight="1"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_products"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="@dimen/spacing_lg"
+            android:clipToPadding="false"
+            tools:listitem="@layout/item_product" />
 
-        android:padding="@dimen/spacing_lg"
+        <include
+            android:id="@+id/empty_state"
+            layout="@layout/component_empty_state"
+            android:visibility="gone" />
+    </FrameLayout>
 
-        android:clipToPadding="false"
-
-        tools:listitem="@layout/item_product" />
-
-	<include
-
+    <include
         android:id="@+id/cart_bar"
-
         layout="@layout/component_bottom_cart_bar" />
-
 </LinearLayout>

@@ -13,15 +13,20 @@ import com.example.cafe_manager.data.local.dao.OrderDao;
 import com.example.cafe_manager.data.local.dao.OrderItemDao;
 import com.example.cafe_manager.data.local.dao.PaymentDao;
 import com.example.cafe_manager.data.local.dao.ProductDao;
+import com.example.cafe_manager.data.local.dao.PromotionDao;
 import com.example.cafe_manager.data.local.dao.TableDao;
+import com.example.cafe_manager.data.local.dao.UserDao;
 import com.example.cafe_manager.data.local.entity.CategoryEntity;
 import com.example.cafe_manager.data.local.entity.OrderEntity;
 import com.example.cafe_manager.data.local.entity.OrderItemEntity;
 import com.example.cafe_manager.data.local.entity.PaymentEntity;
 import com.example.cafe_manager.data.local.entity.ProductEntity;
+import com.example.cafe_manager.data.local.entity.PromotionEntity;
 import com.example.cafe_manager.data.local.entity.TableEntity;
+import com.example.cafe_manager.data.local.entity.UserEntity;
 import com.example.cafe_manager.util.AppExecutors;
 import com.example.cafe_manager.util.Constants;
+import com.example.cafe_manager.util.PasswordUtils;
 import com.example.cafe_manager.data.local.dao.OrderTransactionDao;
 import com.example.cafe_manager.data.local.dao.PaymentTransactionDao;
 
@@ -35,9 +40,11 @@ import java.util.List;
                 ProductEntity.class,
                 OrderEntity.class,
                 OrderItemEntity.class,
-                PaymentEntity.class
+                PaymentEntity.class,
+                PromotionEntity.class,
+                UserEntity.class
         },
-        version = 1,
+        version = 3,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -48,6 +55,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract OrderDao orderDao();
     public abstract OrderItemDao orderItemDao();
     public abstract PaymentDao paymentDao();
+    public abstract PromotionDao promotionDao();
+    public abstract UserDao userDao();
     public abstract OrderTransactionDao orderTransactionDao();
     public abstract PaymentTransactionDao paymentTransactionDao();
 
@@ -83,6 +92,8 @@ public abstract class AppDatabase extends RoomDatabase {
                 seedTables(database);
                 long[] categoryIds = seedCategories(database);
                 seedProducts(database, categoryIds);
+                seedPromotions(database);
+                seedUsers(database);
             });
         }
     };
@@ -148,6 +159,48 @@ public abstract class AppDatabase extends RoomDatabase {
             product.setPrice(price);
             product.setActive(true);
             db.productDao().insert(product);
+        }
+    }
+
+    // ── Seed 3 mã giảm giá mẫu ──────────────────────────────────
+    private static void seedPromotions(AppDatabase db) {
+        // {code, type, value}
+        Object[][] promos = {
+                {"CAFE10K",   Constants.PROMO_CASH,    10000.0},
+                {"WELCOME50", Constants.PROMO_CASH,    50000.0},
+                {"MEMBER20",  Constants.PROMO_PERCENT, 20.0}
+        };
+
+        long now = System.currentTimeMillis();
+        for (Object[] row : promos) {
+            PromotionEntity p = new PromotionEntity();
+            p.setCode((String) row[0]);
+            p.setType((String) row[1]);
+            p.setValue((double) row[2]);
+            p.setActive(true);
+            p.setExpiresAt(0);     // 0 = không hết hạn
+            p.setCreatedAt(now);
+            db.promotionDao().insert(p);
+        }
+    }
+
+    // ── Seed 2 user mẫu ──────────────────────────────────────────
+    private static void seedUsers(AppDatabase db) {
+        long now = System.currentTimeMillis();
+        // {username, plain password, full name}
+        Object[][] users = {
+                {"staff", "123456",   "Nhân viên Demo"},
+                {"admin", "admin123", "Quản lý Demo"}
+        };
+
+        for (Object[] row : users) {
+            UserEntity u = new UserEntity();
+            u.setUsername((String) row[0]);
+            u.setPasswordHash(PasswordUtils.hashPassword((String) row[1]));
+            u.setFullName((String) row[2]);
+            u.setActive(true);
+            u.setCreatedAt(now);
+            db.userDao().insert(u);
         }
     }
 }

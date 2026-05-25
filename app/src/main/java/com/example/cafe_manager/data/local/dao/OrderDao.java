@@ -45,4 +45,17 @@ public interface OrderDao {
     @Query("SELECT * FROM orders WHERE status = :status ORDER BY created_at DESC")
     LiveData<List<OrderWithItems>> getOrdersWithItemsByStatus(String status);
 
+    /** Cho HistoryActivity — list order PAID trong khoảng thời gian. */
+    @Transaction
+    @Query("SELECT * FROM orders WHERE status = :status " +
+            "AND paid_at BETWEEN :fromMs AND :toMs " +
+            "ORDER BY paid_at DESC")
+    LiveData<List<OrderWithItems>> getPaidOrdersInRange(
+            String status, long fromMs, long toMs);
+
+    /** Count order PAID trong khoảng. */
+    @Query("SELECT COUNT(*) FROM orders WHERE status = :status " +
+            "AND paid_at BETWEEN :fromMs AND :toMs")
+    LiveData<Integer> countPaidInRange(String status, long fromMs, long toMs);
+
 }

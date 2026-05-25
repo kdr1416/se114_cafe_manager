@@ -157,4 +157,49 @@ public class OrderViewModel extends AndroidViewModel {
                 }
         );
     }
+
+    /** Thêm các món trong cart vào order existing (mode "gọi thêm món"). */
+    public void addItemsToExistingOrder() {
+        int orderId = cartManager.getPendingOrderId();
+        List<CartItem> items = cartManager.getItems();
+
+        if (orderId <= 0) {
+            errorMessageLiveData.setValue("Không xác định được order.");
+            return;
+        }
+        if (items.isEmpty()) {
+            errorMessageLiveData.setValue("Giỏ hàng đang trống.");
+            return;
+        }
+
+        loadingLiveData.setValue(true);
+
+        orderRepository.addItemsToOrder(
+                orderId,
+                items,
+                new RepositoryCallback<Long>() {
+                    @Override
+                    public void onSuccess(Long resultOrderId) {
+                        loadingLiveData.setValue(false);
+                        cartManager.clearCart();
+                        refreshCartState();
+                        confirmSuccessLiveData.setValue(resultOrderId);
+                    }
+
+                    @Override
+                    public void onError(Exception exception) {
+                        loadingLiveData.setValue(false);
+                        errorMessageLiveData.setValue(
+                                exception != null
+                                        ? exception.getMessage()
+                                        : "Thêm món thất bại."
+                        );
+                    }
+                }
+        );
+    }
+
+    public boolean isAddMode() {
+        return cartManager.isAddMode();
+    }
 }
