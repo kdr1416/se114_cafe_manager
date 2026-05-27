@@ -1,259 +1,159 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-
     android:id="@+id/root"
-
     android:layout_width="match_parent"
-
     android:layout_height="match_parent"
-
     android:orientation="vertical"
-
     android:background="@color/bg_primary">
 
-	<include
-
+    <include
         android:id="@+id/top_bar"
-
         layout="@layout/component_top_bar" />
 
-	<androidx.core.widget.NestedScrollView
-
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-
         android:layout_height="0dp"
-
         android:layout_weight="1"
-
         android:fillViewport="true">
 
-		<LinearLayout
-
+        <LinearLayout
             android:layout_width="match_parent"
-
             android:layout_height="wrap_content"
-
             android:orientation="vertical"
-
             android:padding="@dimen/spacing_lg">
 
-			<!-- Stats row: 2 card -->
-
-			<LinearLayout
-
+            <!-- Stats row: 2 card -->
+            <LinearLayout
                 android:layout_width="match_parent"
-
                 android:layout_height="wrap_content"
-
                 android:orientation="horizontal">
 
-				<LinearLayout
-
+                <LinearLayout
                     android:layout_width="0dp"
-
                     android:layout_height="wrap_content"
-
                     android:layout_weight="1"
-
                     android:orientation="vertical"
-
                     android:background="@drawable/bg_card"
-
                     android:padding="@dimen/spacing_lg"
-
                     android:layout_marginEnd="@dimen/spacing_md">
 
-					<TextView
-
+                    <TextView
                         android:layout_width="wrap_content"
-
                         android:layout_height="wrap_content"
-
                         android:text="@string/label_active_tables"
-
                         android:textAppearance="@style/TextAppearance.Cafe.Caption" />
 
-					<TextView
-
+                    <TextView
                         android:id="@+id/tv_active_count"
-
                         android:layout_width="wrap_content"
-
                         android:layout_height="wrap_content"
-
                         android:textAppearance="@style/TextAppearance.Cafe.Display"
-
                         android:layout_marginTop="@dimen/spacing_sm"
-
                         tools:text="4/10" />
 
-					<TextView
-
+                    <TextView
                         android:layout_width="wrap_content"
-
                         android:layout_height="wrap_content"
-
                         android:text="Đang có khách"
-
                         android:textAppearance="@style/TextAppearance.Cafe.Caption"
-
                         android:layout_marginTop="@dimen/spacing_xs" />
 
-				</LinearLayout>
+                </LinearLayout>
 
-				<LinearLayout
-
+                <LinearLayout
                     android:layout_width="0dp"
-
                     android:layout_height="wrap_content"
-
                     android:layout_weight="1"
-
                     android:orientation="vertical"
-
                     android:background="@drawable/bg_card"
-
                     android:padding="@dimen/spacing_lg">
 
-					<TextView
-
+                    <TextView
                         android:layout_width="wrap_content"
-
                         android:layout_height="wrap_content"
-
                         android:text="@string/label_empty_tables"
-
                         android:textAppearance="@style/TextAppearance.Cafe.Caption" />
 
-					<TextView
-
+                    <TextView
                         android:id="@+id/tv_empty_count"
-
                         android:layout_width="wrap_content"
-
                         android:layout_height="wrap_content"
-
                         android:textAppearance="@style/TextAppearance.Cafe.Display"
-
                         android:layout_marginTop="@dimen/spacing_sm"
-
                         tools:text="6" />
 
-					<TextView
-
+                    <TextView
                         android:layout_width="wrap_content"
-
                         android:layout_height="wrap_content"
-
                         android:text="Sẵn sàng nhận khách"
-
                         android:textAppearance="@style/TextAppearance.Cafe.Caption"
-
                         android:layout_marginTop="@dimen/spacing_xs" />
 
-				</LinearLayout>
+                </LinearLayout>
 
-			</LinearLayout>
+            </LinearLayout>
 
-			<!-- Legend -->
-
-			<LinearLayout
-
+            <!-- Legend -->
+            <LinearLayout
                 android:layout_width="match_parent"
-
                 android:layout_height="wrap_content"
-
                 android:orientation="vertical"
-
                 android:background="@drawable/bg_card"
-
                 android:padding="@dimen/spacing_lg"
-
                 android:layout_marginTop="@dimen/spacing_md">
 
-				<TextView
-
+                <TextView
                     android:layout_width="wrap_content"
-
                     android:layout_height="wrap_content"
-
                     android:text="@string/label_status"
-
                     android:textAppearance="@style/TextAppearance.Cafe.SectionLabel" />
 
-				<LinearLayout
-
+                <LinearLayout
                     android:layout_width="wrap_content"
-
                     android:layout_height="wrap_content"
-
                     android:orientation="horizontal"
-
                     android:layout_marginTop="@dimen/spacing_sm">
 
-					<TextView
-
+                    <TextView
                         style="@style/Widget.Cafe.Badge"
-
                         android:layout_width="wrap_content"
-
                         android:layout_height="wrap_content"
-
                         android:text="@string/status_empty"
-
                         android:textColor="@color/success"
-
                         android:background="@drawable/bg_badge_success" />
 
-					<TextView
-
+                    <TextView
                         style="@style/Widget.Cafe.Badge"
-
                         android:layout_width="wrap_content"
-
                         android:layout_height="wrap_content"
-
                         android:text="@string/status_occupied"
-
                         android:textColor="@color/warning"
-
                         android:background="@drawable/bg_badge_warning"
-
                         android:layout_marginStart="@dimen/spacing_sm" />
 
-				</LinearLayout>
+                </LinearLayout>
 
-			</LinearLayout>
+            </LinearLayout>
 
-			<!-- Grid bàn -->
-
-			<androidx.recyclerview.widget.RecyclerView
-
+            <!-- Grid bàn -->
+            <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_tables"
-
                 android:layout_width="match_parent"
-
                 android:layout_height="wrap_content"
-
                 android:layout_marginTop="@dimen/spacing_md"
-
                 android:nestedScrollingEnabled="false"
-
                 android:clipToPadding="false"
-
+                android:layoutAnimation="@anim/layout_fall_down"
                 tools:listitem="@layout/item_table" />
 
-		</LinearLayout>
+        </LinearLayout>
 
-	</androidx.core.widget.NestedScrollView>
+    </androidx.core.widget.NestedScrollView>
 
-	<include
-
+    <include
         android:id="@+id/bottom_nav"
-
         layout="@layout/component_bottom_nav" />
 
 </LinearLayout>

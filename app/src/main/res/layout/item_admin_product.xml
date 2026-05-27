@@ -10,6 +10,7 @@
     android:padding="@dimen/spacing_lg"
     android:layout_marginBottom="@dimen/spacing_md">
 
+    <!-- iv_thumb: Bổ sung theo yêu cầu instruction 3 -->
     <ImageView
         android:id="@+id/iv_thumb"
         android:layout_width="@dimen/thumb_size"
@@ -28,14 +29,14 @@
         android:layout_marginStart="@dimen/spacing_md">
 
         <TextView
-            android:id="@+id/tv_name"
+            android:id="@+id/tv_product_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="@style/TextAppearance.Cafe.BodyBold"
             tools:text="Cà phê sữa" />
 
         <TextView
-            android:id="@+id/tv_meta"
+            android:id="@+id/tv_product_meta"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="@style/TextAppearance.Cafe.Caption"
@@ -58,7 +59,7 @@
         android:orientation="vertical">
 
         <ImageButton
-            android:id="@+id/btn_visible"
+            android:id="@+id/btn_toggle"
             android:layout_width="36dp"
             android:layout_height="36dp"
             android:src="@drawable/ic_eye"

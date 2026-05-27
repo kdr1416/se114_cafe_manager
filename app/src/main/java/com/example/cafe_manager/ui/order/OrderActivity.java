@@ -9,17 +9,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafe_manager.R;
+import com.example.cafe_manager.ui.common.BaseActivity;
 import com.example.cafe_manager.ui.table.TableActivity;
 import com.example.cafe_manager.util.CurrencyUtils;
 import com.example.cafe_manager.viewmodel.OrderViewModel;
 
-public class OrderActivity extends AppCompatActivity {
+public class OrderActivity extends BaseActivity {
 
     private OrderViewModel viewModel;
     private OrderItemAdapter adapter;

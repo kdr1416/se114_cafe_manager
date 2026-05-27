@@ -7,19 +7,19 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafe_manager.R;
+import com.example.cafe_manager.ui.common.BaseActivity;
 import com.example.cafe_manager.ui.table.TableActivity;
 import com.example.cafe_manager.util.CurrencyUtils;
 import com.example.cafe_manager.util.DateTimeUtils;
 import com.example.cafe_manager.util.StatusUtils;
 import com.example.cafe_manager.viewmodel.OrderDetailViewModel;
 
-public class InvoiceActivity extends AppCompatActivity {
+public class InvoiceActivity extends BaseActivity {
 
     public static final String EXTRA_ORDER_ID = "order_id";
     public static final String EXTRA_TABLE_NAME = "table_name";
@@ -63,7 +63,6 @@ public class InvoiceActivity extends AppCompatActivity {
 
         title.setText(R.string.title_invoice);
         caption.setText(R.string.caption_invoice);
-        // Invoice là điểm cuối — back = quay về Tables luôn
         btnBack.setOnClickListener(v -> navigateBackToTables());
         btnRight.setVisibility(View.GONE);
     }
@@ -123,7 +122,6 @@ public class InvoiceActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        // Override back hardware → cũng về Tables, không quay lại Payment
         navigateBackToTables();
     }
 

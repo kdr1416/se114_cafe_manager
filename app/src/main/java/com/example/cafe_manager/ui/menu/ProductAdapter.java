@@ -3,7 +3,7 @@ package com.example.cafe_manager.ui.menu;
 import android.view.LayoutInflater;
 
 import android.view.View;
-
+import com.example.cafe_manager.util.ImageLoader;
 import android.view.ViewGroup;
 
 import android.widget.ImageButton;
@@ -25,6 +25,7 @@ import com.example.cafe_manager.R;
 import com.example.cafe_manager.data.local.entity.ProductEntity;
 
 import com.example.cafe_manager.util.CurrencyUtils;
+
 
 public class ProductAdapter extends ListAdapter<ProductEntity, ProductAdapter.ProductVH> {
 
@@ -106,7 +107,11 @@ public class ProductAdapter extends ListAdapter<ProductEntity, ProductAdapter.Pr
 
             tvCategoryTag.setVisibility(View.GONE);
 
-            ivMedia.setImageResource(R.drawable.ic_coffee);
+            ImageLoader.loadProductImage(
+                    itemView.getContext(),
+                    ivMedia,
+                    product.getImageUrl()   // null/empty → fallback ic_coffee
+            );
 
             btnAdd.setOnClickListener(v -> {
 
@@ -137,8 +142,8 @@ public class ProductAdapter extends ListAdapter<ProductEntity, ProductAdapter.Pr
                     return o.getProductName().equals(n.getProductName())
 
                             && o.getPrice() == n.getPrice()
-
-                            && o.isActive() == n.isActive();
+                            && o.isActive() == n.isActive()
+                            && o.getCategoryId() == n.getCategoryId();
 
                 }
 

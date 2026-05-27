@@ -84,11 +84,12 @@ public class AdminMenuViewModel extends AndroidViewModel {
         selectedCategoryIdLive.setValue(categoryId);
     }
 
-    public void addProduct(int categoryId, String name, double price) {
+    public void addProduct(int categoryId, String name, double price, String imageUrl) {
         ProductEntity p = new ProductEntity();
         p.setCategoryId(categoryId);
         p.setProductName(name);
         p.setPrice(price);
+        p.setImageUrl(imageUrl);
         p.setActive(true);
         p.setCreatedAt(System.currentTimeMillis());
         menuRepository.insertProduct(p);

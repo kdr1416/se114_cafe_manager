@@ -2,8 +2,6 @@ package com.example.cafe_manager.ui.payment;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -13,19 +11,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafe_manager.R;
-import com.example.cafe_manager.ui.table.TableActivity;
+import com.example.cafe_manager.ui.common.BaseActivity;
 import com.example.cafe_manager.util.Constants;
 import com.example.cafe_manager.util.CurrencyUtils;
 import com.example.cafe_manager.viewmodel.OrderDetailViewModel;
 import com.example.cafe_manager.viewmodel.PaymentViewModel;
 
-public class PaymentActivity extends AppCompatActivity {
+public class PaymentActivity extends BaseActivity {
 
     public static final String EXTRA_ORDER_ID = "order_id";
     public static final String EXTRA_TABLE_ID = "table_id";
@@ -140,10 +137,8 @@ public class PaymentActivity extends AppCompatActivity {
         paymentVm.setOrderInfo(orderId, tableId, subtotal);
         detailVm.setOrderId(orderId);
 
-        // Items summary
         detailVm.getItems().observe(this, items -> itemsAdapter.submitList(items));
 
-        // Amounts
         paymentVm.getSubtotal().observe(this, v ->
                 tvSubtotal.setText(CurrencyUtils.formatVnd(v != null ? v : 0)));
         paymentVm.getDiscountAmount().observe(this, v -> {
@@ -155,10 +150,8 @@ public class PaymentActivity extends AppCompatActivity {
         paymentVm.getFinalAmount().observe(this, v ->
                 tvFinalAmount.setText(CurrencyUtils.formatVnd(v != null ? v : 0)));
 
-        // Payment method selection → update radio UI
         paymentVm.getSelectedPaymentMethod().observe(this, this::updateMethodRadios);
 
-        // Loading
         paymentVm.getLoading().observe(this, loading -> {
             boolean isLoading = Boolean.TRUE.equals(loading);
             btnConfirm.setEnabled(!isLoading);
@@ -167,7 +160,6 @@ public class PaymentActivity extends AppCompatActivity {
                     : getString(R.string.btn_confirm_payment));
         });
 
-        // Success → mở Invoice
         paymentVm.getPaySuccess().observe(this, success -> {
             if (Boolean.TRUE.equals(success)) {
                 paymentVm.clearPaySuccess();
@@ -179,7 +171,6 @@ public class PaymentActivity extends AppCompatActivity {
             }
         });
 
-        // Error
         paymentVm.getErrorMessage().observe(this, msg -> {
             if (msg != null && !msg.isEmpty()) {
                 Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
@@ -187,7 +178,6 @@ public class PaymentActivity extends AppCompatActivity {
             }
         });
 
-        // Promo message (success or invalid)
         paymentVm.getPromoMessage().observe(this, msg -> {
             if (msg != null && !msg.isEmpty()) {
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();

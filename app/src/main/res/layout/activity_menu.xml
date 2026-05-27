@@ -69,6 +69,7 @@
             android:layout_height="match_parent"
             android:padding="@dimen/spacing_lg"
             android:clipToPadding="false"
+            android:layoutAnimation="@anim/layout_fall_down"
             tools:listitem="@layout/item_product" />
 
         <include

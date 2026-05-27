@@ -9,7 +9,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -20,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.cafe_manager.R;
 import com.example.cafe_manager.data.local.entity.ProductEntity;
 import com.example.cafe_manager.manager.CartManager;
+import com.example.cafe_manager.ui.common.BaseActivity;
 import com.example.cafe_manager.ui.order.OrderActivity;
 import com.example.cafe_manager.ui.table.TableActivity;
 import com.example.cafe_manager.util.CurrencyUtils;
@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class MenuActivity extends AppCompatActivity {
+public class MenuActivity extends BaseActivity {
 
     private MenuViewModel viewModel;
     private CategoryAdapter categoryAdapter;
