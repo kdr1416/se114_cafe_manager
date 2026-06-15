@@ -44,7 +44,7 @@ public class PaymentActivity extends AppCompatActivity {
     // Views
     private TextView tvSubtotal, tvDiscount, tvFinalAmount;
     private EditText etDiscount;
-    private Button btnApply, btnConfirm;
+    private Button btnApply, btnConfirm, btnSelectPromo;
     private LinearLayout rowCash, rowBanking, rowMomo;
     private ImageView radioCash, radioBanking, radioMomo;
 
@@ -96,6 +96,7 @@ public class PaymentActivity extends AppCompatActivity {
         tvFinalAmount = findViewById(R.id.tv_final_amount);
 
         etDiscount = findViewById(R.id.et_discount);
+        btnSelectPromo = findViewById(R.id.btn_select_promo);
         btnApply = findViewById(R.id.btn_apply);
         btnConfirm = findViewById(R.id.btn_confirm_payment);
 
@@ -131,6 +132,59 @@ public class PaymentActivity extends AppCompatActivity {
             String text = etDiscount.getText().toString().trim();
             paymentVm.applyPromotionCode(text);
         });
+
+        btnSelectPromo.setOnClickListener(v -> showSelectPromotionDialog());
+    }
+
+    private void showSelectPromotionDialog() {
+        androidx.lifecycle.Observer<java.util.List<com.example.cafe_manager.data.local.entity.PromotionEntity>> observer = new androidx.lifecycle.Observer<>() {
+            @Override
+            public void onChanged(java.util.List<com.example.cafe_manager.data.local.entity.PromotionEntity> list) {
+                paymentVm.getAllPromotions().removeObserver(this);
+
+                // Lọc danh sách mã giảm giá khả dụng
+                java.util.List<com.example.cafe_manager.data.local.entity.PromotionEntity> activePromos = new java.util.ArrayList<>();
+                long now = System.currentTimeMillis();
+                if (list != null) {
+                    for (com.example.cafe_manager.data.local.entity.PromotionEntity p : list) {
+                        if (p.isActive() && (p.getExpiresAt() == 0 || p.getExpiresAt() >= now)) {
+                            activePromos.add(p);
+                        }
+                    }
+                }
+
+                View view = android.view.LayoutInflater.from(PaymentActivity.this)
+                        .inflate(R.layout.dialog_select_promotion, null);
+
+                androidx.recyclerview.widget.RecyclerView rv = view.findViewById(R.id.rv_promotions_select);
+                TextView tvEmpty = view.findViewById(R.id.tv_empty);
+
+                android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(PaymentActivity.this)
+                        .setView(view)
+                        .setNegativeButton("Huỷ", null)
+                        .create();
+
+                if (activePromos.isEmpty()) {
+                    rv.setVisibility(View.GONE);
+                    tvEmpty.setVisibility(View.VISIBLE);
+                } else {
+                    rv.setVisibility(View.VISIBLE);
+                    tvEmpty.setVisibility(View.GONE);
+                    rv.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(PaymentActivity.this));
+                    com.example.cafe_manager.ui.promotion.PromotionSelectAdapter selectAdapter =
+                            new com.example.cafe_manager.ui.promotion.PromotionSelectAdapter(p -> {
+                                etDiscount.setText(p.getCode());
+                                paymentVm.applyPromotionCode(p.getCode());
+                                dialog.dismiss();
+                            });
+                    rv.setAdapter(selectAdapter);
+                    selectAdapter.submitList(activePromos);
+                }
+
+                dialog.show();
+            }
+        };
+        paymentVm.getAllPromotions().observe(this, observer);
     }
 
     private void setupViewModels() {

@@ -67,4 +67,30 @@ public class MenuRepository {
                 productDao.setActive(productId, isActive)
         );
     }
+
+    public void insertCategory(CategoryEntity category, Runnable onSuccess) {
+        appExecutors.diskIO().execute(() -> {
+            categoryDao.insert(category);
+            appExecutors.mainThread().execute(onSuccess);
+        });
+    }
+
+    public void updateCategory(CategoryEntity category, Runnable onSuccess) {
+        appExecutors.diskIO().execute(() -> {
+            categoryDao.update(category);
+            appExecutors.mainThread().execute(onSuccess);
+        });
+    }
+
+    public void deleteCategory(int categoryId, Runnable onSuccess, Runnable onError) {
+        appExecutors.diskIO().execute(() -> {
+            int productCount = productDao.getProductCountByCategory(categoryId);
+            if (productCount > 0) {
+                appExecutors.mainThread().execute(onError);
+            } else {
+                categoryDao.deleteById(categoryId);
+                appExecutors.mainThread().execute(onSuccess);
+            }
+        });
+    }
 }

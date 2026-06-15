@@ -8,6 +8,7 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
+import com.example.cafe_manager.data.local.dao.AuditLogDao;
 import com.example.cafe_manager.data.local.dao.CategoryDao;
 import com.example.cafe_manager.data.local.dao.OrderDao;
 import com.example.cafe_manager.data.local.dao.OrderItemDao;
@@ -16,6 +17,7 @@ import com.example.cafe_manager.data.local.dao.ProductDao;
 import com.example.cafe_manager.data.local.dao.PromotionDao;
 import com.example.cafe_manager.data.local.dao.TableDao;
 import com.example.cafe_manager.data.local.dao.UserDao;
+import com.example.cafe_manager.data.local.entity.AuditLogEntity;
 import com.example.cafe_manager.data.local.entity.CategoryEntity;
 import com.example.cafe_manager.data.local.entity.OrderEntity;
 import com.example.cafe_manager.data.local.entity.OrderItemEntity;
@@ -42,9 +44,10 @@ import java.util.List;
                 OrderItemEntity.class,
                 PaymentEntity.class,
                 PromotionEntity.class,
-                UserEntity.class
+                UserEntity.class,
+                AuditLogEntity.class
         },
-        version = 3,
+        version = 4,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -57,6 +60,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract PaymentDao paymentDao();
     public abstract PromotionDao promotionDao();
     public abstract UserDao userDao();
+    public abstract AuditLogDao auditLogDao();
     public abstract OrderTransactionDao orderTransactionDao();
     public abstract PaymentTransactionDao paymentTransactionDao();
 
@@ -184,13 +188,14 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     }
 
-    // ── Seed 2 user mẫu ──────────────────────────────────────────
+    // ── Seed 3 user mẫu ──────────────────────────────────────────
     private static void seedUsers(AppDatabase db) {
         long now = System.currentTimeMillis();
-        // {username, plain password, full name}
+        // {username, plain password, full name, role}
         Object[][] users = {
-                {"staff", "123456",   "Nhân viên Demo"},
-                {"admin", "admin123", "Quản lý Demo"}
+                {"admin",   "admin123",   "Quản trị viên",  Constants.ROLE_ADMIN},
+                {"manager", "manager123", "Quản lý Demo",   Constants.ROLE_MANAGER},
+                {"staff",   "123456",     "Nhân viên Demo", Constants.ROLE_STAFF}
         };
 
         for (Object[] row : users) {
@@ -198,8 +203,10 @@ public abstract class AppDatabase extends RoomDatabase {
             u.setUsername((String) row[0]);
             u.setPasswordHash(PasswordUtils.hashPassword((String) row[1]));
             u.setFullName((String) row[2]);
+            u.setRole((String) row[3]);
             u.setActive(true);
             u.setCreatedAt(now);
+            u.setUpdatedAt(now);
             db.userDao().insert(u);
         }
     }

@@ -32,13 +32,14 @@ import com.example.cafe_manager.ui.admin.AdminMenuActivity;
 import com.example.cafe_manager.ui.auth.LoginActivity;
 import com.example.cafe_manager.ui.dashboard.DashboardActivity;
 import com.example.cafe_manager.ui.history.HistoryActivity;
-
 import com.example.cafe_manager.ui.menu.MenuActivity;
-
 import com.example.cafe_manager.ui.orderslist.OrdersListActivity;
-
+import com.example.cafe_manager.ui.profile.ProfileActivity;
+import com.example.cafe_manager.ui.promotion.PromotionManagementActivity;
+import com.example.cafe_manager.ui.user.UserManagementActivity;
+import com.example.cafe_manager.ui.menu.CategoryManagementActivity;
 import com.example.cafe_manager.util.Constants;
-
+import com.example.cafe_manager.util.PermissionUtils;
 import com.example.cafe_manager.viewmodel.TableViewModel;
 
 public class TableActivity extends AppCompatActivity {
@@ -112,17 +113,49 @@ public class TableActivity extends AppCompatActivity {
 
     private void showOptionsMenu(View anchor) {
         PopupMenu popup = new PopupMenu(this, anchor);
-        popup.getMenu().add(0, 1, 0, "Lịch sử giao dịch");
-        popup.getMenu().add(0, 2, 0, "Báo cáo doanh thu");
+        String role = SessionManager.getInstance(this).getRole();
+
+        popup.getMenu().add(0, 4, 0, "Hồ sơ cá nhân");
+        if (PermissionUtils.canViewReports(role)) {
+            popup.getMenu().add(0, 1, 0, "Lịch sử giao dịch");
+            popup.getMenu().add(0, 2, 0, "Báo cáo doanh thu");
+        }
+        if (PermissionUtils.canManageUsers(role)) {
+            popup.getMenu().add(0, 5, 0, "Quản lý nhân viên");
+        }
+        if (PermissionUtils.canManageTables(role)) {
+            popup.getMenu().add(0, 6, 0, "Quản lý bàn");
+        }
+        if (PermissionUtils.canManagePromotions(role)) {
+            popup.getMenu().add(0, 7, 0, "Quản lý khuyến mãi");
+        }
+        if (PermissionUtils.canManageCategories(role)) {
+            popup.getMenu().add(0, 8, 0, "Quản lý danh mục");
+        }
         popup.getMenu().add(0, 3, 0, "Đăng xuất");
 
         popup.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
+                case 4:
+                    startActivity(new Intent(this, ProfileActivity.class));
+                    return true;
                 case 1:
                     startActivity(new Intent(this, HistoryActivity.class));
                     return true;
                 case 2:
                     startActivity(new Intent(this, DashboardActivity.class));
+                    return true;
+                case 5:
+                    startActivity(new Intent(this, UserManagementActivity.class));
+                    return true;
+                case 6:
+                    startActivity(new Intent(this, TableManagementActivity.class));
+                    return true;
+                case 7:
+                    startActivity(new Intent(this, PromotionManagementActivity.class));
+                    return true;
+                case 8:
+                    startActivity(new Intent(this, CategoryManagementActivity.class));
                     return true;
                 case 3:
                     showLogoutDialog();
@@ -163,7 +196,12 @@ public class TableActivity extends AppCompatActivity {
         navTables.setSelected(true);
         navOrders.setOnClickListener(v -> startActivity(new Intent(this, OrdersListActivity.class)));
 
-        navMenu.setOnClickListener(v -> startActivity(new Intent(this, AdminMenuActivity.class)));
+        String role = SessionManager.getInstance(this).getRole();
+        if (!PermissionUtils.canManageMenu(role)) {
+            navMenu.setVisibility(View.GONE);
+        } else {
+            navMenu.setOnClickListener(v -> startActivity(new Intent(this, AdminMenuActivity.class)));
+        }
     }
 
 

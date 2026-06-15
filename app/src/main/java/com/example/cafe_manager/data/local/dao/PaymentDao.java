@@ -6,6 +6,7 @@ import androidx.room.Insert;
 import androidx.room.Query;
 
 import com.example.cafe_manager.data.local.entity.PaymentEntity;
+import com.example.cafe_manager.model.DailyRevenueRow;
 import com.example.cafe_manager.model.PaymentMethodStatsRow;
 
 import java.util.List;
@@ -37,4 +38,10 @@ public interface PaymentDao {
             "FROM payments WHERE paid_at BETWEEN :fromMs AND :toMs " +
             "GROUP BY payment_method")
     LiveData<List<PaymentMethodStatsRow>> getPaymentMethodStats(long fromMs, long toMs);
+
+    @Query("SELECT strftime('%d/%m', paid_at / 1000, 'unixepoch', 'localtime') AS day_label, " +
+            "COALESCE(SUM(final_amount), 0) AS daily_revenue " +
+            "FROM payments WHERE paid_at BETWEEN :fromMs AND :toMs " +
+            "GROUP BY day_label ORDER BY paid_at ASC")
+    LiveData<List<DailyRevenueRow>> getDailyRevenue(long fromMs, long toMs);
 }

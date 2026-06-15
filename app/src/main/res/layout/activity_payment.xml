@@ -144,9 +144,17 @@
                         android:layout_weight="1"
                         android:background="@drawable/bg_input"
                         android:hint="@string/hint_discount_code"
-                        android:inputType="number"
+                        android:inputType="textCapCharacters"
                         android:paddingHorizontal="@dimen/spacing_md"
                         android:importantForAutofill="no" />
+
+                    <Button
+                        android:id="@+id/btn_select_promo"
+                        style="@style/Widget.Cafe.Button.Secondary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/height_button"
+                        android:text="Chọn"
+                        android:layout_marginStart="@dimen/spacing_sm" />
 
                     <Button
                         android:id="@+id/btn_apply"

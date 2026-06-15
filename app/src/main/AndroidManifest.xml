@@ -60,6 +60,30 @@
             android:exported="false" />
 
         <activity
+            android:name=".ui.user.UserManagementActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.promotion.PromotionManagementActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.menu.CategoryManagementActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.table.TableManagementActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.profile.ProfileActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.profile.ChangePasswordActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".MainActivity"
             android:exported="false" />
     </application>

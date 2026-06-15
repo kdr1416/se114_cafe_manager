@@ -36,5 +36,6 @@ public interface ProductDao {
     @Query("UPDATE products SET is_active = :isActive WHERE product_id = :productId")
     void setActive(int productId, boolean isActive);
 
-
+    @Query("SELECT COUNT(*) FROM products WHERE category_id = :categoryId")
+    int getProductCountByCategory(int categoryId);
 }

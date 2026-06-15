@@ -94,6 +94,10 @@ public class PaymentViewModel extends AndroidViewModel {
         return promoMessageLiveData;
     }
 
+    public LiveData<java.util.List<com.example.cafe_manager.data.local.entity.PromotionEntity>> getAllPromotions() {
+        return promotionRepository.getAll();
+    }
+
     public void clearPaySuccess() {
         paySuccessLiveData.setValue(null);
     }
