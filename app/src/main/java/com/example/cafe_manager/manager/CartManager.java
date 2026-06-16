@@ -176,6 +176,11 @@ public class CartManager {
         );
     }
 
+    public int getProductQuantity(int productId) {
+        CartItem item = findItemByProductId(productId);
+        return item != null ? item.getQuantity() : 0;
+    }
+
     public void clearCart() {
         cartItems.clear();
         currentTableId = -1;

@@ -37,6 +37,9 @@ public interface TableDao {
     @Query("SELECT COUNT(*) FROM orders WHERE table_id = :tableId AND status = :orderStatus")
     int countOrdersByTableAndStatus(int tableId, String orderStatus);
 
+    @Query("UPDATE tables SET area = :newAreaName WHERE area = :oldAreaName")
+    void updateAreaNameInTables(String oldAreaName, String newAreaName);
+
     @Query("DELETE FROM tables")
     void deleteAll();
 }

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card"
+    android:padding="@dimen/spacing_lg"
+    android:layout_marginBottom="@dimen/spacing_sm">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_code"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Cafe.Subtitle"
+                tools:text="CAFE10K" />
+
+            <TextView
+                android:id="@+id/tv_type_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Cafe.Body"
+                android:textColor="@color/accent"
+                android:layout_marginTop="2dp"
+                tools:text="Giảm 10.000 ₫" />
+
+            <TextView
+                android:id="@+id/tv_expires"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                android:layout_marginTop="2dp"
+                tools:text="Không hết hạn" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_status"
+            style="@style/Widget.Cafe.Badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Hoạt động" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:layout_marginTop="@dimen/spacing_sm">
+
+        <TextView
+            android:id="@+id/btn_toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/height_button_sm"
+            android:gravity="center"
+            android:paddingHorizontal="@dimen/spacing_md"
+            android:textAppearance="@style/TextAppearance.Cafe.Caption"
+            android:textStyle="bold"
+            android:textColor="@color/accent"
+            tools:text="Tắt" />
+
+        <TextView
+            android:id="@+id/btn_edit"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/height_button_sm"
+            android:gravity="center"
+            android:paddingHorizontal="@dimen/spacing_md"
+            android:textAppearance="@style/TextAppearance.Cafe.Caption"
+            android:textStyle="bold"
+            android:textColor="@color/info"
+            android:text="Sửa" />
+
+        <TextView
+            android:id="@+id/btn_delete"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/height_button_sm"
+            android:gravity="center"
+            android:paddingHorizontal="@dimen/spacing_md"
+            android:textAppearance="@style/TextAppearance.Cafe.Caption"
+            android:textStyle="bold"
+            android:textColor="@color/error"
+            android:text="Xoá" />
+    </LinearLayout>
+</LinearLayout>

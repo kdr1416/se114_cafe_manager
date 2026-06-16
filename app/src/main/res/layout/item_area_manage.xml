@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/bg_card"
+    android:padding="@dimen/spacing_md"
+    android:layout_marginBottom="@dimen/spacing_sm">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_area_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.Cafe.Subtitle"
+            tools:text="Tầng 1" />
+
+        <TextView
+            android:id="@+id/tv_prefix"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.Cafe.Caption"
+            android:textColor="@color/text_soft"
+            android:layout_marginTop="2dp"
+            tools:text="Tiền tố đặt tên bàn: A" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/btn_edit"
+        android:layout_width="@dimen/height_icon_button"
+        android:layout_height="@dimen/height_icon_button"
+        android:src="@drawable/ic_edit"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Sửa khu vực"
+        android:layout_marginEnd="@dimen/spacing_sm" />
+
+    <ImageButton
+        android:id="@+id/btn_delete"
+        android:layout_width="@dimen/height_icon_button"
+        android:layout_height="@dimen/height_icon_button"
+        android:src="@drawable/ic_close"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Xoá khu vực" />
+</LinearLayout>

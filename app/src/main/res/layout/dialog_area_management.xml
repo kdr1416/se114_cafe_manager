@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="@dimen/spacing_lg">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Danh sách khu vực"
+        android:textAppearance="@style/TextAppearance.Cafe.SectionLabel"
+        android:layout_marginBottom="@dimen/spacing_md" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_areas_list"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:scrollbars="vertical"
+        android:layout_marginBottom="@dimen/spacing_lg"
+        tools:listitem="@layout/item_area_manage" />
+
+    <Button
+        android:id="@+id/btn_add_area"
+        style="@style/Widget.Cafe.Button.Primary"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/height_button"
+        android:text="+ Thêm khu vực mới" />
+</LinearLayout>

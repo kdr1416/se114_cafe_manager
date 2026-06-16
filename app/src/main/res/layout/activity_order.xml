@@ -79,45 +79,7 @@
                     android:importantForAutofill="no"
                     android:inputType="textMultiLine" />
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/border_soft"
-                    android:layout_marginVertical="@dimen/spacing_lg" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/label_discount_membership"
-                    android:textAppearance="@style/TextAppearance.Cafe.BodyBold" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="@dimen/spacing_sm">
-
-                    <EditText
-                        android:id="@+id/edt_discount_code"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_input"
-                        android:hint="@string/hint_enter_discount"
-                        android:padding="@dimen/spacing_md"
-                        android:textAppearance="@style/TextAppearance.Cafe.Body"
-                        android:inputType="textCapCharacters"
-                        android:importantForAutofill="no" />
-
-                    <Button
-                        android:id="@+id/btn_apply_discount"
-                        style="@style/Widget.Cafe.Button.Secondary"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginStart="@dimen/spacing_sm"
-                        android:text="@string/btn_apply_code"
-                        android:paddingHorizontal="@dimen/spacing_md" />
-                </LinearLayout>
 
             </LinearLayout>
         </LinearLayout>

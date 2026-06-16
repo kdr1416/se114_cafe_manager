@@ -58,4 +58,13 @@ public class TableRepository {
             appExecutors.mainThread().execute(onSuccess);
         });
     }
+
+    public void updateTableAreaName(String oldAreaName, String newAreaName, Runnable onSuccess) {
+        appExecutors.diskIO().execute(() -> {
+            tableDao.updateAreaNameInTables(oldAreaName, newAreaName);
+            if (onSuccess != null) {
+                appExecutors.mainThread().execute(onSuccess);
+            }
+        });
+    }
 }

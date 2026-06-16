@@ -19,6 +19,22 @@ public class OrderWithItems {
     )
     private List<OrderItemEntity> items;
 
+    @Relation(
+            parentColumn = "table_id",
+            entityColumn = "table_id",
+            entity = com.example.cafe_manager.data.local.entity.TableEntity.class,
+            projection = {"table_name"}
+    )
+    private String tableName;
+
+    public String getTableName() {
+        return tableName;
+    }
+
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
+    }
+
     public OrderEntity getOrder() {
         return order;
     }

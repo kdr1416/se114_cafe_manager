@@ -140,7 +140,17 @@ public class MenuActivity extends AppCompatActivity {
 
         rvProducts = findViewById(R.id.rv_products);
         rvProducts.setLayoutManager(new GridLayoutManager(this, 2));
-        productAdapter = new ProductAdapter(this::onAddToCart);
+        productAdapter = new ProductAdapter(new ProductAdapter.OnProductQtyChangeListener() {
+            @Override
+            public void onIncrease(ProductEntity product) {
+                viewModel.increaseQuantity(product);
+            }
+
+            @Override
+            public void onDecrease(ProductEntity product) {
+                viewModel.decreaseQuantity(product);
+            }
+        });
         rvProducts.setAdapter(productAdapter);
     }
 
@@ -148,14 +158,21 @@ public class MenuActivity extends AppCompatActivity {
         viewModel = new ViewModelProvider(this).get(MenuViewModel.class);
         viewModel.setCurrentTable(tableId);
 
-        viewModel.getCategories().observe(this, list -> categoryAdapter.submitList(list));
+        viewModel.getCategories().observe(this, list -> {
+            categoryAdapter.submitList(list);
+            productAdapter.setCategoryMap(list);
+        });
 
         switchProductsSource(0);
 
-        viewModel.getCartTotalQuantityLiveData().observe(this,
-                q -> updateCartBar(q, viewModel.getCartTotalAmountLiveData().getValue()));
-        viewModel.getCartTotalAmountLiveData().observe(this,
-                a -> updateCartBar(viewModel.getCartTotalQuantityLiveData().getValue(), a));
+        viewModel.getCartTotalQuantityLiveData().observe(this, q -> {
+            updateCartBar(q, viewModel.getCartTotalAmountLiveData().getValue());
+            productAdapter.notifyDataSetChanged();
+        });
+        viewModel.getCartTotalAmountLiveData().observe(this, a -> {
+            updateCartBar(viewModel.getCartTotalQuantityLiveData().getValue(), a);
+            productAdapter.notifyDataSetChanged();
+        });
     }
 
     private void onCategorySelected(int categoryId) {
@@ -197,10 +214,6 @@ public class MenuActivity extends AppCompatActivity {
         boolean empty = filtered.isEmpty();
         rvProducts.setVisibility(empty ? View.GONE : View.VISIBLE);
         emptyState.setVisibility(empty ? View.VISIBLE : View.GONE);
-    }
-
-    private void onAddToCart(ProductEntity product) {
-        viewModel.addToCart(product);
     }
 
     private void updateCartBar(Integer quantity, Double amount) {

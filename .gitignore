@@ -19,5 +19,14 @@ local.properties
 
 # Local planning / handoff docs not needed in git
 /CONTEXT_HANDOFF.md
-/context se114 project/*.md
+/context se114 project/
 .vs/
+
+# Cline & AI Context Configuration
+.clinerules
+.cline/
+*.clinerules
+
+# Các file nháp hoặc log ngữ cảnh cục bộ
+*.ai.md
+.caveman/

@@ -18,16 +18,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import androidx.recyclerview.widget.GridLayoutManager;
-
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafe_manager.R;
-
 import com.example.cafe_manager.data.local.entity.TableEntity;
-
 import com.example.cafe_manager.manager.CartManager;
 import com.example.cafe_manager.manager.SessionManager;
-
 import com.example.cafe_manager.ui.admin.AdminMenuActivity;
 import com.example.cafe_manager.ui.auth.LoginActivity;
 import com.example.cafe_manager.ui.dashboard.DashboardActivity;
@@ -51,6 +48,8 @@ public class TableActivity extends AppCompatActivity {
     private TableViewModel viewModel;
 
     private TableAdapter adapter;
+
+    private AreaAdapter areaAdapter;
 
     private TextView tvActiveCount;
 
@@ -206,37 +205,39 @@ public class TableActivity extends AppCompatActivity {
 
 
     private void setupRecyclerView() {
+        RecyclerView rvAreas = findViewById(R.id.rv_areas);
+        rvAreas.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        areaAdapter = new AreaAdapter(area -> {
+            viewModel.selectArea(area);
+        });
+        rvAreas.setAdapter(areaAdapter);
 
         RecyclerView rv = findViewById(R.id.rv_tables);
-
         rv.setLayoutManager(new GridLayoutManager(this, 2));
-
         adapter = new TableAdapter(this::onTableClicked);
-
         rv.setAdapter(adapter);
-
     }
 
     private void setupViewModel() {
-
         viewModel = new ViewModelProvider(this).get(TableViewModel.class);
 
         viewModel.getTables().observe(this, list -> {
-
             if (list != null) adapter.submitList(list);
+        });
 
+        viewModel.getAreas().observe(this, areas -> {
+            if (areas != null) areaAdapter.submitList(areas);
+        });
+
+        viewModel.getSelectedArea().observe(this, area -> {
+            if (area != null) areaAdapter.setSelectedArea(area);
         });
 
         viewModel.getOccupiedCount().observe(this, c -> updateActiveStat());
-
         viewModel.getTotalCount().observe(this, c -> updateActiveStat());
-
         viewModel.getEmptyCount().observe(this, empty -> {
-
             if (empty != null) tvEmptyCount.setText(String.valueOf(empty));
-
         });
-
     }
 
     private void updateActiveStat() {

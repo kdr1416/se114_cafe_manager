@@ -31,7 +31,10 @@ import com.example.cafe_manager.util.Constants;
 import com.example.cafe_manager.util.PasswordUtils;
 import com.example.cafe_manager.data.local.dao.OrderTransactionDao;
 import com.example.cafe_manager.data.local.dao.PaymentTransactionDao;
+import com.example.cafe_manager.data.local.dao.AreaDao;
+import com.example.cafe_manager.data.local.entity.AreaEntity;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -45,14 +48,16 @@ import java.util.List;
                 PaymentEntity.class,
                 PromotionEntity.class,
                 UserEntity.class,
-                AuditLogEntity.class
+                AuditLogEntity.class,
+                AreaEntity.class
         },
-        version = 4,
+        version = 7,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
 
     public abstract TableDao tableDao();
+    public abstract AreaDao areaDao();
     public abstract CategoryDao categoryDao();
     public abstract ProductDao productDao();
     public abstract OrderDao orderDao();
@@ -91,22 +96,44 @@ public abstract class AppDatabase extends RoomDatabase {
             super.onCreate(db);
             AppExecutors.getInstance().diskIO().execute(() -> {
                 AppDatabase database = instance;
-                if (database == null) return;
+                if (database != null) {
+                    seedDatabase(database);
+                }
+            });
+        }
 
-                seedTables(database);
-                long[] categoryIds = seedCategories(database);
-                seedProducts(database, categoryIds);
-                seedPromotions(database);
-                seedUsers(database);
+        @Override
+        public void onDestructiveMigration(@NonNull SupportSQLiteDatabase db) {
+            super.onDestructiveMigration(db);
+            AppExecutors.getInstance().diskIO().execute(() -> {
+                AppDatabase database = instance;
+                if (database != null) {
+                    seedDatabase(database);
+                }
             });
         }
     };
+
+    private static void seedDatabase(AppDatabase database) {
+        seedAreas(database);
+        seedTables(database);
+        long[] categoryIds = seedCategories(database);
+        seedProducts(database, categoryIds);
+        seedPromotions(database);
+        seedUsers(database);
+    }
 
     // ── Seed 10 bàn ──────────────────────────────────────────────
     private static void seedTables(AppDatabase db) {
         // capacity: B01-B04 → 2 người, B05-B08 → 4 người, B09-B10 → 6 người
         String[] names = {"B01","B02","B03","B04","B05","B06","B07","B08","B09","B10"};
         int[]   caps  = {  2,   2,   2,   2,   4,   4,   4,   4,   6,   6  };
+        String[] areas = {
+            "Tầng 1", "Tầng 1", "Tầng 1", "Tầng 1",
+            "Tầng 2", "Tầng 2", "Tầng 2",
+            "Ngoài trời", "Ngoài trời",
+            "VIP"
+        };
 
         TableEntity[] tables = new TableEntity[names.length];
         for (int i = 0; i < names.length; i++) {
@@ -114,6 +141,7 @@ public abstract class AppDatabase extends RoomDatabase {
             t.setTableName(names[i]);
             t.setStatus(Constants.TABLE_EMPTY);
             t.setCapacity(caps[i]);
+            t.setArea(areas[i]);
             tables[i] = t;
         }
         db.tableDao().insertAll(Arrays.asList(tables));
@@ -186,6 +214,22 @@ public abstract class AppDatabase extends RoomDatabase {
             p.setCreatedAt(now);
             db.promotionDao().insert(p);
         }
+    }
+
+    // ── Seed 4 khu vực mẫu ───────────────────────────────────────
+    private static void seedAreas(AppDatabase db) {
+        long now = System.currentTimeMillis();
+        String[][] areas = {
+                {"Tầng 1", "A"},
+                {"Tầng 2", "B"},
+                {"Ngoài trời", "C"},
+                {"VIP", "VIP"}
+        };
+        List<AreaEntity> list = new ArrayList<>();
+        for (String[] row : areas) {
+            list.add(new AreaEntity(row[0], row[1], now));
+        }
+        db.areaDao().insertAll(list);
     }
 
     // ── Seed 3 user mẫu ──────────────────────────────────────────

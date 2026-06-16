@@ -104,11 +104,12 @@ public class TableAdapter extends ListAdapter<TableEntity, TableAdapter.TableVH>
 
             tvBadge.setTextColor(itemView.getContext().getColor(badgeColor));
 
-            tvMeta.setText(isEmpty
-
-                    ? itemView.getContext().getString(R.string.format_table_meta_empty)
-
-                    : "Đang có khách");
+            String areaName = table.getArea();
+            if (areaName == null || areaName.trim().isEmpty()) {
+                areaName = "Chưa xếp khu vực";
+            }
+            String statusDesc = isEmpty ? "Trống" : "Có khách";
+            tvMeta.setText(areaName + " · " + statusDesc + " · " + table.getCapacity() + " người");
 
             tvHint.setText(isEmpty
 

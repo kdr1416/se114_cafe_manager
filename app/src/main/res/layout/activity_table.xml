@@ -228,6 +228,22 @@
 
 			</LinearLayout>
 
+			<!-- Khu vực chips -->
+
+			<androidx.recyclerview.widget.RecyclerView
+
+                android:id="@+id/rv_areas"
+
+                android:layout_width="match_parent"
+
+                android:layout_height="wrap_content"
+
+                android:layout_marginTop="@dimen/spacing_md"
+
+                android:clipToPadding="false"
+
+                tools:listitem="@layout/item_category_chip" />
+
 			<!-- Grid bàn -->
 
 			<androidx.recyclerview.widget.RecyclerView

@@ -77,6 +77,31 @@ public class MenuViewModel extends AndroidViewModel {
         refreshCartSummary();
     }
 
+    public void increaseQuantity(ProductEntity product) {
+        if (product == null) {
+            return;
+        }
+        int qty = cartManager.getProductQuantity(product.getProductId());
+        if (qty == 0) {
+            cartManager.addItem(
+                    product.getProductId(),
+                    product.getProductName(),
+                    product.getPrice()
+            );
+        } else {
+            cartManager.increaseQuantity(product.getProductId());
+        }
+        refreshCartSummary();
+    }
+
+    public void decreaseQuantity(ProductEntity product) {
+        if (product == null) {
+            return;
+        }
+        cartManager.decreaseQuantity(product.getProductId());
+        refreshCartSummary();
+    }
+
     public void refreshCartBar() {
         refreshCartSummary();
     }

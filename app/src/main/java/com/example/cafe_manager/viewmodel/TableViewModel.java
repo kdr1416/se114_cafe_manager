@@ -5,19 +5,27 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
 import com.example.cafe_manager.data.local.entity.TableEntity;
+import com.example.cafe_manager.data.local.entity.AreaEntity;
 import com.example.cafe_manager.data.repository.TableRepository;
+import com.example.cafe_manager.data.repository.AreaRepository;
 import com.example.cafe_manager.util.Constants;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TableViewModel extends AndroidViewModel {
 
     private final TableRepository tableRepository;
+    private final AreaRepository areaRepository;
 
-    private final LiveData<List<TableEntity>> tablesLiveData;
+    private final MutableLiveData<String> selectedAreaLiveData = new MutableLiveData<>("Tất cả");
+    private final MediatorLiveData<List<TableEntity>> tablesLiveData = new MediatorLiveData<>();
+    private final LiveData<List<String>> areasLiveData;
     private final LiveData<Integer> totalCountLiveData;
     private final LiveData<Integer> emptyCountLiveData;
     private final LiveData<Integer> occupiedCountLiveData;
@@ -26,8 +34,26 @@ public class TableViewModel extends AndroidViewModel {
         super(application);
 
         this.tableRepository = new TableRepository(application);
+        this.areaRepository = new AreaRepository(application);
 
-        this.tablesLiveData = tableRepository.getAllTables();
+        LiveData<List<TableEntity>> allTables = tableRepository.getAllTables();
+
+        this.areasLiveData = Transformations.map(areaRepository.getAllAreas(), areas -> {
+            List<String> list = new ArrayList<>();
+            list.add("Tất cả");
+            if (areas != null) {
+                for (AreaEntity a : areas) {
+                    String area = a.getAreaName();
+                    if (area != null && !area.trim().isEmpty() && !list.contains(area)) {
+                        list.add(area);
+                    }
+                }
+            }
+            return list;
+        });
+
+        tablesLiveData.addSource(allTables, tables -> filterTables(tables, selectedAreaLiveData.getValue()));
+        tablesLiveData.addSource(selectedAreaLiveData, area -> filterTables(allTables.getValue(), area));
 
         this.totalCountLiveData = Transformations.map(
                 tablesLiveData,
@@ -45,8 +71,38 @@ public class TableViewModel extends AndroidViewModel {
         );
     }
 
+    private void filterTables(List<TableEntity> tables, String area) {
+        if (tables == null) {
+            tablesLiveData.setValue(null);
+            return;
+        }
+        if (area == null || "Tất cả".equals(area)) {
+            tablesLiveData.setValue(tables);
+            return;
+        }
+        List<TableEntity> filtered = new ArrayList<>();
+        for (TableEntity t : tables) {
+            if (area.equals(t.getArea())) {
+                filtered.add(t);
+            }
+        }
+        tablesLiveData.setValue(filtered);
+    }
+
     public LiveData<List<TableEntity>> getTables() {
         return tablesLiveData;
+    }
+
+    public LiveData<List<String>> getAreas() {
+        return areasLiveData;
+    }
+
+    public LiveData<String> getSelectedArea() {
+        return selectedAreaLiveData;
+    }
+
+    public void selectArea(String area) {
+        selectedAreaLiveData.setValue(area);
     }
 
     public LiveData<Integer> getTotalCount() {

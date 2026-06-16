@@ -32,8 +32,6 @@ public class OrderActivity extends AppCompatActivity {
     private Button btnConfirm;
     
     private EditText edtNote;
-    private EditText edtDiscount;
-    private Button btnApplyDiscount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,15 +85,6 @@ public class OrderActivity extends AppCompatActivity {
 
     private void setupExtras() {
         edtNote = findViewById(R.id.edt_order_note);
-        edtDiscount = findViewById(R.id.edt_discount_code);
-        btnApplyDiscount = findViewById(R.id.btn_apply_discount);
-        
-        btnApplyDiscount.setOnClickListener(v -> {
-            String code = edtDiscount.getText().toString().trim();
-            if (!code.isEmpty()) {
-                Toast.makeText(this, "Đã áp dụng mã: " + code, Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     private void setupEmptyState() {

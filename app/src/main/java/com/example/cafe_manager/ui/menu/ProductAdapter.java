@@ -28,20 +28,30 @@ import com.example.cafe_manager.util.CurrencyUtils;
 
 public class ProductAdapter extends ListAdapter<ProductEntity, ProductAdapter.ProductVH> {
 
-    public interface OnAddToCartListener {
-
-        void onAddToCart(ProductEntity product);
-
+    public interface OnProductQtyChangeListener {
+        void onIncrease(ProductEntity product);
+        void onDecrease(ProductEntity product);
     }
 
-    private final OnAddToCartListener listener;
+    private final OnProductQtyChangeListener listener;
+    private final java.util.Map<Integer, String> categoryNameMap = new java.util.HashMap<>();
 
-    public ProductAdapter(OnAddToCartListener listener) {
+    public ProductAdapter(OnProductQtyChangeListener listener) {
 
         super(DIFF);
 
         this.listener = listener;
 
+    }
+
+    public void setCategoryMap(java.util.List<com.example.cafe_manager.data.local.entity.CategoryEntity> categories) {
+        categoryNameMap.clear();
+        if (categories != null) {
+            for (com.example.cafe_manager.data.local.entity.CategoryEntity c : categories) {
+                categoryNameMap.put(c.getCategoryId(), c.getCategoryName());
+            }
+        }
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -62,7 +72,7 @@ public class ProductAdapter extends ListAdapter<ProductEntity, ProductAdapter.Pr
 
     public void onBindViewHolder(@NonNull ProductVH holder, int position) {
 
-        holder.bind(getItem(position), listener);
+        holder.bind(getItem(position), listener, categoryNameMap);
 
     }
 
@@ -77,6 +87,10 @@ public class ProductAdapter extends ListAdapter<ProductEntity, ProductAdapter.Pr
         private final TextView tvCategoryTag;
 
         private final ImageButton btnAdd;
+        private final View layoutQuantity;
+        private final ImageButton btnDecrease;
+        private final TextView tvQuantity;
+        private final ImageButton btnIncrease;
 
         ProductVH(View itemView) {
 
@@ -91,27 +105,67 @@ public class ProductAdapter extends ListAdapter<ProductEntity, ProductAdapter.Pr
             tvCategoryTag = itemView.findViewById(R.id.tv_category_tag);
 
             btnAdd = itemView.findViewById(R.id.btn_add);
+            layoutQuantity = itemView.findViewById(R.id.layout_quantity);
+            btnDecrease = itemView.findViewById(R.id.btn_decrease);
+            tvQuantity = itemView.findViewById(R.id.tv_quantity);
+            btnIncrease = itemView.findViewById(R.id.btn_increase);
 
         }
 
-        void bind(final ProductEntity product, final OnAddToCartListener listener) {
+        void bind(final ProductEntity product, final OnProductQtyChangeListener listener, final java.util.Map<Integer, String> categoryNameMap) {
 
             tvName.setText(product.getProductName());
 
             tvPrice.setText(CurrencyUtils.formatVnd(product.getPrice()));
 
-            // MVP: tạm dùng icon mặc định + tag rỗng.
+            String categoryName = categoryNameMap.get(product.getCategoryId());
+            if (categoryName != null && !categoryName.isEmpty()) {
+                tvCategoryTag.setText(categoryName);
+                tvCategoryTag.setVisibility(View.VISIBLE);
+            } else {
+                tvCategoryTag.setVisibility(View.GONE);
+            }
 
-            // Tối ưu sau: pass thêm Map<categoryId, CategoryEntity> để show tên + đổi icon.
+            int defaultIcon = R.drawable.ic_coffee;
+            if (categoryName != null) {
+                String nameLower = categoryName.toLowerCase();
+                if (nameLower.contains("trà") || nameLower.contains("tea")) {
+                    defaultIcon = R.drawable.ic_tea;
+                } else if (nameLower.contains("bánh") || nameLower.contains("cake") || nameLower.contains("ngọt")) {
+                    defaultIcon = R.drawable.ic_cake;
+                } else if (nameLower.contains("sinh tố") || nameLower.contains("smoothie")) {
+                    defaultIcon = R.drawable.ic_smoothie;
+                }
+            }
 
-            tvCategoryTag.setVisibility(View.GONE);
+            if (product.getImageUrl() != null && !product.getImageUrl().trim().isEmpty()) {
+                com.bumptech.glide.Glide.with(itemView.getContext())
+                        .load(product.getImageUrl().trim())
+                        .placeholder(defaultIcon)
+                        .error(defaultIcon)
+                        .into(ivMedia);
+            } else {
+                ivMedia.setImageResource(defaultIcon);
+            }
 
-            ivMedia.setImageResource(R.drawable.ic_coffee);
+            int quantity = com.example.cafe_manager.manager.CartManager.getInstance().getProductQuantity(product.getProductId());
+            if (quantity > 0) {
+                btnAdd.setVisibility(View.GONE);
+                layoutQuantity.setVisibility(View.VISIBLE);
+                tvQuantity.setText(String.valueOf(quantity));
+            } else {
+                btnAdd.setVisibility(View.VISIBLE);
+                layoutQuantity.setVisibility(View.GONE);
+            }
 
             btnAdd.setOnClickListener(v -> {
-
-                if (listener != null) listener.onAddToCart(product);
-
+                if (listener != null) listener.onIncrease(product);
+            });
+            btnDecrease.setOnClickListener(v -> {
+                if (listener != null) listener.onDecrease(product);
+            });
+            btnIncrease.setOnClickListener(v -> {
+                if (listener != null) listener.onIncrease(product);
             });
 
         }
