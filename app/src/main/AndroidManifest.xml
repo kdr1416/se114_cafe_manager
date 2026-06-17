@@ -11,6 +11,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Cafe_manager">
+        
         <activity
             android:name=".ui.payment.PaymentActivity"
             android:exported="false" />
@@ -32,6 +33,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".ui.shift.ShiftTemplateActivity" android:exported="false" />
+        <activity android:name=".ui.shift.ShiftScheduleActivity" android:exported="false" />
+        <activity android:name=".ui.shift.MyShiftActivity" android:exported="false" />
+        
     </application>
 
 </manifest>
