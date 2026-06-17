@@ -34,8 +34,20 @@ public class MenuRepository {
         return productDao.getAllActive();
     }
 
+    public LiveData<List<ProductEntity>> getAllProducts() {
+        return productDao.getAll();
+    }
+
+    public LiveData<List<CategoryEntity>> getAllCategories() {
+        return categoryDao.getAll();
+    }
+
     public LiveData<List<ProductEntity>> getProductsByCategory(int categoryId) {
         return productDao.getByCategoryId(categoryId);
+    }
+
+    public LiveData<List<ProductEntity>> getProductsByCategoryIncludingInactive(int categoryId) {
+        return productDao.getByCategoryIdIncludingInactive(categoryId);
     }
 
     public void insertProduct(ProductEntity product) {
@@ -54,5 +66,31 @@ public class MenuRepository {
         appExecutors.diskIO().execute(() ->
                 productDao.setActive(productId, isActive)
         );
+    }
+
+    public void insertCategory(CategoryEntity category, Runnable onSuccess) {
+        appExecutors.diskIO().execute(() -> {
+            categoryDao.insert(category);
+            appExecutors.mainThread().execute(onSuccess);
+        });
+    }
+
+    public void updateCategory(CategoryEntity category, Runnable onSuccess) {
+        appExecutors.diskIO().execute(() -> {
+            categoryDao.update(category);
+            appExecutors.mainThread().execute(onSuccess);
+        });
+    }
+
+    public void deleteCategory(int categoryId, Runnable onSuccess, Runnable onError) {
+        appExecutors.diskIO().execute(() -> {
+            int productCount = productDao.getProductCountByCategory(categoryId);
+            if (productCount > 0) {
+                appExecutors.mainThread().execute(onError);
+            } else {
+                categoryDao.deleteById(categoryId);
+                appExecutors.mainThread().execute(onSuccess);
+            }
+        });
     }
 }

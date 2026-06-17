@@ -1,5 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Base -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Surfaces -->
+    <color name="bg_primary">#FFF8F6F3</color>
+    <color name="surface">#FFFFFFFF</color>
+    <color name="surface_soft">#FFFCFBF9</color>
+    <color name="media_bg">#FFF6F1EC</color>
+    <color name="border">#FFE5E0DA</color>
+    <color name="border_soft">#FFECECEC</color>
+
+    <!-- Brand (chocolate accent) -->
+    <color name="accent">#FFA77456</color>
+    <color name="accent_dark">#FF9B6A4B</color>
+    <color name="accent_soft">#FFF6EEE8</color>
+
+    <!-- Text -->
+    <color name="text_primary">#FF1F2937</color>
+    <color name="text_soft">#FF6B7280</color>
+    <color name="text_mute">#FF9CA3AF</color>
+    <color name="text_on_accent">#FFFFFFFF</color>
+
+    <!-- Status: table empty / order paid -->
+    <color name="success">#FF1F9D63</color>
+    <color name="success_soft">#FFEAF8F1</color>
+
+    <!-- Status: table occupied / order confirmed -->
+    <color name="warning">#FFD97745</color>
+    <color name="warning_soft">#FFFFF2EA</color>
+
+    <!-- Error / Danger -->
+    <color name="error">#FFE11D48</color>
+
+    <!-- Optional info color -->
+    <color name="info">#FF2563EB</color>
+
+    <!-- Shadows / scrim -->
+    <color name="shadow_soft">#1A1F2937</color>
 </resources>

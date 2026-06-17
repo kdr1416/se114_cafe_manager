@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+    xmlns:tools="http://schemas.android.com/tools"
+
+    android:layout_width="match_parent"
+
+    android:layout_height="wrap_content"
+
+    android:orientation="vertical"
+
+    android:background="@drawable/bg_card"
+
+    android:padding="@dimen/spacing_lg"
+
+    android:layout_margin="@dimen/spacing_xs"
+
+    android:clickable="true"
+
+    android:focusable="true">
+
+	<LinearLayout
+
+        android:layout_width="match_parent"
+
+        android:layout_height="wrap_content"
+
+        android:orientation="horizontal"
+
+        android:gravity="center_vertical">
+
+		<ImageView
+
+            android:layout_width="@dimen/table_icon_size"
+
+            android:layout_height="@dimen/table_icon_size"
+
+            android:src="@drawable/ic_table"
+
+            android:background="@drawable/bg_media"
+
+            android:padding="@dimen/spacing_sm"
+
+            android:contentDescription="@null" />
+
+		<View
+
+            android:layout_width="0dp"
+
+            android:layout_height="1dp"
+
+            android:layout_weight="1" />
+
+		<TextView
+
+            android:id="@+id/tv_status_badge"
+
+            style="@style/Widget.Cafe.Badge"
+
+            android:layout_width="wrap_content"
+
+            android:layout_height="wrap_content"
+
+            tools:text="Trống"
+
+            tools:background="@drawable/bg_badge_success" />
+
+	</LinearLayout>
+
+	<TextView
+
+        android:id="@+id/tv_table_name"
+
+        android:layout_width="wrap_content"
+
+        android:layout_height="wrap_content"
+
+        android:textAppearance="@style/TextAppearance.Cafe.Subtitle"
+
+        android:layout_marginTop="@dimen/spacing_md"
+
+        tools:text="B01" />
+
+	<TextView
+
+        android:id="@+id/tv_table_meta"
+
+        android:layout_width="wrap_content"
+
+        android:layout_height="wrap_content"
+
+        android:textAppearance="@style/TextAppearance.Cafe.Caption"
+
+        android:layout_marginTop="@dimen/spacing_xs"
+
+        tools:text="Sẵn sàng phục vụ khách mới" />
+
+	<View
+
+        android:layout_width="match_parent"
+
+        android:layout_height="1dp"
+
+        android:background="@color/border"
+
+        android:layout_marginTop="@dimen/spacing_md" />
+
+	<TextView
+
+        android:id="@+id/tv_table_hint"
+
+        android:layout_width="wrap_content"
+
+        android:layout_height="wrap_content"
+
+        android:textColor="@color/text_mute"
+
+        android:textSize="11sp"
+
+        android:textStyle="bold"
+
+        android:layout_marginTop="@dimen/spacing_md"
+
+        tools:text="Chạm để bắt đầu order" />
+
+</LinearLayout>

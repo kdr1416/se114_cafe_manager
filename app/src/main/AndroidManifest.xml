@@ -11,33 +11,81 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Cafe_manager">
-        
+
+        <!-- LAUNCHER giờ là LoginActivity -->
         <activity
-            android:name=".ui.payment.PaymentActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.order.OrderActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.menu.MenuActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.table.TableActivity"
-            android:exported="false" />
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
+            android:name=".ui.auth.LoginActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".ui.shift.ShiftTemplateActivity" android:exported="false" />
-        <activity android:name=".ui.shift.ShiftScheduleActivity" android:exported="false" />
-        <activity android:name=".ui.shift.MyShiftActivity" android:exported="false" />
-        
+        <activity
+            android:name=".ui.table.TableActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.menu.MenuActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.order.OrderActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.payment.PaymentActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.payment.InvoiceActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.orderslist.OrdersListActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.admin.AdminMenuActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.history.HistoryActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.dashboard.DashboardActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.user.UserManagementActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.promotion.PromotionManagementActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.menu.CategoryManagementActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.table.TableManagementActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.profile.ProfileActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.profile.ChangePasswordActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Empty state dùng chung.
+    - icon_empty (ImageView): mặc định ly cà phê. Set src qua code nếu muốn đổi.
+    - tv_empty_message (TextView): nội dung text. Set qua code hoặc tools:text.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="@dimen/spacing_xxl">
+
+    <ImageView
+        android:id="@+id/icon_empty"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@drawable/ic_coffee"
+        android:background="@drawable/bg_media"
+        android:padding="@dimen/spacing_lg"
+        android:contentDescription="@null" />
+
+    <TextView
+        android:id="@+id/tv_empty_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.Cafe.Body"
+        android:textColor="@color/text_soft"
+        android:gravity="center"
+        android:layout_marginTop="@dimen/spacing_lg"
+        tools:text="Chưa có dữ liệu" />
+</LinearLayout>

@@ -30,4 +30,7 @@ public interface CategoryDao {
 
     @Query("UPDATE categories SET is_active = :isActive WHERE category_id = :categoryId")
     void setActive(int categoryId, boolean isActive);
+
+    @Query("DELETE FROM categories WHERE category_id = :categoryId")
+    void deleteById(int categoryId);
 }

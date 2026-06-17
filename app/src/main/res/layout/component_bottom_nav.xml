@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Bottom navigation 3 tab: Bàn | Order | Menu.
+    Activity gọi setSelected(true/false) trên tab tương ứng,
+    set click → Intent.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@drawable/bg_bottom_nav"
+    android:padding="@dimen/spacing_sm"
+    android:layout_margin="@dimen/spacing_md">
+
+    <LinearLayout
+        android:id="@+id/nav_tables"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/bg_nav_item_selector"
+        android:padding="@dimen/spacing_sm"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:id="@+id/icon_nav_tables"
+            android:layout_width="@dimen/icon_md"
+            android:layout_height="@dimen/icon_md"
+            android:src="@drawable/ic_table"
+            android:contentDescription="@string/nav_tables" />
+
+        <TextView
+            android:id="@+id/text_nav_tables"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nav_tables"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/text_soft"
+            android:layout_marginTop="@dimen/spacing_xs" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/nav_orders"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/bg_nav_item_selector"
+        android:padding="@dimen/spacing_sm"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:id="@+id/icon_nav_orders"
+            android:layout_width="@dimen/icon_md"
+            android:layout_height="@dimen/icon_md"
+            android:src="@drawable/ic_receipt"
+            android:contentDescription="@string/nav_orders" />
+
+        <TextView
+            android:id="@+id/text_nav_orders"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nav_orders"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/text_soft"
+            android:layout_marginTop="@dimen/spacing_xs" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/nav_menu"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/bg_nav_item_selector"
+        android:padding="@dimen/spacing_sm"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:id="@+id/icon_nav_menu"
+            android:layout_width="@dimen/icon_md"
+            android:layout_height="@dimen/icon_md"
+            android:src="@drawable/ic_menu_book"
+            android:contentDescription="@string/nav_menu" />
+
+        <TextView
+            android:id="@+id/text_nav_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nav_menu"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/text_soft"
+            android:layout_marginTop="@dimen/spacing_xs" />
+    </LinearLayout>
+</LinearLayout>

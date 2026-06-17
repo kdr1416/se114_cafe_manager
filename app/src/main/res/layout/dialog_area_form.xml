@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="@dimen/spacing_lg">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tên khu vực"
+        android:textAppearance="@style/TextAppearance.Cafe.SectionLabel" />
+
+    <EditText
+        android:id="@+id/et_area_name"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/height_input"
+        android:background="@drawable/bg_input"
+        android:paddingHorizontal="@dimen/spacing_md"
+        android:inputType="text"
+        android:singleLine="true"
+        android:hint="VD: Sân thượng"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:autofillHints="off" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tiền tố đặt tên bàn (Prefix)"
+        android:textAppearance="@style/TextAppearance.Cafe.SectionLabel"
+        android:layout_marginTop="@dimen/spacing_md" />
+
+    <EditText
+        android:id="@+id/et_prefix"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/height_input"
+        android:background="@drawable/bg_input"
+        android:paddingHorizontal="@dimen/spacing_md"
+        android:inputType="textCapCharacters"
+        android:singleLine="true"
+        android:hint="VD: ST"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:autofillHints="off" />
+</LinearLayout>

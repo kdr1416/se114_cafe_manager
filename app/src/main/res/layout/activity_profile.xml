@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_primary">
+
+    <include
+        android:id="@+id/top_bar"
+        layout="@layout/component_top_bar" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_lg">
+
+            <!-- Profile card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/spacing_xl">
+
+                <!-- Avatar circle with initials -->
+                <TextView
+                    android:id="@+id/tv_avatar"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:gravity="center"
+                    android:background="@drawable/bg_media"
+                    android:textAppearance="@style/TextAppearance.Cafe.Display"
+                    android:textColor="@color/accent"
+                    tools:text="NV" />
+
+                <TextView
+                    android:id="@+id/tv_full_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.Title"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    tools:text="Nhân viên Demo" />
+
+                <TextView
+                    android:id="@+id/tv_username"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                    android:textColor="@color/text_soft"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    tools:text="@staff" />
+
+                <TextView
+                    android:id="@+id/tv_role"
+                    style="@style/Widget.Cafe.Badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_badge_accent"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    tools:text="STAFF" />
+
+                <TextView
+                    android:id="@+id/tv_phone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.Body"
+                    android:textColor="@color/text_soft"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    tools:text="0901234567" />
+            </LinearLayout>
+
+            <!-- Change password button -->
+            <Button
+                android:id="@+id/btn_change_password"
+                style="@style/Widget.Cafe.Button.Secondary"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/height_button"
+                android:text="Đổi mật khẩu"
+                android:layout_marginTop="@dimen/spacing_lg" />
+
+            <!-- Logout button -->
+            <Button
+                android:id="@+id/btn_logout"
+                style="@style/Widget.Cafe.Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/height_button"
+                android:text="Đăng xuất"
+                android:layout_marginTop="@dimen/spacing_md" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

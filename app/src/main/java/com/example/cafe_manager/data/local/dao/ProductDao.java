@@ -14,8 +14,14 @@ public interface ProductDao {
     @Query("SELECT * FROM products WHERE is_active = 1 ORDER BY product_name ASC")
     LiveData<List<ProductEntity>> getAllActive();
 
+    @Query("SELECT * FROM products ORDER BY product_name ASC")
+    LiveData<List<ProductEntity>> getAll();
+
     @Query("SELECT * FROM products WHERE category_id = :categoryId AND is_active = 1 ORDER BY product_name ASC")
     LiveData<List<ProductEntity>> getByCategoryId(int categoryId);
+
+    @Query("SELECT * FROM products WHERE category_id = :categoryId ORDER BY product_name ASC")
+    LiveData<List<ProductEntity>> getByCategoryIdIncludingInactive(int categoryId);
 
 
     @Query("SELECT * FROM products WHERE product_id = :productId")
@@ -30,5 +36,6 @@ public interface ProductDao {
     @Query("UPDATE products SET is_active = :isActive WHERE product_id = :productId")
     void setActive(int productId, boolean isActive);
 
-
+    @Query("SELECT COUNT(*) FROM products WHERE category_id = :categoryId")
+    int getProductCountByCategory(int categoryId);
 }

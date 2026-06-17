@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/bg_card"
+    android:padding="@dimen/spacing_lg"
+    android:layout_marginBottom="@dimen/spacing_md">
+
+    <!-- Info column -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_full_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.Cafe.Title"
+            tools:text="Nhân viên Demo" />
+
+        <TextView
+            android:id="@+id/tv_username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.Cafe.Caption"
+            android:textColor="@color/text_soft"
+            android:layout_marginTop="2dp"
+            tools:text="@staff" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="@dimen/spacing_sm">
+
+            <TextView
+                android:id="@+id/tv_role"
+                style="@style/Widget.Cafe.Badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_badge_accent"
+                tools:text="STAFF" />
+
+            <TextView
+                android:id="@+id/tv_status"
+                style="@style/Widget.Cafe.Badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_sm"
+                tools:text="Hoạt động"
+                tools:background="@drawable/bg_badge_success" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Action buttons -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <ImageButton
+            android:id="@+id/btn_edit"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_edit"
+            android:background="@drawable/bg_icon_button"
+            android:scaleType="centerInside"
+            android:contentDescription="Sửa" />
+
+        <ImageButton
+            android:id="@+id/btn_toggle_active"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_eye"
+            android:background="@drawable/bg_icon_button"
+            android:scaleType="centerInside"
+            android:contentDescription="Khóa/Mở"
+            android:layout_marginTop="@dimen/spacing_sm" />
+    </LinearLayout>
+</LinearLayout>

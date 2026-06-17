@@ -1,3 +1,115 @@
 <resources>
-    <string name="app_name">cafe_manager</string>
+    <string name="app_name">Cafe Manager</string>
+
+    <!-- Table screen -->
+    <string name="title_tables">Sơ đồ bàn</string>
+    <string name="caption_tables">Theo dõi trạng thái bàn trong quán</string>
+    <string name="label_active_tables">Bàn hoạt động</string>
+    <string name="label_empty_tables">Bàn trống</string>
+    <string name="label_status">Trạng thái</string>
+    <string name="status_empty">Trống</string>
+    <string name="status_occupied">Có khách</string>
+    <string name="hint_tap_to_order">Chạm để bắt đầu order</string>
+    <string name="hint_tap_to_add">Chạm để gọi thêm món</string>
+
+    <!-- Menu screen -->
+    <string name="title_menu_with_table">Chọn món · %1$s</string>
+    <string name="caption_menu">Thêm món vào order của bàn</string>
+    <string name="hint_search_menu">Tìm món, đồ uống, bánh…</string>
+    <string name="category_all">Tất cả</string>
+    <string name="btn_view_order">Xem order</string>
+    <string name="format_items_selected">%1$d món đã chọn</string>
+
+    <!-- Order screen -->
+    <string name="title_order_with_table">Đặt đơn · %1$s</string>
+    <string name="caption_order">Kiểm tra món trước khi xác nhận</string>
+    <string name="header_order_title">Xác nhận đơn hàng</string>
+    <string name="header_order_caption">Vui lòng kiểm tra lại các món đã gọi</string>
+    <string name="empty_order">Chưa có món nào. Quay lại để gọi món.</string>
+    <string name="label_total">Tổng tiền</string>
+    <string name="btn_confirm_order">Xác nhận order</string>
+    <string name="msg_order_confirmed">Đã xác nhận order thành công</string>
+    <string name="msg_order_failed">Xác nhận order thất bại</string>
+    <string name="label_unit_price">%1$s / món</string>
+    <string name="label_amount">Thành tiền</string>
+    <string name="label_order_note">Ghi chú đơn hàng</string>
+    <string name="hint_order_note">Ví dụ: Ít đường, không đá...</string>
+    <string name="label_discount_membership">Mã giảm giá / Thành viên</string>
+    <string name="hint_enter_discount">Nhập mã ưu đãi hoặc ID thẻ</string>
+    <string name="btn_apply_code">Áp dụng</string>
+
+    <!-- Payment screen -->
+    <string name="title_payment_with_table">Thanh toán · %1$s</string>
+    <string name="caption_payment">Chọn phương thức và xác nhận</string>
+    <string name="label_order_summary">Tóm tắt đơn hàng</string>
+    <string name="label_subtotal">Tạm tính</string>
+    <string name="label_discount">Giảm giá</string>
+    <string name="label_final_amount">Tổng cộng</string>
+    <string name="label_discount_code">Mã giảm giá</string>
+    <string name="hint_discount_code">Nhập số tiền giảm</string>
+    <string name="btn_apply">Áp dụng</string>
+    <string name="label_payment_method">Phương thức thanh toán</string>
+    <string name="payment_cash">Tiền mặt</string>
+    <string name="payment_cash_desc">Thanh toán tại quầy</string>
+    <string name="payment_banking">Chuyển khoản</string>
+    <string name="payment_banking_desc">QR / Internet Banking</string>
+    <string name="payment_momo">Ví MoMo</string>
+    <string name="payment_momo_desc">Thanh toán ví điện tử</string>
+    <string name="btn_confirm_payment">Xác nhận thanh toán</string>
+    <string name="msg_payment_success">Thanh toán thành công</string>
+    <string name="msg_payment_failed">Thanh toán thất bại</string>
+    <string name="format_item_summary">%1$s × %2$d</string>
+
+    <!-- Invoice screen -->
+    <string name="title_invoice">Hóa đơn</string>
+    <string name="caption_invoice">Giao dịch đã hoàn tất</string>
+    <string name="invoice_thanks">Cảm ơn quý khách đã ghé quán</string>
+    <string name="invoice_code">Mã hóa đơn</string>
+    <string name="invoice_table">Bàn</string>
+    <string name="invoice_items">Danh sách món</string>
+    <string name="invoice_payment_info">Thông tin thanh toán</string>
+    <string name="invoice_method">Phương thức</string>
+    <string name="invoice_time">Thời gian</string>
+    <string name="status_paid">Đã thanh toán</string>
+    <string name="btn_back_to_tables">Quay về sơ đồ bàn</string>
+
+    <!-- Orders list screen -->
+    <string name="title_orders_list">Danh sách order</string>
+    <string name="caption_orders_list">Theo dõi các order trong quán</string>
+    <string name="label_serving">Đang phục vụ</string>
+    <string name="label_awaiting_payment">Chờ thanh toán</string>
+    <string name="btn_view_details">Xem chi tiết</string>
+    <string name="btn_collect_payment">Thu tiền</string>
+
+    <!-- Admin menu screen -->
+    <string name="title_admin_menu">Danh sách menu</string>
+    <string name="caption_admin_menu">Quản lý món đang bán và trạng thái hiển thị</string>
+    <string name="label_total_products">Tổng món</string>
+    <string name="label_visible_products">Đang hiển thị</string>
+    <string name="hint_search_admin">Tìm món trong menu…</string>
+    <string name="status_active">Đang hiển thị</string>
+    <string name="status_inactive">Đang ẩn</string>
+    <string name="btn_add_product">Thêm món</string>
+    <string name="btn_edit_product">Sửa món</string>
+    <string name="dialog_product_name">Tên món</string>
+    <string name="dialog_product_price">Giá</string>
+    <string name="dialog_product_category">Danh mục</string>
+    <string name="btn_save">Lưu</string>
+    <string name="btn_cancel">Huỷ</string>
+
+    <!-- Bottom nav -->
+    <string name="nav_tables">Bàn</string>
+    <string name="nav_orders">Order</string>
+    <string name="nav_menu">Menu</string>
+
+    <!-- Common -->
+    <string name="content_desc_back">Quay lại</string>
+    <string name="content_desc_search">Tìm kiếm</string>
+    <string name="content_desc_add">Thêm</string>
+    <string name="content_desc_increase">Tăng số lượng</string>
+    <string name="content_desc_decrease">Giảm số lượng</string>
+    <string name="content_desc_toggle_visibility">Ẩn / hiện</string>
+    <string name="content_desc_edit">Chỉnh sửa</string>
+    <string name="format_table_meta_empty">Sẵn sàng phục vụ khách mới</string>
+    <string name="format_total_tables">%1$d/%2$d</string>
 </resources>

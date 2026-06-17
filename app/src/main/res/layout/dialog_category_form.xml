@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="@dimen/spacing_lg">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tên danh mục"
+        android:textAppearance="@style/TextAppearance.Cafe.SectionLabel" />
+
+    <EditText
+        android:id="@+id/et_category_name"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/height_input"
+        android:background="@drawable/bg_input"
+        android:paddingHorizontal="@dimen/spacing_md"
+        android:inputType="textCapSentences"
+        android:singleLine="true"
+        android:hint="VD: Trà trái cây"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:autofillHints="off" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Mô tả danh mục"
+        android:textAppearance="@style/TextAppearance.Cafe.SectionLabel"
+        android:layout_marginTop="@dimen/spacing_md" />
+
+    <EditText
+        android:id="@+id/et_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="80dp"
+        android:background="@drawable/bg_input"
+        android:padding="@dimen/spacing_md"
+        android:inputType="textMultiLine"
+        android:gravity="top|start"
+        android:hint="Nhập mô tả cho danh mục món ăn này..."
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:autofillHints="off" />
+</LinearLayout>

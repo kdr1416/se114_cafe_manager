@@ -14,6 +14,7 @@ import com.example.cafe_manager.model.CartItem;
 import com.example.cafe_manager.util.AppExecutors;
 import com.example.cafe_manager.util.Constants;
 import com.example.cafe_manager.util.RepositoryCallback;
+import com.example.cafe_manager.model.OrderWithItems;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -92,8 +93,100 @@ public class OrderRepository {
         return orderDao.getActiveByTableId(tableId, Constants.ORDER_CONFIRMED);
     }
 
+    public LiveData<OrderEntity> getActiveOrderByTableLive(int tableId) {
+        return orderDao.getActiveByTableIdLive(tableId, Constants.ORDER_CONFIRMED);
+    }
+
+    public LiveData<OrderEntity> getOrderLive(int orderId) {
+        return orderDao.getByIdLive(orderId);
+    }
+
+    public LiveData<List<OrderEntity>> getActiveOrders() {
+        return orderDao.getAllByStatus(Constants.ORDER_CONFIRMED);
+    }
+
+    public LiveData<List<OrderEntity>> getOrdersByStatus(String status) {
+        return orderDao.getAllByStatus(status);
+    }
+
+    public LiveData<List<OrderWithItems>> getActiveOrdersWithItems(String status) {
+        return orderDao.getOrdersWithItemsByStatus(status);
+    }
+
+    public LiveData<List<OrderWithItems>> getPaidOrdersInRange(long fromMs, long toMs) {
+        return orderDao.getPaidOrdersInRange(Constants.ORDER_PAID, fromMs, toMs);
+    }
+
+    public LiveData<Integer> countPaidInRange(long fromMs, long toMs) {
+        return orderDao.countPaidInRange(Constants.ORDER_PAID, fromMs, toMs);
+    }
+
     public LiveData<List<OrderItemEntity>> getItemsByOrderId(int orderId) {
         return orderItemDao.getByOrderId(orderId);
+    }
+
+    /**
+     * Atomic: thêm items vào order existing + cộng dồn total.
+     * Dùng khi nhân viên gọi thêm món cho bàn đang OCCUPIED.
+     */
+    public void addItemsToOrder(
+            int orderId,
+            List<CartItem> cartItems,
+            RepositoryCallback<Long> callback
+    ) {
+        appExecutors.diskIO().execute(() -> {
+            try {
+                double deltaAmount = 0;
+                List<OrderItemEntity> newItems = new ArrayList<>();
+
+                for (CartItem c : cartItems) {
+                    deltaAmount += c.getSubtotal();
+
+                    OrderItemEntity item = new OrderItemEntity();
+                    item.setProductId(c.getProductId());
+                    item.setProductNameSnapshot(c.getProductName());
+                    item.setQuantity(c.getQuantity());
+                    item.setUnitPrice(c.getUnitPrice());
+                    item.setSubtotal(c.getSubtotal());
+                    item.setNote(c.getNote());
+
+                    newItems.add(item);
+                }
+
+                orderTransactionDao.addItemsToOrderAtomic(orderId, newItems, deltaAmount);
+
+                appExecutors.mainThread().execute(() ->
+                        callback.onSuccess((long) orderId));
+            } catch (Exception e) {
+                appExecutors.mainThread().execute(() ->
+                        callback.onError(e));
+            }
+        });
+    }
+
+    /**
+     * Atomic: cancel order → status=CANCELLED + bàn=EMPTY.
+     */
+    public void cancelOrder(
+            int orderId,
+            int tableId,
+            RepositoryCallback<Boolean> callback
+    ) {
+        appExecutors.diskIO().execute(() -> {
+            try {
+                orderTransactionDao.cancelOrderAtomic(
+                        orderId,
+                        tableId,
+                        Constants.ORDER_CANCELLED,
+                        Constants.TABLE_EMPTY
+                );
+                appExecutors.mainThread().execute(() ->
+                        callback.onSuccess(true));
+            } catch (Exception e) {
+                appExecutors.mainThread().execute(() ->
+                        callback.onError(e));
+            }
+        });
     }
 
 }
