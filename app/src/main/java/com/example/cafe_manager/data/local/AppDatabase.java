@@ -1,7 +1,6 @@
 package com.example.cafe_manager.data.local;
 
 import android.content.Context;
-
 import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.Room;
@@ -33,6 +32,15 @@ import com.example.cafe_manager.data.local.dao.OrderTransactionDao;
 import com.example.cafe_manager.data.local.dao.PaymentTransactionDao;
 import com.example.cafe_manager.data.local.dao.AreaDao;
 import com.example.cafe_manager.data.local.entity.AreaEntity;
+// Thêm các import mới cho Module Ca làm việc
+import com.example.cafe_manager.data.local.dao.AttendanceDao;
+import com.example.cafe_manager.data.local.dao.ShiftAssignmentDao;
+import com.example.cafe_manager.data.local.dao.ShiftDao;
+import com.example.cafe_manager.data.local.dao.ShiftTemplateDao;
+import com.example.cafe_manager.data.local.entity.AttendanceEntity;
+import com.example.cafe_manager.data.local.entity.ShiftAssignmentEntity;
+import com.example.cafe_manager.data.local.entity.ShiftEntity;
+import com.example.cafe_manager.data.local.entity.ShiftTemplateEntity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,22 +48,17 @@ import java.util.List;
 
 @Database(
         entities = {
-                TableEntity.class,
-                CategoryEntity.class,
-                ProductEntity.class,
-                OrderEntity.class,
-                OrderItemEntity.class,
-                PaymentEntity.class,
-                PromotionEntity.class,
-                UserEntity.class,
-                AuditLogEntity.class,
-                AreaEntity.class
+                TableEntity.class, AreaEntity.class, CategoryEntity.class, ProductEntity.class,
+                OrderEntity.class, OrderItemEntity.class, PaymentEntity.class, UserEntity.class,
+                PromotionEntity.class, AuditLogEntity.class,
+                ShiftTemplateEntity.class, ShiftEntity.class, ShiftAssignmentEntity.class, AttendanceEntity.class
         },
-        version = 7,
+        version = 8,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
 
+    // Existing DAOs
     public abstract TableDao tableDao();
     public abstract AreaDao areaDao();
     public abstract CategoryDao categoryDao();
@@ -63,6 +66,14 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract OrderDao orderDao();
     public abstract OrderItemDao orderItemDao();
     public abstract PaymentDao paymentDao();
+    // Assuming other DAOs like UserDao, etc. exist
+
+    
+    // New DAOs
+    public abstract ShiftTemplateDao shiftTemplateDao();
+    public abstract ShiftDao shiftDao();
+    public abstract ShiftAssignmentDao shiftAssignmentDao();
+    public abstract AttendanceDao attendanceDao();
     public abstract PromotionDao promotionDao();
     public abstract UserDao userDao();
     public abstract AuditLogDao auditLogDao();
@@ -114,14 +125,47 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
-    private static void seedDatabase(AppDatabase database) {
-        seedAreas(database);
-        seedTables(database);
-        long[] categoryIds = seedCategories(database);
-        seedProducts(database, categoryIds);
-        seedPromotions(database);
-        seedUsers(database);
+    private static void seedShiftTemplates(AppDatabase db) {
+        long now = System.currentTimeMillis();
+
+        ShiftTemplateEntity caSang = new ShiftTemplateEntity();
+        caSang.setTemplateName("Ca Sáng");
+        caSang.setStartTime("06:00");
+        caSang.setEndTime("14:00");
+        caSang.setMinStaff(2);
+        caSang.setActive(true);
+        caSang.setCreatedAt(now);
+        db.shiftTemplateDao().insert(caSang);
+
+        ShiftTemplateEntity caChieu = new ShiftTemplateEntity();
+        caChieu.setTemplateName("Ca Chiều");
+        caChieu.setStartTime("14:00");
+        caChieu.setEndTime("22:00");
+        caChieu.setMinStaff(2);
+        caChieu.setActive(true);
+        caChieu.setCreatedAt(now);
+        db.shiftTemplateDao().insert(caChieu);
+
+        ShiftTemplateEntity caDem = new ShiftTemplateEntity();
+        caDem.setTemplateName("Ca Tối/Đêm");
+        caDem.setStartTime("22:00");
+        caDem.setEndTime("06:00");
+        caDem.setMinStaff(1);
+        caDem.setActive(true);
+        caDem.setCreatedAt(now);
+        db.shiftTemplateDao().insert(caDem);
     }
+
+    // Các hàm seed cũ giữ nguyên...
+         private static void seedDatabase(AppDatabase database) {
+         seedAreas(database);
+         seedTables(database);
+         long[] categoryIds = seedCategories(database);
+         seedProducts(database, categoryIds);
+         seedPromotions(database);
+         seedUsers(database);
+        seedShiftTemplates(database); // Seed mẫu ca làm việc tự động
+     }
 
     // ── Seed 10 bàn ──────────────────────────────────────────────
     private static void seedTables(AppDatabase db) {
