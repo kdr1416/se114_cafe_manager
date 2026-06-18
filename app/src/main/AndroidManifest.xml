@@ -86,6 +86,10 @@
         <activity
             android:name=".MainActivity"
             android:exported="false" />
+                <!-- Đăng ký màn hình quản lý ca làm việc -->
+        <activity android:name=".ui.shift.ShiftTemplateActivity" android:exported="false" />
+        <activity android:name=".ui.shift.ShiftScheduleActivity" android:exported="false" />
+        <activity android:name=".ui.shift.MyShiftActivity" android:exported="false" />
     </application>
 
 </manifest>

@@ -32,9 +32,19 @@ import com.example.cafe_manager.data.local.dao.OrderTransactionDao;
 import com.example.cafe_manager.data.local.dao.PaymentTransactionDao;
 import com.example.cafe_manager.data.local.dao.AreaDao;
 import com.example.cafe_manager.data.local.entity.AreaEntity;
+// Thêm các import mới cho Module Ca làm việc
+import com.example.cafe_manager.data.local.dao.AttendanceDao;
+import com.example.cafe_manager.data.local.dao.ShiftAssignmentDao;
+import com.example.cafe_manager.data.local.dao.ShiftDao;
+import com.example.cafe_manager.data.local.dao.ShiftTemplateDao;
+import com.example.cafe_manager.data.local.entity.AttendanceEntity;
+import com.example.cafe_manager.data.local.entity.ShiftAssignmentEntity;
+import com.example.cafe_manager.data.local.entity.ShiftEntity;
+import com.example.cafe_manager.data.local.entity.ShiftTemplateEntity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 @Database(
         entities = {
@@ -57,6 +67,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract OrderItemDao orderItemDao();
     public abstract PaymentDao paymentDao();
     // Assuming other DAOs like UserDao, etc. exist
+
     
     // New DAOs
     public abstract ShiftTemplateDao shiftTemplateDao();
@@ -146,14 +157,15 @@ public abstract class AppDatabase extends RoomDatabase {
     }
 
     // Các hàm seed cũ giữ nguyên...
-    private static void seedDatabase(AppDatabase database) {
-        seedAreas(database);
-        seedTables(database);
-        long[] categoryIds = seedCategories(database);
-        seedProducts(database, categoryIds);
-        seedPromotions(database);
-        seedUsers(database);
-    }
+         private static void seedDatabase(AppDatabase database) {
+         seedAreas(database);
+         seedTables(database);
+         long[] categoryIds = seedCategories(database);
+         seedProducts(database, categoryIds);
+         seedPromotions(database);
+         seedUsers(database);
+        seedShiftTemplates(database); // Seed mẫu ca làm việc tự động
+     }
 
     // ── Seed 10 bàn ──────────────────────────────────────────────
     private static void seedTables(AppDatabase db) {
