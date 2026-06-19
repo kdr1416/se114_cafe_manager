@@ -33,8 +33,14 @@ public abstract class OrderTransactionDao {
             OrderEntity order,
             List<OrderItemEntity> items,
             int tableId,
-            String occupiedStatus
+            String occupiedStatus,
+            int createdByUserId,
+            int createdShiftId
     ) {
+        // Set shift/user info vào order trước khi insert
+        order.setCreatedByUserId(createdByUserId);
+        order.setCreatedShiftId(createdShiftId);
+
         long orderId = insertOrderInternal(order);
 
         for (OrderItemEntity item : items) {
@@ -75,6 +81,7 @@ public abstract class OrderTransactionDao {
         for (OrderItemEntity item : newItems) {
             item.setOrderId(orderId);
         }
+
         insertOrderItemsInternal(newItems);
         incrementOrderTotalInternal(orderId, deltaAmount);
     }
