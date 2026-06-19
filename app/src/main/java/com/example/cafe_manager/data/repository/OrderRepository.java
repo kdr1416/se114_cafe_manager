@@ -37,10 +37,12 @@ public class OrderRepository {
         this.appExecutors = AppExecutors.getInstance();
     }
 
-    public void confirmOrder(
+public void confirmOrder(
             int tableId,
             List<CartItem> cartItems,
             String note,
+            int createdByUserId,
+            int createdShiftId,
             RepositoryCallback<Long> callback
     ) {
         appExecutors.diskIO().execute(() -> {
@@ -74,7 +76,9 @@ public class OrderRepository {
                         order,
                         orderItems,
                         tableId,
-                        Constants.TABLE_OCCUPIED
+                        Constants.TABLE_OCCUPIED,
+                        createdByUserId,
+                        createdShiftId
                 );
 
                 appExecutors.mainThread().execute(() ->
