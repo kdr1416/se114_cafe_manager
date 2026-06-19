@@ -7,6 +7,9 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.cafe_manager.data.local.AppDatabase;
+import com.example.cafe_manager.data.local.entity.ShiftEntity;
+import com.example.cafe_manager.manager.SessionManager;
 import com.example.cafe_manager.data.repository.OrderRepository;
 import com.example.cafe_manager.manager.CartManager;
 import com.example.cafe_manager.model.CartItem;
@@ -16,7 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OrderViewModel extends AndroidViewModel {
-
+    
+    private final SessionManager sessionManager;
+    private final AppDatabase appDatabase;
     private final OrderRepository orderRepository;
     private final CartManager cartManager;
 
@@ -33,6 +38,8 @@ public class OrderViewModel extends AndroidViewModel {
 
         this.orderRepository = new OrderRepository(application);
         this.cartManager = CartManager.getInstance();
+        this.sessionManager = SessionManager.getInstance(application);
+        this.appDatabase = AppDatabase.getInstance(application);
 
         refreshCartState();
     }
@@ -103,11 +110,6 @@ public class OrderViewModel extends AndroidViewModel {
         refreshCartState();
     }
 
-    public void clearCart() {
-        cartManager.clearCart();
-        refreshCartState();
-    }
-
     public void confirmOrder(String note) {
 
         int tableId = cartManager.getCurrentTableId();
@@ -125,37 +127,43 @@ public class OrderViewModel extends AndroidViewModel {
 
         loadingLiveData.setValue(true);
 
-        orderRepository.confirmOrder(
-                tableId,
-                currentItems,
-                note,
-                new RepositoryCallback<Long>() {
+        // Lấy userId và shiftId hiện tại
+        int userId = sessionManager.getUserId();
+        // Lấy shift đang mở (chạy trên background)
+        com.example.cafe_manager.util.AppExecutors.getInstance().diskIO().execute(() -> {
+            ShiftEntity openShift = appDatabase.shiftDao().getCurrentlyOpen();
+            int shiftId = (openShift != null) ? openShift.getShiftId() : 0;
 
-                    @Override
-                    public void onSuccess(Long orderId) {
+            com.example.cafe_manager.util.AppExecutors.getInstance().mainThread().execute(() -> {
+                orderRepository.confirmOrder(
+                        tableId,
+                        currentItems,
+                        note,
+                        userId,
+                        shiftId,
+                        new RepositoryCallback<Long>() {
 
-                        loadingLiveData.setValue(false);
+                            @Override
+                            public void onSuccess(Long orderId) {
+                                loadingLiveData.setValue(false);
+                                cartManager.clearCart();
+                                refreshCartState();
+                                confirmSuccessLiveData.setValue(orderId);
+                            }
 
-                        cartManager.clearCart();
-
-                        refreshCartState();
-
-                        confirmSuccessLiveData.setValue(orderId);
-                    }
-
-                    @Override
-                    public void onError(Exception exception) {
-
-                        loadingLiveData.setValue(false);
-
-                        errorMessageLiveData.setValue(
-                                exception != null
-                                        ? exception.getMessage()
-                                        : "Xác nhận order thất bại."
-                        );
-                    }
-                }
-        );
+                            @Override
+                            public void onError(Exception exception) {
+                                loadingLiveData.setValue(false);
+                                errorMessageLiveData.setValue(
+                                        exception != null
+                                                ? exception.getMessage()
+                                                : "Xác nhận order thất bại."
+                                );
+                            }
+                        }
+                );
+            });
+        });
     }
 
     /** Thêm các món trong cart vào order existing (mode "gọi thêm món"). */
