@@ -7,6 +7,7 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
+
 import com.example.cafe_manager.data.local.dao.AuditLogDao;
 import com.example.cafe_manager.data.local.dao.CategoryDao;
 import com.example.cafe_manager.data.local.dao.OrderDao;
@@ -51,9 +52,10 @@ import java.util.List;
                 TableEntity.class, AreaEntity.class, CategoryEntity.class, ProductEntity.class,
                 OrderEntity.class, OrderItemEntity.class, PaymentEntity.class, UserEntity.class,
                 PromotionEntity.class, AuditLogEntity.class,
-                ShiftTemplateEntity.class, ShiftEntity.class, ShiftAssignmentEntity.class, AttendanceEntity.class
+                ShiftTemplateEntity.class, ShiftEntity.class, ShiftAssignmentEntity.class, AttendanceEntity.class,
+                ShiftCashSessionEntity.class
         },
-        version = 8,
+        version = 9,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -79,6 +81,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract AuditLogDao auditLogDao();
     public abstract OrderTransactionDao orderTransactionDao();
     public abstract PaymentTransactionDao paymentTransactionDao();
+    public abstract ShiftCashSessionDao shiftCashSessionDao();
 
 
     private static volatile AppDatabase instance;
