@@ -43,7 +43,17 @@ public final class Constants {
     public static final String ACTION_UPDATE_USER = "UPDATE_USER";
     public static final String ACTION_LOCK_USER = "LOCK_USER";
     public static final String ACTION_RESET_PASSWORD = "RESET_PASSWORD";
+    // ── Shift status constants ──────────────────────────────────
+    public static final String SHIFT_DRAFT = "DRAFT";
+    public static final String SHIFT_PUBLISHED = "PUBLISHED";
+    public static final String SHIFT_IN_PROGRESS = "IN_PROGRESS";
+    public static final String SHIFT_CLOSED = "CLOSED";
+    public static final String SHIFT_CANCELLED = "CANCELLED";
 
+    // ── Cash session status ─────────────────────────────────────
+    public static final String CASH_SESSION_OPEN = "OPEN";
+    public static final String CASH_SESSION_CLOSED = "CLOSED";
+    
     private Constants() {
     }
 }
