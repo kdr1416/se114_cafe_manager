@@ -30,8 +30,14 @@ public abstract class PaymentTransactionDao {
             int tableId,
             String paidStatus,
             String emptyTableStatus,
-            long paidAt
+            long paidAt,
+            int cashierUserId,
+            int paidShiftId
     ) {
+        // Set shift/cashier info vào payment trước khi insert
+        payment.setCashierUserId(cashierUserId);
+        payment.setPaidShiftId(paidShiftId);
+
         long paymentId = insertPaymentInternal(payment);
 
         updateOrderStatusWithPaidAtInternal(orderId, paidStatus, paidAt);
