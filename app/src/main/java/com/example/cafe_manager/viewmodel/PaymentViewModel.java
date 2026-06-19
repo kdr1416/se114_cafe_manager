@@ -16,11 +16,16 @@ import com.example.cafe_manager.util.CurrencyUtils;
 import com.example.cafe_manager.util.OrderCalculator;
 import com.example.cafe_manager.util.RepositoryCallback;
 import com.example.cafe_manager.util.StatusUtils;
+import com.example.cafe_manager.data.local.AppDatabase;
+import com.example.cafe_manager.data.local.entity.ShiftEntity;
+import com.example.cafe_manager.manager.SessionManager;
 
 public class PaymentViewModel extends AndroidViewModel {
 
     private final PaymentRepository paymentRepository;
     private final PromotionRepository promotionRepository;
+    private final SessionManager sessionManager;
+    private final AppDatabase appDatabase;
 
     private int orderId = -1;
     private int tableId = -1;
@@ -42,6 +47,8 @@ public class PaymentViewModel extends AndroidViewModel {
         super(application);
         this.paymentRepository = new PaymentRepository(application);
         this.promotionRepository = new PromotionRepository(application);
+        this.sessionManager = SessionManager.getInstance(application);
+        this.appDatabase = AppDatabase.getInstance(application);
     }
 
     // ========================
@@ -217,36 +224,44 @@ public class PaymentViewModel extends AndroidViewModel {
 
         loadingLiveData.setValue(true);
 
-        paymentRepository.payOrder(
-                orderId,
-                tableId,
-                paymentMethod,
-                subtotal,
-                discount,
-                finalAmount,
-                new RepositoryCallback<Boolean>() {
+        // Lấy userId và shiftId hiện tại
+        int userId = sessionManager.getUserId();
 
-                    @Override
-                    public void onSuccess(Boolean result) {
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            ShiftEntity openShift = appDatabase.shiftDao().getCurrentlyOpen();
+            int shiftId = (openShift != null) ? openShift.getShiftId() : 0;
 
-                        loadingLiveData.setValue(false);
+            AppExecutors.getInstance().mainThread().execute(() -> {
+                paymentRepository.payOrder(
+                        orderId,
+                        tableId,
+                        paymentMethod,
+                        subtotal,
+                        discount,
+                        finalAmount,
+                        userId,
+                        shiftId,
+                        new RepositoryCallback<Boolean>() {
 
-                        paySuccessLiveData.setValue(Boolean.TRUE.equals(result));
-                    }
+                            @Override
+                            public void onSuccess(Boolean result) {
+                                loadingLiveData.setValue(false);
+                                paySuccessLiveData.setValue(Boolean.TRUE.equals(result));
+                            }
 
-                    @Override
-                    public void onError(Exception exception) {
-
-                        loadingLiveData.setValue(false);
-
-                        errorMessageLiveData.setValue(
-                                exception != null
-                                        ? exception.getMessage()
-                                        : "Thanh toán thất bại."
-                        );
-                    }
-                }
-        );
+                            @Override
+                            public void onError(Exception exception) {
+                                loadingLiveData.setValue(false);
+                                errorMessageLiveData.setValue(
+                                        exception != null
+                                                ? exception.getMessage()
+                                                : "Thanh toán thất bại."
+                                );
+                            }
+                        }
+                );
+            });
+        });
     }
 
     // ========================
