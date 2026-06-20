@@ -28,6 +28,9 @@ public class PaymentRepository {
     /**
      * Atomic: insert Payment → update Order = PAID → update Table = EMPTY.
      */
+   /**
+     * Atomic: insert Payment → update Order = PAID → update Table = EMPTY.
+     */
     public void payOrder(
             int orderId,
             int tableId,
@@ -35,6 +38,8 @@ public class PaymentRepository {
             double subtotal,
             double discount,
             double finalAmount,
+            int cashierUserId,
+            int paidShiftId,
             RepositoryCallback<Boolean> callback
     ) {
         appExecutors.diskIO().execute(() -> {
@@ -56,7 +61,9 @@ public class PaymentRepository {
                         tableId,
                         Constants.ORDER_PAID,
                         Constants.TABLE_EMPTY,
-                        paidAt
+                        paidAt,
+                        cashierUserId,
+                        paidShiftId
                 );
 
                 appExecutors.mainThread().execute(() ->

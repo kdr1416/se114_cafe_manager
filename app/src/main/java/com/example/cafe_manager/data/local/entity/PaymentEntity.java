@@ -38,6 +38,12 @@ public class PaymentEntity {
 
     @ColumnInfo(name = "status")
     private String status;
+        
+    @ColumnInfo(name = "cashier_user_id", defaultValue = "0")
+    private int cashierUserId;
+
+    @ColumnInfo(name = "paid_shift_id", defaultValue = "0")
+    private int paidShiftId;
 
     public PaymentEntity() {
     }
@@ -116,4 +122,9 @@ public class PaymentEntity {
     public void setStatus(String status) {
         this.status = status;
     }
+    public int getCashierUserId() { return cashierUserId; }
+    public void setCashierUserId(int cashierUserId) { this.cashierUserId = cashierUserId; }
+
+    public int getPaidShiftId() { return paidShiftId; }
+    public void setPaidShiftId(int paidShiftId) { this.paidShiftId = paidShiftId; }
 }

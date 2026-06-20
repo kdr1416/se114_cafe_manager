@@ -37,7 +37,13 @@ public class OrderEntity {
 
     @ColumnInfo(name = "paid_at")
     private long paidAt;
+    
+    @ColumnInfo(name = "created_by_user_id", defaultValue = "0")
+    private int createdByUserId;
 
+    @ColumnInfo(name = "created_shift_id", defaultValue = "0")
+    private int createdShiftId;
+    
     public OrderEntity() {
     }
 
@@ -115,4 +121,9 @@ public class OrderEntity {
     public void setPaidAt(long paidAt) {
         this.paidAt = paidAt;
     }
+    public int getCreatedByUserId() { return createdByUserId; }
+    public void setCreatedByUserId(int createdByUserId) { this.createdByUserId = createdByUserId; }
+
+    public int getCreatedShiftId() { return createdShiftId; }
+    public void setCreatedShiftId(int createdShiftId) { this.createdShiftId = createdShiftId; }
 }

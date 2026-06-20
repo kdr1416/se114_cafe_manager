@@ -39,6 +39,11 @@ public final class PermissionUtils {
         return Constants.ROLE_ADMIN.equals(role) || Constants.ROLE_MANAGER.equals(role);
     }
 
+    /** ADMIN hoặc MANAGER mới được quản lý ca làm, mở/đóng ca. */
+    public static boolean canManageShifts(String role) {
+        return Constants.ROLE_ADMIN.equals(role) || Constants.ROLE_MANAGER.equals(role);
+    }
+
     /**
      * Kiểm tra currentRole có được thay đổi role của targetRole không.
      * ADMIN: được thay đổi bất kỳ.

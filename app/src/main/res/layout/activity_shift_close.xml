@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_primary">
+
+    <include
+        android:id="@+id/top_bar"
+        layout="@layout/component_top_bar" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="@dimen/spacing_lg">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Thông tin ca -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/spacing_lg"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <TextView
+                    android:id="@+id/tv_shift_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/TextAppearance.Cafe.Title"
+                    android:text="Ca làm việc" />
+
+                <TextView
+                    android:id="@+id/tv_shift_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/TextAppearance.Cafe.Caption"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:textColor="@color/text_soft" />
+            </LinearLayout>
+
+            <!-- Cảnh báo đơn chưa thanh toán -->
+            <LinearLayout
+                android:id="@+id/layout_unpaid_warning"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/bg_badge_warning"
+                android:padding="@dimen/spacing_md"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tv_unpaid_warning"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/TextAppearance.Cafe.Body"
+                    android:textColor="@color/warning" />
+            </LinearLayout>
+
+            <!-- Input tiền thực tế -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/TextAppearance.Cafe.SectionLabel"
+                android:text="Tiền mặt thực tế trong két (VNĐ)"
+                android:layout_marginBottom="@dimen/spacing_sm" />
+
+            <EditText
+                android:id="@+id/et_actual_cash"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/height_input"
+                android:background="@drawable/bg_input"
+                android:inputType="numberDecimal"
+                android:hint="Nhập số tiền thực tế"
+                android:paddingStart="@dimen/spacing_md"
+                android:paddingEnd="@dimen/spacing_md"
+                android:layout_marginBottom="@dimen/spacing_xl" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Nút đóng ca -->
+    <Button
+        android:id="@+id/btn_close_shift"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/height_button"
+        style="@style/Widget.Cafe.Button.Primary"
+        android:text="Đóng ca"
+        android:layout_margin="@dimen/spacing_lg" />
+
+</LinearLayout>

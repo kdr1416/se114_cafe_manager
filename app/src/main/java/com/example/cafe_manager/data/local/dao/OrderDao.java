@@ -58,4 +58,15 @@ public interface OrderDao {
             "AND paid_at BETWEEN :fromMs AND :toMs")
     LiveData<Integer> countPaidInRange(String status, long fromMs, long toMs);
 
+        /** Lấy các đơn được tạo trong ca X. */
+    @Query("SELECT * FROM orders WHERE created_shift_id = :shiftId ORDER BY created_at DESC")
+    LiveData<List<OrderEntity>> getByCreatedShiftId(int shiftId);
+
+    /** Đếm đơn chưa thanh toán trong ca X. */
+    @Query("SELECT COUNT(*) FROM orders WHERE created_shift_id = :shiftId AND status != 'PAID' AND status != 'CANCELLED'")
+    int countUnpaidByShift(int shiftId);
+
+    /** Đếm đơn đã thanh toán trong ca X. */
+    @Query("SELECT COUNT(*) FROM orders WHERE created_shift_id = :shiftId AND status = 'PAID'")
+    int countPaidByShift(int shiftId);
 }
