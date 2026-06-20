@@ -35,9 +35,15 @@ import com.example.cafe_manager.ui.profile.ProfileActivity;
 import com.example.cafe_manager.ui.promotion.PromotionManagementActivity;
 import com.example.cafe_manager.ui.user.UserManagementActivity;
 import com.example.cafe_manager.ui.menu.CategoryManagementActivity;
+import com.example.cafe_manager.ui.shift.ShiftCloseActivity;
+import com.example.cafe_manager.ui.shift.ShiftReportActivity;
+import com.example.cafe_manager.data.local.AppDatabase;
+import com.example.cafe_manager.data.local.entity.ShiftEntity;
+import com.example.cafe_manager.util.AppExecutors;
 import com.example.cafe_manager.util.Constants;
 import com.example.cafe_manager.util.PermissionUtils;
 import com.example.cafe_manager.viewmodel.TableViewModel;
+import android.widget.Toast;
 
 public class TableActivity extends AppCompatActivity {
 
@@ -131,6 +137,10 @@ public class TableActivity extends AppCompatActivity {
         if (PermissionUtils.canManageCategories(role)) {
             popup.getMenu().add(0, 8, 0, "Quản lý danh mục");
         }
+        if (PermissionUtils.canManageShifts(role)) {
+            popup.getMenu().add(0, 9, 0, "Đóng ca hiện tại");
+            popup.getMenu().add(0, 10, 0, "Xem báo cáo ca");
+        }
         popup.getMenu().add(0, 3, 0, "Đăng xuất");
 
         popup.setOnMenuItemClickListener(item -> {
@@ -156,6 +166,12 @@ public class TableActivity extends AppCompatActivity {
                 case 8:
                     startActivity(new Intent(this, CategoryManagementActivity.class));
                     return true;
+                case 9:
+                    launchShiftActivity(ShiftCloseActivity.class);
+                    return true;
+                case 10:
+                    launchShiftActivity(ShiftReportActivity.class);
+                    return true;
                 case 3:
                     showLogoutDialog();
                     return true;
@@ -164,6 +180,21 @@ public class TableActivity extends AppCompatActivity {
             }
         });
         popup.show();
+    }
+
+    private void launchShiftActivity(Class<?> targetActivityClass) {
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            ShiftEntity openShift = AppDatabase.getInstance(this).shiftDao().getCurrentlyOpen();
+            AppExecutors.getInstance().mainThread().execute(() -> {
+                if (openShift != null) {
+                    Intent intent = new Intent(this, targetActivityClass);
+                    intent.putExtra("extra_shift_id", openShift.getShiftId());
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(this, "Không có ca làm việc nào đang mở.", Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
     }
 
     private void showLogoutDialog() {

@@ -42,6 +42,8 @@ import com.example.cafe_manager.data.local.entity.AttendanceEntity;
 import com.example.cafe_manager.data.local.entity.ShiftAssignmentEntity;
 import com.example.cafe_manager.data.local.entity.ShiftEntity;
 import com.example.cafe_manager.data.local.entity.ShiftTemplateEntity;
+import com.example.cafe_manager.data.local.entity.ShiftCashSessionEntity;
+import com.example.cafe_manager.data.local.dao.ShiftCashSessionDao;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -167,7 +169,30 @@ public abstract class AppDatabase extends RoomDatabase {
          seedProducts(database, categoryIds);
          seedPromotions(database);
          seedUsers(database);
-        seedShiftTemplates(database); // Seed mẫu ca làm việc tự động
+         seedShiftTemplates(database); // Seed mẫu ca làm việc tự động
+         seedActiveShift(database); // Tự động mở ca demo để kiểm thử Phase 2
+     }
+
+     private static void seedActiveShift(AppDatabase db) {
+         long now = System.currentTimeMillis();
+         ShiftEntity shift = new ShiftEntity();
+         shift.setShiftName("Ca Sáng Demo");
+         shift.setShiftDate(now - (now % 86400000));
+         shift.setStartTime("06:00");
+         shift.setEndTime("14:00");
+         shift.setStatus(Constants.SHIFT_IN_PROGRESS);
+         shift.setOpenedBy(2); // manager
+         shift.setOpenedAt(now);
+         shift.setCreatedAt(now);
+         long shiftId = db.shiftDao().insert(shift);
+
+         ShiftCashSessionEntity session = new ShiftCashSessionEntity();
+         session.setShiftId((int) shiftId);
+         session.setOpeningCash(500000.0); // 500,000 VND
+         session.setOpenedBy(2); // manager
+         session.setOpenedAt(now);
+         session.setStatus(Constants.CASH_SESSION_OPEN);
+         db.shiftCashSessionDao().insert(session);
      }
 
     // ── Seed 10 bàn ──────────────────────────────────────────────
