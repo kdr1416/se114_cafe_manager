@@ -78,23 +78,25 @@ public class ShiftRepository {
     public void openShift(int shiftId, int userId, RepositoryCallback<Void> callback) {
         executors.diskIO().execute(() -> {
             try {
-                ShiftEntity currentOpen = shiftDao.getCurrentlyOpen();
-                if (currentOpen != null) {
-                    if (currentOpen.getShiftId() == shiftId) {
-                        // Chính ca này đang mở, cho phép đi tiếp (idempotency)
+                ShiftEntity openShift = shiftDao.getCurrentlyOpen();
+                if (openShift != null) {
+                    if (openShift.getShiftId() == shiftId) {
+                        // If this specific shift is already open, allow proceeding (idempotency)
                         executors.mainThread().execute(() -> callback.onSuccess(null));
                     } else {
-                        // Báo lỗi chi tiết ca nào đang bị kẹt
+                        // Provide a clear error message about which shift is blocking
                         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-                        String dateStr = sdf.format(new Date(currentOpen.getShiftDate()));
-                        String errorMsg = "Ca '" + currentOpen.getShiftName() + "' ngày " + dateStr + " đang mở. Hãy đóng ca đó trước.";
+                        String dateStr = sdf.format(new Date(openShift.getShiftDate()));
+                        String errorMsg = "Ca '" + openShift.getShiftName() + "' ngày " + dateStr + " đang mở. Hãy đóng ca đó trước.";
                         executors.mainThread().execute(() -> callback.onError(new Exception(errorMsg)));
                     }
                     return;
                 }
                 shiftDao.openShift(shiftId, userId, System.currentTimeMillis());
                 executors.mainThread().execute(() -> callback.onSuccess(null));
-            } catch (Exception e) { executors.mainThread().execute(() -> callback.onError(e)); }
+            } catch (Exception e) {
+                executors.mainThread().execute(() -> callback.onError(e));
+            }
         });
     }
 
