@@ -80,7 +80,25 @@ public class ShiftRepository {
     public void openShiftWithCash(int shiftId, double openingCash, int userId, RepositoryCallback<Void> callback) {
         executors.diskIO().execute(() -> {
             try {
+<<<<<<< HEAD
                 transactionDao.openShiftWithCashAtomic(shiftId, openingCash, userId, System.currentTimeMillis());
+=======
+                ShiftEntity openShift = shiftDao.getCurrentlyOpen();
+                if (openShift != null) {
+                    if (openShift.getShiftId() == shiftId) {
+                        // If this specific shift is already open, allow proceeding (idempotency)
+                        executors.mainThread().execute(() -> callback.onSuccess(null));
+                    } else {
+                        // Provide a clear error message about which shift is blocking
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                        String dateStr = sdf.format(new Date(openShift.getShiftDate()));
+                        String errorMsg = "Ca '" + openShift.getShiftName() + "' ngày " + dateStr + " đang mở. Hãy đóng ca đó trước.";
+                        executors.mainThread().execute(() -> callback.onError(new Exception(errorMsg)));
+                    }
+                    return;
+                }
+                shiftDao.openShift(shiftId, userId, System.currentTimeMillis());
+>>>>>>> 133595b62c24b13c0d3d38cbe4582385da7ddfea
                 executors.mainThread().execute(() -> callback.onSuccess(null));
             } catch (Exception e) {
                 executors.mainThread().execute(() -> callback.onError(e));
