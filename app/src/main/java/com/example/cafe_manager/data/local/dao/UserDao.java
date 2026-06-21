@@ -42,4 +42,8 @@ public interface UserDao {
 
     @Query("UPDATE users SET last_login_at = :time WHERE user_id = :userId")
     void updateLastLogin(int userId, long time);
+
+    @Query("SELECT * FROM users WHERE is_active = 1 ORDER BY full_name ASC")
+    List<UserEntity> getActiveUsersSync();
+
 }

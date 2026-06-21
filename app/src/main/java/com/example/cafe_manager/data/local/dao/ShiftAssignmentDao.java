@@ -39,4 +39,16 @@ public interface ShiftAssignmentDao {
            "AND s.status != 'CANCELLED' " +
            "AND ((s.start_time < :newEnd AND s.end_time > :newStart))")
     List<ShiftAssignmentEntity> getOverlapping(int userId, long date, String newStart, String newEnd);
+
+    /** Sync: lấy danh sách phân công theo ca (cho dialog). */
+    @Query("SELECT * FROM shift_assignments WHERE shift_id = :shiftId")
+    List<ShiftAssignmentEntity> getByShiftSync(int shiftId);
+
+    /** Sync: lấy danh sách phân công theo user (cho MyShift). */
+    @Query("SELECT * FROM shift_assignments WHERE user_id = :userId")
+    List<ShiftAssignmentEntity> getByUserSync(int userId);
+
+    /** Đếm số nhân viên đã phân công cho 1 ca. */
+    @Query("SELECT COUNT(*) FROM shift_assignments WHERE shift_id = :shiftId")
+    int countByShift(int shiftId);
 }

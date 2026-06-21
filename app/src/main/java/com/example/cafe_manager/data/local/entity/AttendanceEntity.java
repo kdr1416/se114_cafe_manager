@@ -2,15 +2,10 @@ package com.example.cafe_manager.data.local.entity;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
-import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-@Entity(
-    tableName = "attendance",
-    indices = {@Index(value = {"shift_id", "user_id"}, unique = true)}
-)
+@Entity(tableName = "attendance")
 public class AttendanceEntity {
-
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "attendance_id")
     private int attendanceId;
@@ -22,10 +17,10 @@ public class AttendanceEntity {
     private int userId;
 
     @ColumnInfo(name = "check_in_at")
-    private long checkInAt; // Epoch timestamp, 0 nếu chưa check-in
+    private Long checkInAt;
 
     @ColumnInfo(name = "check_out_at")
-    private long checkOutAt; // Epoch timestamp, 0 nếu chưa check-out
+    private Long checkOutAt;
 
     @ColumnInfo(name = "status")
     private String status; // ABSENT, CHECKED_IN, COMPLETED, LATE, EARLY_LEAVE
@@ -37,10 +32,9 @@ public class AttendanceEntity {
     private int earlyLeaveMinutes;
 
     @ColumnInfo(name = "notes")
-    private String notes; // Ghi chú của quản lý hoặc nhân viên
+    private String notes;
 
-    public AttendanceEntity() {}
-
+    // Getters and Setters
     public int getAttendanceId() { return attendanceId; }
     public void setAttendanceId(int attendanceId) { this.attendanceId = attendanceId; }
 
@@ -50,11 +44,11 @@ public class AttendanceEntity {
     public int getUserId() { return userId; }
     public void setUserId(int userId) { this.userId = userId; }
 
-    public long getCheckInAt() { return checkInAt; }
-    public void setCheckInAt(long checkInAt) { this.checkInAt = checkInAt; }
+    public Long getCheckInAt() { return checkInAt; }
+    public void setCheckInAt(Long checkInAt) { this.checkInAt = checkInAt; }
 
-    public long getCheckOutAt() { return checkOutAt; }
-    public void setCheckOutAt(long checkOutAt) { this.checkOutAt = checkOutAt; }
+    public Long getCheckOutAt() { return checkOutAt; }
+    public void setCheckOutAt(Long checkOutAt) { this.checkOutAt = checkOutAt; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

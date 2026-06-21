@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card"
+    android:padding="@dimen/spacing_lg"
+    android:layout_marginBottom="@dimen/spacing_md">
+
+    <!-- Row 1: name + date -->
+    <TextView
+        android:id="@+id/tv_shift_name_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/TextAppearance.Cafe.Subtitle" />
+
+    <!-- Row 2: time + shift status -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="@dimen/spacing_xs">
+
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            style="@style/TextAppearance.Cafe.Caption" />
+
+        <TextView
+            android:id="@+id/tv_shift_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/TextAppearance.Cafe.Caption" />
+    </LinearLayout>
+
+    <!-- Row 3: assignment status + action button -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="@dimen/spacing_md">
+
+        <TextView
+            android:id="@+id/tv_confirm_status"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            style="@style/TextAppearance.Cafe.Body" />
+
+        <Button
+            android:id="@+id/btn_confirm"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/height_button_sm"
+            style="@style/Widget.Cafe.Button.Primary"
+            android:text="Xác nhận"
+            android:visibility="gone" />
+    </LinearLayout>
+</LinearLayout>

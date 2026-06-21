@@ -42,4 +42,11 @@ public interface ShiftDao {
 
     @Query("UPDATE shifts SET status = 'CLOSED', closed_by = :closedBy, closed_at = :closedAt WHERE shift_id = :id")
     void closeShift(int id, int closedBy, long closedAt);
+
+    /** Lấy các ca mà userId được phân công. */
+    @Query("SELECT DISTINCT s.* FROM shifts s " +
+           "INNER JOIN shift_assignments sa ON s.shift_id = sa.shift_id " +
+           "WHERE sa.user_id = :userId " +
+           "ORDER BY s.shift_date DESC, s.start_time ASC")
+    LiveData<List<ShiftEntity>> getShiftsByUserId(int userId);
 }

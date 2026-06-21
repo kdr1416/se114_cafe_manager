@@ -1,7 +1,6 @@
 package com.example.cafe_manager.data.repository;
 
-import android.content.Context;
-
+import android.app.Application;
 import androidx.lifecycle.LiveData;
 
 import com.example.cafe_manager.data.local.AppDatabase;
@@ -14,41 +13,35 @@ import com.example.cafe_manager.data.local.entity.ShiftTemplateEntity;
 import com.example.cafe_manager.util.AppExecutors;
 import com.example.cafe_manager.util.RepositoryCallback;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class ShiftRepository {
-
     private final ShiftTemplateDao templateDao;
     private final ShiftDao shiftDao;
     private final ShiftAssignmentDao assignmentDao;
     private final AppExecutors executors;
 
-    public ShiftRepository(Context context) {
-        AppDatabase db = AppDatabase.getInstance(context);
-        this.templateDao = db.shiftTemplateDao();
-        this.shiftDao = db.shiftDao();
-        this.assignmentDao = db.shiftAssignmentDao();
-        this.executors = AppExecutors.getInstance();
+    public ShiftRepository(Application application) {
+        AppDatabase db = AppDatabase.getInstance(application);
+        templateDao = db.shiftTemplateDao();
+        shiftDao = db.shiftDao();
+        assignmentDao = db.shiftAssignmentDao();
+        executors = AppExecutors.getInstance();
     }
 
-    // ── Template Operations ──────────────────────────────────────────
-
-    public LiveData<List<ShiftTemplateEntity>> getAllTemplates() {
-        return templateDao.getAll();
-    }
-
-    public LiveData<List<ShiftTemplateEntity>> getActiveTemplates() {
-        return templateDao.getActive();
-    }
+    // ── Template ──
+    public LiveData<List<ShiftTemplateEntity>> getAllTemplates() { return templateDao.getAll(); }
+    public LiveData<List<ShiftTemplateEntity>> getActiveTemplates() { return templateDao.getActive(); }
 
     public void insertTemplate(ShiftTemplateEntity template, RepositoryCallback<Long> callback) {
         executors.diskIO().execute(() -> {
             try {
                 long id = templateDao.insert(template);
                 executors.mainThread().execute(() -> callback.onSuccess(id));
-            } catch (Exception e) {
-                executors.mainThread().execute(() -> callback.onError(e));
-            }
+            } catch (Exception e) { executors.mainThread().execute(() -> callback.onError(e)); }
         });
     }
 
@@ -57,9 +50,7 @@ public class ShiftRepository {
             try {
                 templateDao.update(template);
                 executors.mainThread().execute(() -> callback.onSuccess(null));
-            } catch (Exception e) {
-                executors.mainThread().execute(() -> callback.onError(e));
-            }
+            } catch (Exception e) { executors.mainThread().execute(() -> callback.onError(e)); }
         });
     }
 
@@ -68,105 +59,52 @@ public class ShiftRepository {
             try {
                 templateDao.deactivate(templateId);
                 executors.mainThread().execute(() -> callback.onSuccess(null));
-            } catch (Exception e) {
-                executors.mainThread().execute(() -> callback.onError(e));
-            }
+            } catch (Exception e) { executors.mainThread().execute(() -> callback.onError(e)); }
         });
     }
 
-    // ── Shift Operations ──────────────────────────────────────────────
-
-    public LiveData<List<ShiftEntity>> getShiftsByDate(long dateMidnight) {
-        return shiftDao.getByDate(dateMidnight);
-    }
+    // ── Shift ──
+    public LiveData<List<ShiftEntity>> getShiftsByDate(long date) { return shiftDao.getByDate(date); }
 
     public void insertShift(ShiftEntity shift, RepositoryCallback<Long> callback) {
         executors.diskIO().execute(() -> {
             try {
                 long id = shiftDao.insert(shift);
                 executors.mainThread().execute(() -> callback.onSuccess(id));
-            } catch (Exception e) {
-                executors.mainThread().execute(() -> callback.onError(e));
-            }
+            } catch (Exception e) { executors.mainThread().execute(() -> callback.onError(e)); }
         });
     }
 
-    public void updateShift(ShiftEntity shift, RepositoryCallback<Void> callback) {
+    public void openShift(int shiftId, int userId, RepositoryCallback<Void> callback) {
         executors.diskIO().execute(() -> {
             try {
-                shiftDao.update(shift);
-                executors.mainThread().execute(() -> callback.onSuccess(null));
-            } catch (Exception e) {
-                executors.mainThread().execute(() -> callback.onError(e));
-            }
-        });
-    }
-
-    public void openShift(int id, int openedBy, RepositoryCallback<Void> callback) {
-        executors.diskIO().execute(() -> {
-            try {
-                ShiftEntity openShift = shiftDao.getCurrentlyOpen();
-                if (openShift != null) {
-                    executors.mainThread().execute(() -> callback.onError(new Exception("Đã có ca làm việc khác đang mở.")));
+                ShiftEntity currentOpen = shiftDao.getCurrentlyOpen();
+                if (currentOpen != null) {
+                    if (currentOpen.getShiftId() == shiftId) {
+                        // Chính ca này đang mở, cho phép đi tiếp (idempotency)
+                        executors.mainThread().execute(() -> callback.onSuccess(null));
+                    } else {
+                        // Báo lỗi chi tiết ca nào đang bị kẹt
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                        String dateStr = sdf.format(new Date(currentOpen.getShiftDate()));
+                        String errorMsg = "Ca '" + currentOpen.getShiftName() + "' ngày " + dateStr + " đang mở. Hãy đóng ca đó trước.";
+                        executors.mainThread().execute(() -> callback.onError(new Exception(errorMsg)));
+                    }
                     return;
                 }
-                shiftDao.openShift(id, openedBy, System.currentTimeMillis());
+                shiftDao.openShift(shiftId, userId, System.currentTimeMillis());
                 executors.mainThread().execute(() -> callback.onSuccess(null));
-            } catch (Exception e) {
-                executors.mainThread().execute(() -> callback.onError(e));
-            }
+            } catch (Exception e) { executors.mainThread().execute(() -> callback.onError(e)); }
         });
     }
 
-    public void closeShift(int id, int closedBy, RepositoryCallback<Void> callback) {
-        executors.diskIO().execute(() -> {
-            try {
-                shiftDao.closeShift(id, closedBy, System.currentTimeMillis());
-                executors.mainThread().execute(() -> callback.onSuccess(null));
-            } catch (Exception e) {
-                executors.mainThread().execute(() -> callback.onError(e));
-            }
-        });
-    }
-
-    // ── Assignment Operations ────────────────────────────────────────
-
-    public LiveData<List<ShiftAssignmentEntity>> getAssignmentsByShift(int shiftId) {
-        return assignmentDao.getByShift(shiftId);
-    }
-
-    public LiveData<List<ShiftAssignmentEntity>> getAssignmentsByUser(int userId) {
-        return assignmentDao.getByUser(userId);
-    }
-
+    // ── Assignment ──
     public void assignStaff(ShiftAssignmentEntity assignment, RepositoryCallback<Long> callback) {
         executors.diskIO().execute(() -> {
             try {
-                // Lấy ca làm việc để kiểm tra overlap
-                ShiftEntity shift = shiftDao.getById(assignment.getShiftId());
-                if (shift == null) {
-                    executors.mainThread().execute(() -> callback.onError(new Exception("Ca làm việc không tồn tại.")));
-                    return;
-                }
-                
-                // Kiểm tra overlap
-                List<ShiftAssignmentEntity> overlap = assignmentDao.getOverlapping(
-                        assignment.getUserId(),
-                        shift.getShiftDate(),
-                        shift.getStartTime(),
-                        shift.getEndTime()
-                );
-                
-                if (overlap != null && !overlap.isEmpty()) {
-                    executors.mainThread().execute(() -> callback.onError(new Exception("Nhân viên này đã bị trùng ca làm việc khác trong ngày.")));
-                    return;
-                }
-
                 long id = assignmentDao.insert(assignment);
                 executors.mainThread().execute(() -> callback.onSuccess(id));
-            } catch (Exception e) {
-                executors.mainThread().execute(() -> callback.onError(e));
-            }
+            } catch (Exception e) { executors.mainThread().execute(() -> callback.onError(e)); }
         });
     }
 
@@ -175,9 +113,7 @@ public class ShiftRepository {
             try {
                 assignmentDao.delete(assignmentId);
                 executors.mainThread().execute(() -> callback.onSuccess(null));
-            } catch (Exception e) {
-                executors.mainThread().execute(() -> callback.onError(e));
-            }
+            } catch (Exception e) { executors.mainThread().execute(() -> callback.onError(e)); }
         });
     }
 
@@ -186,9 +122,7 @@ public class ShiftRepository {
             try {
                 assignmentDao.confirm(assignmentId);
                 executors.mainThread().execute(() -> callback.onSuccess(null));
-            } catch (Exception e) {
-                executors.mainThread().execute(() -> callback.onError(e));
-            }
+            } catch (Exception e) { executors.mainThread().execute(() -> callback.onError(e)); }
         });
     }
 }

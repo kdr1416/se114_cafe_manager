@@ -7,7 +7,6 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-
 import com.example.cafe_manager.data.local.dao.AuditLogDao;
 import com.example.cafe_manager.data.local.dao.CategoryDao;
 import com.example.cafe_manager.data.local.dao.OrderDao;
@@ -33,7 +32,6 @@ import com.example.cafe_manager.data.local.dao.OrderTransactionDao;
 import com.example.cafe_manager.data.local.dao.PaymentTransactionDao;
 import com.example.cafe_manager.data.local.dao.AreaDao;
 import com.example.cafe_manager.data.local.entity.AreaEntity;
-// Thêm các import mới cho Module Ca làm việc
 import com.example.cafe_manager.data.local.dao.AttendanceDao;
 import com.example.cafe_manager.data.local.dao.ShiftAssignmentDao;
 import com.example.cafe_manager.data.local.dao.ShiftDao;
@@ -62,7 +60,6 @@ import java.util.List;
 )
 public abstract class AppDatabase extends RoomDatabase {
 
-    // Existing DAOs
     public abstract TableDao tableDao();
     public abstract AreaDao areaDao();
     public abstract CategoryDao categoryDao();
@@ -70,10 +67,6 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract OrderDao orderDao();
     public abstract OrderItemDao orderItemDao();
     public abstract PaymentDao paymentDao();
-    // Assuming other DAOs like UserDao, etc. exist
-
-    
-    // New DAOs
     public abstract ShiftTemplateDao shiftTemplateDao();
     public abstract ShiftDao shiftDao();
     public abstract ShiftAssignmentDao shiftAssignmentDao();
@@ -84,7 +77,6 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract OrderTransactionDao orderTransactionDao();
     public abstract PaymentTransactionDao paymentTransactionDao();
     public abstract ShiftCashSessionDao shiftCashSessionDao();
-
 
     private static volatile AppDatabase instance;
 
@@ -110,17 +102,6 @@ public abstract class AppDatabase extends RoomDatabase {
         @Override
         public void onCreate(@NonNull SupportSQLiteDatabase db) {
             super.onCreate(db);
-            AppExecutors.getInstance().diskIO().execute(() -> {
-                AppDatabase database = instance;
-                if (database != null) {
-                    seedDatabase(database);
-                }
-            });
-        }
-
-        @Override
-        public void onDestructiveMigration(@NonNull SupportSQLiteDatabase db) {
-            super.onDestructiveMigration(db);
             AppExecutors.getInstance().diskIO().execute(() -> {
                 AppDatabase database = instance;
                 if (database != null) {
@@ -161,51 +142,21 @@ public abstract class AppDatabase extends RoomDatabase {
         db.shiftTemplateDao().insert(caDem);
     }
 
-    // Các hàm seed cũ giữ nguyên...
-         private static void seedDatabase(AppDatabase database) {
-         seedAreas(database);
-         seedTables(database);
-         long[] categoryIds = seedCategories(database);
-         seedProducts(database, categoryIds);
-         seedPromotions(database);
-         seedUsers(database);
-         seedShiftTemplates(database); // Seed mẫu ca làm việc tự động
-         seedActiveShift(database); // Tự động mở ca demo để kiểm thử Phase 2
-     }
+    private static void seedDatabase(AppDatabase db) {
+         seedAreas(db);
+         seedTables(db);
+         long[] categoryIds = seedCategories(db);
+         seedProducts(db, categoryIds);
+         seedPromotions(db);
+         seedUsers(db);
+         seedShiftTemplates(db);
+         // Đã xóa phần seedActiveShift gây kẹt ca để bạn có thể tự mở ca mới
+    }
 
-     private static void seedActiveShift(AppDatabase db) {
-         long now = System.currentTimeMillis();
-         ShiftEntity shift = new ShiftEntity();
-         shift.setShiftName("Ca Sáng Demo");
-         shift.setShiftDate(now - (now % 86400000));
-         shift.setStartTime("06:00");
-         shift.setEndTime("14:00");
-         shift.setStatus(Constants.SHIFT_IN_PROGRESS);
-         shift.setOpenedBy(2); // manager
-         shift.setOpenedAt(now);
-         shift.setCreatedAt(now);
-         long shiftId = db.shiftDao().insert(shift);
-
-         ShiftCashSessionEntity session = new ShiftCashSessionEntity();
-         session.setShiftId((int) shiftId);
-         session.setOpeningCash(500000.0); // 500,000 VND
-         session.setOpenedBy(2); // manager
-         session.setOpenedAt(now);
-         session.setStatus(Constants.CASH_SESSION_OPEN);
-         db.shiftCashSessionDao().insert(session);
-     }
-
-    // ── Seed 10 bàn ──────────────────────────────────────────────
     private static void seedTables(AppDatabase db) {
-        // capacity: B01-B04 → 2 người, B05-B08 → 4 người, B09-B10 → 6 người
         String[] names = {"B01","B02","B03","B04","B05","B06","B07","B08","B09","B10"};
-        int[]   caps  = {  2,   2,   2,   2,   4,   4,   4,   4,   6,   6  };
-        String[] areas = {
-            "Tầng 1", "Tầng 1", "Tầng 1", "Tầng 1",
-            "Tầng 2", "Tầng 2", "Tầng 2",
-            "Ngoài trời", "Ngoài trời",
-            "VIP"
-        };
+        int[] caps = {2, 2, 2, 2, 4, 4, 4, 4, 6, 6};
+        String[] areas = {"Tầng 1", "Tầng 1", "Tầng 1", "Tầng 1", "Tầng 2", "Tầng 2", "Tầng 2", "Ngoài trời", "Ngoài trời", "VIP"};
 
         TableEntity[] tables = new TableEntity[names.length];
         for (int i = 0; i < names.length; i++) {
@@ -221,13 +172,7 @@ public abstract class AppDatabase extends RoomDatabase {
 
     // ── Seed 4 danh mục, trả về mảng id ──────────────────────────
     private static long[] seedCategories(AppDatabase db) {
-        String[][] cats = {
-                {"Cà phê",  "Các loại cà phê"},
-                {"Trà",     "Các loại trà"},
-                {"Sinh tố", "Các loại sinh tố"},
-                {"Bánh",    "Các loại bánh"}
-        };
-
+        String[][] cats = {{"Cà phê", "Các loại cà phê"}, {"Trà", "Các loại trà"}, {"Sinh tố", "Các loại sinh tố"}, {"Bánh", "Các loại bánh"}};
         long[] ids = new long[cats.length];
         for (int i = 0; i < cats.length; i++) {
             CategoryEntity c = new CategoryEntity();
@@ -241,26 +186,12 @@ public abstract class AppDatabase extends RoomDatabase {
 
     // ── Seed 6 sản phẩm mẫu ─────────────────────────────────────
     private static void seedProducts(AppDatabase db, long[] categoryIds) {
-        // categoryIds: [0]=Cà phê, [1]=Trà, [2]=Sinh tố, [3]=Bánh
-        Object[][] products = {
-                // {categoryIndex, name, price}
-                {0, "Cà phê sữa đá",        35000.0},
-                {0, "Bạc xỉu",              38000.0},
-                {1, "Trà sữa trân châu",    45000.0},
-                {1, "Trà đào cam sả",       45000.0},
-                {2, "Sinh tố bơ",           50000.0},
-                {3, "Bánh Tiramisu",        55000.0}
-        };
-
+        Object[][] products = {{0, "Cà phê sữa đá", 35000.0}, {0, "Bạc xỉu", 38000.0}, {1, "Trà sữa trân châu", 45000.0}, {1, "Trà đào cam sả", 45000.0}, {2, "Sinh tố bơ", 50000.0}, {3, "Bánh Tiramisu", 55000.0}};
         for (Object[] p : products) {
-            int    catIdx = (int)    p[0];
-            String name   = (String) p[1];
-            double price  = (double) p[2];
-
             ProductEntity product = new ProductEntity();
-            product.setCategoryId((int) categoryIds[catIdx]);
-            product.setProductName(name);
-            product.setPrice(price);
+            product.setCategoryId((int) categoryIds[(int)p[0]]);
+            product.setProductName((String)p[1]);
+            product.setPrice((double)p[2]);
             product.setActive(true);
             db.productDao().insert(product);
         }
@@ -282,7 +213,7 @@ public abstract class AppDatabase extends RoomDatabase {
             p.setType((String) row[1]);
             p.setValue((double) row[2]);
             p.setActive(true);
-            p.setExpiresAt(0);     // 0 = không hết hạn
+            p.setExpiresAt(0);
             p.setCreatedAt(now);
             db.promotionDao().insert(p);
         }
@@ -307,13 +238,7 @@ public abstract class AppDatabase extends RoomDatabase {
     // ── Seed 3 user mẫu ──────────────────────────────────────────
     private static void seedUsers(AppDatabase db) {
         long now = System.currentTimeMillis();
-        // {username, plain password, full name, role}
-        Object[][] users = {
-                {"admin",   "admin123",   "Quản trị viên",  Constants.ROLE_ADMIN},
-                {"manager", "manager123", "Quản lý Demo",   Constants.ROLE_MANAGER},
-                {"staff",   "123456",     "Nhân viên Demo", Constants.ROLE_STAFF}
-        };
-
+        Object[][] users = {{"admin", "admin123", "Quản trị viên", Constants.ROLE_ADMIN}, {"manager", "manager123", "Quản lý Demo", Constants.ROLE_MANAGER}, {"staff", "123456", "Nhân viên Demo", Constants.ROLE_STAFF}};
         for (Object[] row : users) {
             UserEntity u = new UserEntity();
             u.setUsername((String) row[0]);

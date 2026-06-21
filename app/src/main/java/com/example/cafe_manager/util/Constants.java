@@ -31,6 +31,7 @@ public final class Constants {
     public static final String ICON_DESSERT = "DESSERT";
     public static final String ICON_OTHER = "OTHER";
 
+
     // ── Role constants ──────────────────────────────────────────
     public static final String ROLE_ADMIN = "ADMIN";
     public static final String ROLE_MANAGER = "MANAGER";
@@ -49,11 +50,21 @@ public final class Constants {
     public static final String SHIFT_IN_PROGRESS = "IN_PROGRESS";
     public static final String SHIFT_CLOSED = "CLOSED";
     public static final String SHIFT_CANCELLED = "CANCELLED";
-
-    // ── Cash session status ─────────────────────────────────────
     public static final String CASH_SESSION_OPEN = "OPEN";
     public static final String CASH_SESSION_CLOSED = "CLOSED";
-    
+
+    // ── Attendance status ───────────────────────────────────────
+    public static final String ATTENDANCE_ABSENT = "ABSENT";
+    public static final String ATTENDANCE_CHECKED_IN = "CHECKED_IN";
+    public static final String ATTENDANCE_COMPLETED = "COMPLETED";
+
+
+
+    public static final String ATTENDANCE_LATE = "LATE";
+    public static final String ATTENDANCE_EARLY_LEAVE = "EARLY_LEAVE";
+
+
+
     private Constants() {
     }
 }

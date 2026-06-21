@@ -2,21 +2,16 @@ package com.example.cafe_manager.ui.table;
 
 import android.app.AlertDialog;
 import android.content.Intent;
-
 import android.os.Bundle;
-
 import android.view.View;
-
 import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
+
 import androidx.activity.EdgeToEdge;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import androidx.lifecycle.ViewModelProvider;
-
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -37,69 +32,55 @@ import com.example.cafe_manager.ui.user.UserManagementActivity;
 import com.example.cafe_manager.ui.menu.CategoryManagementActivity;
 import com.example.cafe_manager.ui.shift.ShiftCloseActivity;
 import com.example.cafe_manager.ui.shift.ShiftReportActivity;
+import com.example.cafe_manager.ui.shift.ShiftTemplateActivity;
+import com.example.cafe_manager.ui.shift.ShiftScheduleActivity;
+import com.example.cafe_manager.ui.shift.MyShiftActivity;
 import com.example.cafe_manager.data.local.AppDatabase;
 import com.example.cafe_manager.data.local.entity.ShiftEntity;
 import com.example.cafe_manager.util.AppExecutors;
 import com.example.cafe_manager.util.Constants;
 import com.example.cafe_manager.util.PermissionUtils;
 import com.example.cafe_manager.viewmodel.TableViewModel;
+
 import android.widget.Toast;
 
 public class TableActivity extends AppCompatActivity {
 
     public static final String EXTRA_TABLE_ID = "table_id";
-
     public static final String EXTRA_TABLE_NAME = "table_name";
 
     private TableViewModel viewModel;
-
     private TableAdapter adapter;
-
     private AreaAdapter areaAdapter;
-
     private TextView tvActiveCount;
-
     private TextView tvEmptyCount;
 
     @Override
-
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
-
         EdgeToEdge.enable(this);
-
         setContentView(R.layout.activity_table);
 
         setupTopBar();
-
         setupBottomNav();
 
         tvActiveCount = findViewById(R.id.tv_active_count);
-
         tvEmptyCount = findViewById(R.id.tv_empty_count);
 
         setupRecyclerView();
-
         setupViewModel();
-
     }
 
     private void setupTopBar() {
-
         View topBar = findViewById(R.id.top_bar);
-
         TextView title = topBar.findViewById(R.id.tv_title);
-
         TextView caption = topBar.findViewById(R.id.tv_caption);
-
         View btnBack = topBar.findViewById(R.id.btn_back);
-
         ImageButton btnRight = topBar.findViewById(R.id.btn_right);
 
+        // Greeting với tên user (nếu có session)
         title.setText(R.string.title_tables);
 
-        // Greeting với tên user (nếu có session)
         String fullName = SessionManager.getInstance(this).getFullName();
         if (fullName == null || fullName.isEmpty()) {
             caption.setText(R.string.caption_tables);
@@ -107,13 +88,12 @@ public class TableActivity extends AppCompatActivity {
             caption.setText("Xin chào, " + fullName);
         }
 
-        btnBack.setVisibility(View.GONE);   // entry screen, không back
+        btnBack.setVisibility(View.GONE);
 
         // Right icon → popup menu: Lịch sử / Báo cáo / Đăng xuất
         btnRight.setVisibility(View.VISIBLE);
         btnRight.setImageResource(R.drawable.ic_menu_book);
         btnRight.setOnClickListener(this::showOptionsMenu);
-
     }
 
     private void showOptionsMenu(View anchor) {
@@ -140,7 +120,13 @@ public class TableActivity extends AppCompatActivity {
         if (PermissionUtils.canManageShifts(role)) {
             popup.getMenu().add(0, 9, 0, "Đóng ca hiện tại");
             popup.getMenu().add(0, 10, 0, "Xem báo cáo ca");
+
         }
+        if (PermissionUtils.canManageShifts(role)) {
+            popup.getMenu().add(0, 11, 0, "Quản lý mẫu ca");
+            popup.getMenu().add(0, 12, 0, "Lịch ca làm việc");
+        }
+        popup.getMenu().add(0, 13, 0, "Ca làm của tôi");
         popup.getMenu().add(0, 3, 0, "Đăng xuất");
 
         popup.setOnMenuItemClickListener(item -> {
@@ -171,6 +157,15 @@ public class TableActivity extends AppCompatActivity {
                     return true;
                 case 10:
                     launchShiftActivity(ShiftReportActivity.class);
+                    return true;
+                case 11:
+                    startActivity(new Intent(this, ShiftTemplateActivity.class));
+                    return true;
+                case 12:
+                    startActivity(new Intent(this, ShiftScheduleActivity.class));
+                    return true;
+                case 13:
+                    startActivity(new Intent(this, MyShiftActivity.class));
                     return true;
                 case 3:
                     showLogoutDialog();
@@ -234,7 +229,6 @@ public class TableActivity extends AppCompatActivity {
         }
     }
 
-
     private void setupRecyclerView() {
         RecyclerView rvAreas = findViewById(R.id.rv_areas);
         rvAreas.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
@@ -272,43 +266,23 @@ public class TableActivity extends AppCompatActivity {
     }
 
     private void updateActiveStat() {
-
         Integer total = viewModel.getTotalCount().getValue();
-
         Integer occupied = viewModel.getOccupiedCount().getValue();
-
         if (total != null && occupied != null) {
-
             tvActiveCount.setText(getString(R.string.format_total_tables, occupied, total));
-
         }
-
     }
 
     private void onTableClicked(TableEntity table) {
-
-        // Reset cart trước mọi flow mới — đảm bảo không kế thừa state cũ
         CartManager.getInstance().clearCart();
-
         if (Constants.TABLE_EMPTY.equals(table.getStatus())) {
-
             Intent intent = new Intent(this, MenuActivity.class);
-
             intent.putExtra(EXTRA_TABLE_ID, table.getTableId());
-
             intent.putExtra(EXTRA_TABLE_NAME, table.getTableName());
-
             startActivity(intent);
-
         } else {
-
-            // OCCUPIED: mở OrdersList để chọn order cần thu tiền (hoặc gọi thêm)
-
             Intent intent = new Intent(this, OrdersListActivity.class);
-
             startActivity(intent);
-
         }
-
     }
 }

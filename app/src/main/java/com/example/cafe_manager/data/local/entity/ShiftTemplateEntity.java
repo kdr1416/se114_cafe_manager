@@ -2,12 +2,10 @@ package com.example.cafe_manager.data.local.entity;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
-import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "shift_templates", indices = {@Index(value = "template_name", unique = true)})
+@Entity(tableName = "shift_templates")
 public class ShiftTemplateEntity {
-
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "template_id")
     private int templateId;
@@ -16,22 +14,23 @@ public class ShiftTemplateEntity {
     private String templateName;
 
     @ColumnInfo(name = "start_time")
-    private String startTime; // Định dạng HH:mm, ví dụ: "06:00"
+    private String startTime;
 
     @ColumnInfo(name = "end_time")
-    private String endTime; // Định dạng HH:mm, ví dụ: "14:00"
+    private String endTime;
 
     @ColumnInfo(name = "min_staff")
     private int minStaff;
 
     @ColumnInfo(name = "is_active")
-    private boolean isActive;
+    private boolean isActive = true;
 
     @ColumnInfo(name = "created_at")
     private long createdAt;
 
     public ShiftTemplateEntity() {}
 
+    // Getters and Setters
     public int getTemplateId() { return templateId; }
     public void setTemplateId(int templateId) { this.templateId = templateId; }
 

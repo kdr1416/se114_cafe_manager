@@ -2,15 +2,10 @@ package com.example.cafe_manager.data.local.entity;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
-import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-@Entity(
-    tableName = "shift_assignments",
-    indices = {@Index(value = {"shift_id", "user_id"}, unique = true)}
-)
+@Entity(tableName = "shift_assignments")
 public class ShiftAssignmentEntity {
-
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "assignment_id")
     private int assignmentId;
@@ -22,19 +17,18 @@ public class ShiftAssignmentEntity {
     private int userId;
 
     @ColumnInfo(name = "role")
-    private String role; // Vai trò mong muốn trong ca (ADMIN, MANAGER, STAFF)
+    private String role;
 
     @ColumnInfo(name = "assigned_by")
-    private int assignedBy;
+    private Integer assignedBy;
 
     @ColumnInfo(name = "confirmed")
-    private boolean confirmed; // Nhân viên đã xác nhận làm ca này chưa
+    private boolean confirmed;
 
     @ColumnInfo(name = "created_at")
     private long createdAt;
 
-    public ShiftAssignmentEntity() {}
-
+    // Getters and Setters
     public int getAssignmentId() { return assignmentId; }
     public void setAssignmentId(int assignmentId) { this.assignmentId = assignmentId; }
 
@@ -47,8 +41,8 @@ public class ShiftAssignmentEntity {
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 
-    public int getAssignedBy() { return assignedBy; }
-    public void setAssignedBy(int assignedBy) { this.assignedBy = assignedBy; }
+    public Integer getAssignedBy() { return assignedBy; }
+    public void setAssignedBy(Integer assignedBy) { this.assignedBy = assignedBy; }
 
     public boolean isConfirmed() { return confirmed; }
     public void setConfirmed(boolean confirmed) { this.confirmed = confirmed; }
@@ -56,4 +50,3 @@ public class ShiftAssignmentEntity {
     public long getCreatedAt() { return createdAt; }
     public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
 }
-
