@@ -58,6 +58,14 @@ public class ShiftScheduleAdapter extends RecyclerView.Adapter<ShiftScheduleAdap
         h.tvTime.setText(shift.getStartTime() + " — " + shift.getEndTime());
         h.tvStaffCount.setText(item.assignedCount + " nhân viên");
 
+        // Warning understaffed
+        if (item.understaffed) {
+            h.tvUnderstaffedWarning.setText("⚠️ Thiếu nhân viên (" + item.assignedCount + "/" + item.minStaff + ")");
+            h.tvUnderstaffedWarning.setVisibility(View.VISIBLE);
+        } else {
+            h.tvUnderstaffedWarning.setVisibility(View.GONE);
+        }
+
         // Status badge
         String status = shift.getStatus();
         h.tvStatus.setText(getStatusLabel(status));
@@ -129,7 +137,7 @@ public class ShiftScheduleAdapter extends RecyclerView.Adapter<ShiftScheduleAdap
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvName, tvTime, tvStatus, tvStaffCount;
+        TextView tvName, tvTime, tvStatus, tvStaffCount, tvUnderstaffedWarning;
         Button btnAction;
 
         ViewHolder(View v) {
@@ -138,6 +146,7 @@ public class ShiftScheduleAdapter extends RecyclerView.Adapter<ShiftScheduleAdap
             tvTime = v.findViewById(R.id.tv_time);
             tvStatus = v.findViewById(R.id.tv_status);
             tvStaffCount = v.findViewById(R.id.tv_staff_count);
+            tvUnderstaffedWarning = v.findViewById(R.id.tv_understaffed_warning);
             btnAction = v.findViewById(R.id.btn_action);
         }
     }

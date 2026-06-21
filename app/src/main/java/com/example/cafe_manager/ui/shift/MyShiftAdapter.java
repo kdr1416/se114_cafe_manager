@@ -24,6 +24,8 @@ public class MyShiftAdapter extends RecyclerView.Adapter<MyShiftAdapter.ViewHold
 
     public interface OnMyShiftActionListener {
         void onConfirm(int assignmentId);
+        void onCheckIn(int shiftId);
+        void onCheckOut(int shiftId);
     }
 
     private List<MyShiftViewModel.MyShiftItem> items = new ArrayList<>();
@@ -80,25 +82,101 @@ public class MyShiftAdapter extends RecyclerView.Adapter<MyShiftAdapter.ViewHold
         h.tvShiftStatus.setText(statusLabel);
         h.tvShiftStatus.setTextColor(h.itemView.getContext().getResources().getColor(statusColor));
 
-        // Assignment status
+        // Assignment status text
         if (item.confirmed) {
             h.tvConfirmStatus.setText("✅ Đã xác nhận");
             h.tvConfirmStatus.setTextColor(h.itemView.getContext().getResources().getColor(R.color.success));
-            h.btnConfirm.setVisibility(View.GONE);
         } else {
             h.tvConfirmStatus.setText("⏳ Chờ xác nhận");
             h.tvConfirmStatus.setTextColor(h.itemView.getContext().getResources().getColor(R.color.warning));
-            h.btnConfirm.setVisibility(View.VISIBLE);
-            h.btnConfirm.setOnClickListener(v -> listener.onConfirm(item.assignmentId));
         }
+
+        // Attendance details text
+        if (item.attendance != null && item.attendance.getCheckInAt() > 0) {
+            String attStatus = item.attendance.getStatus();
+            String badgeText = attStatus;
+            int badgeBg = R.drawable.bg_badge_success;
+
+            switch (attStatus) {
+                case Constants.ATTENDANCE_CHECKED_IN:
+                    badgeText = "✅ Đã check-in";
+                    badgeBg = R.drawable.bg_badge_success;
+                    break;
+                case Constants.ATTENDANCE_LATE:
+                    badgeText = "⏰ Đi muộn";
+                    badgeBg = R.drawable.bg_badge_warning;
+                    break;
+                case Constants.ATTENDANCE_EARLY_LEAVE:
+                    badgeText = "⚡ Về sớm";
+                    badgeBg = R.drawable.bg_badge_warning;
+                    break;
+                case Constants.ATTENDANCE_COMPLETED:
+                    badgeText = "✔️ Hoàn thành";
+                    badgeBg = R.drawable.bg_badge_success;
+                    break;
+                case Constants.ATTENDANCE_ABSENT:
+                    badgeText = "❌ Vắng mặt";
+                    badgeBg = R.drawable.bg_badge_warning;
+                    break;
+            }
+            h.tvAttendanceStatus.setText(badgeText);
+            h.tvAttendanceStatus.setBackgroundResource(badgeBg);
+            h.tvAttendanceStatus.setVisibility(View.VISIBLE);
+
+            StringBuilder details = new StringBuilder();
+            details.append("📥 Check-in: ").append(formatTime(item.attendance.getCheckInAt()));
+            if (item.attendance.getLateMinutes() > 0) {
+                details.append(" (muộn ").append(item.attendance.getLateMinutes()).append(" phút)");
+            }
+            if (item.attendance.getCheckOutAt() > 0) {
+                details.append("\n📤 Check-out: ").append(formatTime(item.attendance.getCheckOutAt()));
+                if (item.attendance.getEarlyLeaveMinutes() > 0) {
+                    details.append(" (sớm ").append(item.attendance.getEarlyLeaveMinutes()).append(" phút)");
+                }
+            }
+            h.tvAttendanceDetails.setText(details.toString());
+            h.tvAttendanceDetails.setVisibility(View.VISIBLE);
+        } else {
+            h.tvAttendanceStatus.setVisibility(View.GONE);
+            h.tvAttendanceDetails.setVisibility(View.GONE);
+        }
+
+        // Dynamic action button based on state
+        if (!item.confirmed) {
+            h.btnAction.setVisibility(View.VISIBLE);
+            h.btnAction.setText("Xác nhận");
+            h.btnAction.setOnClickListener(v -> listener.onConfirm(item.assignmentId));
+        } else if (item.attendance == null || item.attendance.getCheckInAt() == 0) {
+            // Đã xác nhận ca, chưa check-in
+            if (Constants.SHIFT_PUBLISHED.equals(shift.getStatus()) || Constants.SHIFT_IN_PROGRESS.equals(shift.getStatus())) {
+                h.btnAction.setVisibility(View.VISIBLE);
+                h.btnAction.setText("Check-in");
+                h.btnAction.setOnClickListener(v -> listener.onCheckIn(shift.getShiftId()));
+            } else {
+                h.btnAction.setVisibility(View.GONE);
+            }
+        } else if (item.attendance.getCheckOutAt() == 0) {
+            // Đã check-in, chưa check-out
+            h.btnAction.setVisibility(View.VISIBLE);
+            h.btnAction.setText("Check-out");
+            h.btnAction.setOnClickListener(v -> listener.onCheckOut(shift.getShiftId()));
+        } else {
+            // Đã hoàn tất check-out
+            h.btnAction.setVisibility(View.GONE);
+        }
+    }
+
+    private String formatTime(long timestamp) {
+        if (timestamp <= 0) return "--:--";
+        return new SimpleDateFormat("HH:mm dd/MM", Locale.getDefault()).format(new Date(timestamp));
     }
 
     @Override
     public int getItemCount() { return items.size(); }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView tvNameDate, tvTime, tvShiftStatus, tvConfirmStatus;
-        public Button btnConfirm;
+        public TextView tvNameDate, tvTime, tvShiftStatus, tvConfirmStatus, tvAttendanceStatus, tvAttendanceDetails;
+        public Button btnAction;
 
         public ViewHolder(View v) {
             super(v);
@@ -106,7 +184,9 @@ public class MyShiftAdapter extends RecyclerView.Adapter<MyShiftAdapter.ViewHold
             tvTime = v.findViewById(R.id.tv_time);
             tvShiftStatus = v.findViewById(R.id.tv_shift_status);
             tvConfirmStatus = v.findViewById(R.id.tv_confirm_status);
-            btnConfirm = v.findViewById(R.id.btn_confirm);
+            tvAttendanceStatus = v.findViewById(R.id.tv_attendance_status);
+            tvAttendanceDetails = v.findViewById(R.id.tv_attendance_details);
+            btnAction = v.findViewById(R.id.btn_action);
         }
     }
 }

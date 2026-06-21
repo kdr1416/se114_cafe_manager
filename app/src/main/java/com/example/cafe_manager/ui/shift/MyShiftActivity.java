@@ -36,7 +36,22 @@ public class MyShiftActivity extends AppCompatActivity {
         // RecyclerView
         RecyclerView rv = findViewById(R.id.rv_my_shifts);
         rv.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new MyShiftAdapter(assignmentId -> viewModel.confirmAssignment(assignmentId));
+        adapter = new MyShiftAdapter(new MyShiftAdapter.OnMyShiftActionListener() {
+            @Override
+            public void onConfirm(int assignmentId) {
+                viewModel.confirmAssignment(assignmentId);
+            }
+
+            @Override
+            public void onCheckIn(int shiftId) {
+                viewModel.checkIn(shiftId);
+            }
+
+            @Override
+            public void onCheckOut(int shiftId) {
+                viewModel.checkOut(shiftId);
+            }
+        });
         rv.setAdapter(adapter);
 
         // Observe

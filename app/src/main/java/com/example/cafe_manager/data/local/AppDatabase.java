@@ -42,6 +42,7 @@ import com.example.cafe_manager.data.local.entity.ShiftEntity;
 import com.example.cafe_manager.data.local.entity.ShiftTemplateEntity;
 import com.example.cafe_manager.data.local.entity.ShiftCashSessionEntity;
 import com.example.cafe_manager.data.local.dao.ShiftCashSessionDao;
+import com.example.cafe_manager.data.local.dao.ShiftTransactionDao;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -77,6 +78,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract OrderTransactionDao orderTransactionDao();
     public abstract PaymentTransactionDao paymentTransactionDao();
     public abstract ShiftCashSessionDao shiftCashSessionDao();
+    public abstract ShiftTransactionDao shiftTransactionDao();
 
     private static volatile AppDatabase instance;
 

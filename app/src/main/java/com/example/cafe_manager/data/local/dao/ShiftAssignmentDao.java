@@ -51,4 +51,17 @@ public interface ShiftAssignmentDao {
     /** Đếm số nhân viên đã phân công cho 1 ca. */
     @Query("SELECT COUNT(*) FROM shift_assignments WHERE shift_id = :shiftId")
     int countByShift(int shiftId);
+
+    @Query("SELECT s.status FROM shifts s INNER JOIN shift_assignments sa ON s.shift_id = sa.shift_id WHERE sa.assignment_id = :assignmentId")
+    String getShiftStatusByAssignmentId(int assignmentId);
+
+    @Query("SELECT * FROM shift_assignments WHERE shift_id = :shiftId AND user_id = :userId LIMIT 1")
+    ShiftAssignmentEntity getByShiftAndUser(int shiftId, int userId);
+
+    @Query("SELECT COUNT(*) FROM shift_assignments sa " +
+           "INNER JOIN shifts s ON sa.shift_id = s.shift_id " +
+           "WHERE sa.user_id = :userId " +
+           "AND s.shift_date BETWEEN :fromDate AND :toDate " +
+           "AND s.status != 'CANCELLED'")
+    int countAssignmentsInRange(int userId, long fromDate, long toDate);
 }

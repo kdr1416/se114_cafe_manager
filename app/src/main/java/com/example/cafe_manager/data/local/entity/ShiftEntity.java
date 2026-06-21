@@ -6,44 +6,46 @@ import androidx.room.PrimaryKey;
 
 @Entity(tableName = "shifts")
 public class ShiftEntity {
+
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "shift_id")
     private int shiftId;
 
     @ColumnInfo(name = "template_id")
-    private Integer templateId;
+    private Integer templateId; // Có thể null nếu tạo thủ công không theo template
 
     @ColumnInfo(name = "shift_name")
     private String shiftName;
 
     @ColumnInfo(name = "shift_date")
-    private long shiftDate;
+    private long shiftDate; // Epoch ngày làm việc (mili giây lúc 00:00:00)
 
     @ColumnInfo(name = "start_time")
-    private String startTime;
+    private String startTime; // HH:mm
 
     @ColumnInfo(name = "end_time")
-    private String endTime;
+    private String endTime; // HH:mm
 
     @ColumnInfo(name = "status")
     private String status; // DRAFT, PUBLISHED, IN_PROGRESS, CLOSED, CANCELLED
 
     @ColumnInfo(name = "opened_by")
-    private Integer openedBy;
+    private int openedBy;
 
     @ColumnInfo(name = "opened_at")
-    private Long openedAt;
+    private long openedAt;
 
     @ColumnInfo(name = "closed_by")
-    private Integer closedBy;
+    private int closedBy;
 
     @ColumnInfo(name = "closed_at")
-    private Long closedAt;
+    private long closedAt;
 
     @ColumnInfo(name = "created_at")
     private long createdAt;
 
-    // Getters and Setters
+    public ShiftEntity() {}
+
     public int getShiftId() { return shiftId; }
     public void setShiftId(int shiftId) { this.shiftId = shiftId; }
 
@@ -65,17 +67,17 @@ public class ShiftEntity {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public Integer getOpenedBy() { return openedBy; }
-    public void setOpenedBy(Integer openedBy) { this.openedBy = openedBy; }
+    public int getOpenedBy() { return openedBy; }
+    public void setOpenedBy(int openedBy) { this.openedBy = openedBy; }
 
-    public Long getOpenedAt() { return openedAt; }
-    public void setOpenedAt(Long openedAt) { this.openedAt = openedAt; }
+    public long getOpenedAt() { return openedAt; }
+    public void setOpenedAt(long openedAt) { this.openedAt = openedAt; }
 
-    public Integer getClosedBy() { return closedBy; }
-    public void setClosedBy(Integer closedBy) { this.closedBy = closedBy; }
+    public int getClosedBy() { return closedBy; }
+    public void setClosedBy(int closedBy) { this.closedBy = closedBy; }
 
-    public Long getClosedAt() { return closedAt; }
-    public void setClosedAt(Long closedAt) { this.closedAt = closedAt; }
+    public long getClosedAt() { return closedAt; }
+    public void setClosedAt(long closedAt) { this.closedAt = closedAt; }
 
     public long getCreatedAt() { return createdAt; }
     public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }

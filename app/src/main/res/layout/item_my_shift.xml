@@ -35,6 +35,30 @@
             style="@style/TextAppearance.Cafe.Caption" />
     </LinearLayout>
 
+    <!-- Attendance Status Badge -->
+    <TextView
+        android:id="@+id/tv_attendance_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:paddingStart="@dimen/spacing_sm"
+        android:paddingEnd="@dimen/spacing_sm"
+        android:paddingTop="@dimen/spacing_xs"
+        android:paddingBottom="@dimen/spacing_xs"
+        android:background="@drawable/bg_badge_success"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:visibility="gone" />
+
+    <!-- Attendance Details -->
+    <TextView
+        android:id="@+id/tv_attendance_details"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:textColor="@color/text_soft"
+        android:visibility="gone" />
+
     <!-- Row 3: assignment status + action button -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -51,7 +75,7 @@
             style="@style/TextAppearance.Cafe.Body" />
 
         <Button
-            android:id="@+id/btn_confirm"
+            android:id="@+id/btn_action"
             android:layout_width="wrap_content"
             android:layout_height="@dimen/height_button_sm"
             style="@style/Widget.Cafe.Button.Primary"

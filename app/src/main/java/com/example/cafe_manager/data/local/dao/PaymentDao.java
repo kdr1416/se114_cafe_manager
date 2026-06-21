@@ -49,6 +49,10 @@ public interface PaymentDao {
     @Query("SELECT * FROM payments WHERE paid_shift_id = :shiftId ORDER BY paid_at DESC")
     LiveData<List<PaymentEntity>> getByPaidShiftId(int shiftId);
 
+    /** Đếm số đơn đã thanh toán theo ca bằng payments.paid_shift_id. */
+    @Query("SELECT COUNT(DISTINCT order_id) FROM payments WHERE paid_shift_id = :shiftId")
+    int countDistinctOrdersByPaidShiftId(int shiftId);
+
     /** Tổng doanh thu tiền mặt theo ca (dùng cho reconciliation). */
     @Query("SELECT COALESCE(SUM(final_amount), 0) FROM payments " +
             "WHERE paid_shift_id = :shiftId AND payment_method = 'CASH'")

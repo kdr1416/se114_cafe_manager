@@ -36,6 +36,7 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
     private final LiveData<List<ShiftEntity>> rawShifts;
     private final MediatorLiveData<List<ShiftDisplayItem>> shiftsLive = new MediatorLiveData<>();
     private final LiveData<List<ShiftTemplateEntity>> templatesLive;
+    private final MutableLiveData<String> statusFilter = new MutableLiveData<>("ALL");
     private final MutableLiveData<String> messageLive = new MutableLiveData<>();
 
     // ── Inner classes ──
@@ -43,19 +44,29 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
     public static class ShiftDisplayItem {
         public final ShiftEntity shift;
         public final int assignedCount;
-        public ShiftDisplayItem(ShiftEntity shift, int assignedCount) {
+        public final int minStaff;
+        public final boolean understaffed;
+
+        public ShiftDisplayItem(ShiftEntity shift, int assignedCount, int minStaff) {
             this.shift = shift;
             this.assignedCount = assignedCount;
+            this.minStaff = minStaff;
+            this.understaffed = assignedCount < minStaff &&
+                    !Constants.SHIFT_CLOSED.equals(shift.getStatus()) &&
+                    !Constants.SHIFT_CANCELLED.equals(shift.getStatus());
         }
     }
 
     public static class StaffAssignmentData {
         public final List<UserEntity> allUsers;
         public final List<ShiftAssignmentEntity> currentAssignments;
+        public final java.util.Map<Integer, Integer> weeklyShiftCounts;
         public StaffAssignmentData(List<UserEntity> allUsers,
-                                   List<ShiftAssignmentEntity> currentAssignments) {
+                                   List<ShiftAssignmentEntity> currentAssignments,
+                                   java.util.Map<Integer, Integer> weeklyShiftCounts) {
             this.allUsers = allUsers;
             this.currentAssignments = currentAssignments;
+            this.weeklyShiftCounts = weeklyShiftCounts;
         }
     }
 
@@ -73,18 +84,9 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
         rawShifts = Transformations.switchMap(selectedDate,
                 date -> shiftRepository.getShiftsByDate(date));
 
-        // Enrich mỗi shift với assignedCount
-        shiftsLive.addSource(rawShifts, shifts -> {
-            if (shifts == null) { shiftsLive.setValue(null); return; }
-            AppExecutors.getInstance().diskIO().execute(() -> {
-                List<ShiftDisplayItem> items = new ArrayList<>();
-                for (ShiftEntity s : shifts) {
-                    int count = appDatabase.shiftAssignmentDao().countByShift(s.getShiftId());
-                    items.add(new ShiftDisplayItem(s, count));
-                }
-                AppExecutors.getInstance().mainThread().execute(() -> shiftsLive.setValue(items));
-            });
-        });
+        // Enrich và lọc mỗi shift
+        shiftsLive.addSource(rawShifts, shifts -> reloadAndFilterShifts());
+        shiftsLive.addSource(statusFilter, filter -> reloadAndFilterShifts());
 
         // Mặc định chọn hôm nay
         Calendar cal = Calendar.getInstance();
@@ -95,12 +97,46 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
         selectedDate.setValue(cal.getTimeInMillis());
     }
 
+    private void reloadAndFilterShifts() {
+        List<ShiftEntity> shifts = rawShifts.getValue();
+        String filter = statusFilter.getValue();
+        if (shifts == null) {
+            shiftsLive.setValue(null);
+            return;
+        }
+
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            List<ShiftDisplayItem> items = new ArrayList<>();
+            for (ShiftEntity s : shifts) {
+                // Lọc theo status
+                if (filter != null && !"ALL".equals(filter)) {
+                    if (!filter.equals(s.getStatus())) {
+                        continue;
+                    }
+                }
+
+                int count = appDatabase.shiftAssignmentDao().countByShift(s.getShiftId());
+                int minStaff = 0;
+                if (s.getTemplateId() != null) {
+                    ShiftTemplateEntity t = appDatabase.shiftTemplateDao().getById(s.getTemplateId());
+                    if (t != null) {
+                        minStaff = t.getMinStaff();
+                    }
+                }
+                items.add(new ShiftDisplayItem(s, count, minStaff));
+            }
+            AppExecutors.getInstance().mainThread().execute(() -> shiftsLive.setValue(items));
+        });
+    }
+
     // ── Getters ──
 
     public LiveData<List<ShiftDisplayItem>> getShifts() { return shiftsLive; }
     public LiveData<List<ShiftTemplateEntity>> getTemplates() { return templatesLive; }
     public LiveData<String> getMessage() { return messageLive; }
     public void clearMessage() { messageLive.setValue(null); }
+    public void setStatusFilter(String filter) { statusFilter.setValue(filter); }
+    public String getStatusFilter() { return statusFilter.getValue(); }
     public long getSelectedDate() {
         Long d = selectedDate.getValue();
         return d != null ? d : System.currentTimeMillis();
@@ -110,6 +146,13 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
 
     public void setDate(long dateMidnight) {
         selectedDate.setValue(dateMidnight);
+    }
+
+    public void refresh() {
+        Long d = selectedDate.getValue();
+        if (d != null) {
+            selectedDate.setValue(d);
+        }
     }
 
     // ── Tạo ca từ template ──
@@ -157,6 +200,17 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
     public void cancelShift(int shiftId) {
         AppExecutors.getInstance().diskIO().execute(() -> {
             try {
+                ShiftEntity shift = appDatabase.shiftDao().getById(shiftId);
+                if (shift == null) {
+                    AppExecutors.getInstance().mainThread().execute(
+                            () -> messageLive.setValue("Ca làm việc không tồn tại."));
+                    return;
+                }
+                if (Constants.SHIFT_IN_PROGRESS.equals(shift.getStatus()) || Constants.SHIFT_CLOSED.equals(shift.getStatus())) {
+                    AppExecutors.getInstance().mainThread().execute(
+                            () -> messageLive.setValue("Không thể hủy ca đang chạy hoặc đã đóng."));
+                    return;
+                }
                 appDatabase.shiftDao().updateStatus(shiftId, Constants.SHIFT_CANCELLED);
                 AppExecutors.getInstance().mainThread().execute(
                         () -> messageLive.setValue("Đã hủy ca."));
@@ -171,25 +225,15 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
 
     public void openShiftWithCash(int shiftId, double openingCash) {
         int userId = sessionManager.getUserId();
-        shiftRepository.openShift(shiftId, userId, new RepositoryCallback<Void>() {
+        shiftRepository.openShiftWithCash(shiftId, openingCash, userId, new RepositoryCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
-                // Ca đã mở → tạo phiên két tiền mặt
-                reportRepository.openCashSession(shiftId, openingCash, userId,
-                        new RepositoryCallback<Long>() {
-                            @Override
-                            public void onSuccess(Long sessionId) {
-                                messageLive.setValue("Đã mở ca và két tiền mặt.");
-                            }
-                            @Override
-                            public void onError(Exception e) {
-                                messageLive.setValue("Ca đã mở, nhưng lỗi két: " + e.getMessage());
-                            }
-                        });
+                messageLive.setValue("Đã mở ca và két tiền mặt.");
+                refresh();
             }
             @Override
             public void onError(Exception e) {
-                messageLive.setValue(e.getMessage());
+                messageLive.setValue("Lỗi mở ca: " + e.getMessage());
             }
         });
     }
@@ -200,10 +244,40 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
     public void loadStaffForAssignment(int shiftId, RepositoryCallback<StaffAssignmentData> callback) {
         AppExecutors.getInstance().diskIO().execute(() -> {
             try {
+                ShiftEntity shift = appDatabase.shiftDao().getById(shiftId);
+                long date = shift != null ? shift.getShiftDate() : System.currentTimeMillis();
+
+                Calendar cal = Calendar.getInstance();
+                cal.setTimeInMillis(date);
+                cal.setFirstDayOfWeek(Calendar.MONDAY);
+                
+                // Get Monday 00:00:00.000 of the week
+                cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                long weekStart = cal.getTimeInMillis();
+
+                // Get Sunday 23:59:59.999 of the week
+                cal.add(Calendar.DATE, 6);
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.MILLISECOND, 999);
+                long weekEnd = cal.getTimeInMillis();
+
                 List<UserEntity> users = appDatabase.userDao().getActiveUsersSync();
                 List<ShiftAssignmentEntity> assigned =
                         appDatabase.shiftAssignmentDao().getByShiftSync(shiftId);
-                StaffAssignmentData data = new StaffAssignmentData(users, assigned);
+
+                java.util.Map<Integer, Integer> weeklyShiftCounts = new java.util.HashMap<>();
+                for (UserEntity u : users) {
+                    int count = appDatabase.shiftAssignmentDao().countAssignmentsInRange(u.getUserId(), weekStart, weekEnd);
+                    weeklyShiftCounts.put(u.getUserId(), count);
+                }
+
+                StaffAssignmentData data = new StaffAssignmentData(users, assigned, weeklyShiftCounts);
                 AppExecutors.getInstance().mainThread().execute(() -> callback.onSuccess(data));
             } catch (Exception e) {
                 AppExecutors.getInstance().mainThread().execute(() -> callback.onError(e));
@@ -224,6 +298,7 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
             @Override
             public void onSuccess(Long result) {
                 messageLive.setValue("Đã phân công nhân viên.");
+                refresh();
             }
             @Override
             public void onError(Exception e) {
@@ -237,10 +312,90 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
             @Override
             public void onSuccess(Void result) {
                 messageLive.setValue("Đã hủy phân công.");
+                refresh();
             }
             @Override
             public void onError(Exception e) {
                 messageLive.setValue("Lỗi: " + e.getMessage());
+            }
+        });
+    }
+
+    public void bulkCreateShifts(List<ShiftTemplateEntity> templates) {
+        Long date = selectedDate.getValue();
+        if (date == null) { messageLive.setValue("Chưa chọn ngày."); return; }
+
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            try {
+                int count = 0;
+                for (ShiftTemplateEntity t : templates) {
+                    ShiftEntity shift = new ShiftEntity();
+                    shift.setTemplateId(t.getTemplateId());
+                    shift.setShiftName(t.getTemplateName());
+                    shift.setShiftDate(date);
+                    shift.setStartTime(t.getStartTime());
+                    shift.setEndTime(t.getEndTime());
+                    shift.setStatus(Constants.SHIFT_DRAFT);
+                    shift.setCreatedAt(System.currentTimeMillis());
+                    appDatabase.shiftDao().insert(shift);
+                    count++;
+                }
+                int finalCount = count;
+                AppExecutors.getInstance().mainThread().execute(() -> {
+                    messageLive.setValue("Đã tạo " + finalCount + " ca làm việc.");
+                    refresh();
+                });
+            } catch (Exception e) {
+                AppExecutors.getInstance().mainThread().execute(() -> {
+                    messageLive.setValue("Lỗi: " + e.getMessage());
+                });
+            }
+        });
+    }
+
+    public void copySchedule(long sourceDate, long targetDate) {
+        if (sourceDate == targetDate) {
+            messageLive.setValue("Không thể sao chép vào cùng ngày.");
+            return;
+        }
+
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            try {
+                List<ShiftEntity> sourceShifts = appDatabase.shiftDao().getByDateSync(sourceDate);
+                if (sourceShifts == null || sourceShifts.isEmpty()) {
+                    AppExecutors.getInstance().mainThread().execute(() -> {
+                        messageLive.setValue("Ngày nguồn không có ca nào để sao chép.");
+                    });
+                    return;
+                }
+
+                int count = 0;
+                for (ShiftEntity src : sourceShifts) {
+                    if (Constants.SHIFT_CANCELLED.equals(src.getStatus())) {
+                        continue;
+                    }
+
+                    ShiftEntity newShift = new ShiftEntity();
+                    newShift.setTemplateId(src.getTemplateId());
+                    newShift.setShiftName(src.getShiftName());
+                    newShift.setShiftDate(targetDate);
+                    newShift.setStartTime(src.getStartTime());
+                    newShift.setEndTime(src.getEndTime());
+                    newShift.setStatus(Constants.SHIFT_DRAFT);
+                    newShift.setCreatedAt(System.currentTimeMillis());
+                    appDatabase.shiftDao().insert(newShift);
+                    count++;
+                }
+
+                int finalCount = count;
+                AppExecutors.getInstance().mainThread().execute(() -> {
+                    messageLive.setValue("Đã sao chép " + finalCount + " ca làm việc (chỉ khung ca).");
+                    setDate(targetDate);
+                });
+            } catch (Exception e) {
+                AppExecutors.getInstance().mainThread().execute(() -> {
+                    messageLive.setValue("Lỗi: " + e.getMessage());
+                });
             }
         });
     }

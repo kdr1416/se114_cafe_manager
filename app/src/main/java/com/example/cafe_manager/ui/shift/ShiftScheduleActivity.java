@@ -136,8 +136,88 @@ public class ShiftScheduleActivity extends AppCompatActivity {
             }
         });
 
+        // Filter chips setup
+        TextView chipAll = findViewById(R.id.chip_shift_all);
+        TextView chipDraft = findViewById(R.id.chip_shift_draft);
+        TextView chipPublished = findViewById(R.id.chip_shift_published);
+        TextView chipInProgress = findViewById(R.id.chip_shift_in_progress);
+        TextView chipClosed = findViewById(R.id.chip_shift_closed);
+
+        View.OnClickListener filterClickListener = v -> {
+            String filter = "ALL";
+            if (v.getId() == R.id.chip_shift_all) {
+                filter = "ALL";
+            } else if (v.getId() == R.id.chip_shift_draft) {
+                filter = Constants.SHIFT_DRAFT;
+            } else if (v.getId() == R.id.chip_shift_published) {
+                filter = Constants.SHIFT_PUBLISHED;
+            } else if (v.getId() == R.id.chip_shift_in_progress) {
+                filter = Constants.SHIFT_IN_PROGRESS;
+            } else if (v.getId() == R.id.chip_shift_closed) {
+                filter = Constants.SHIFT_CLOSED;
+            }
+            viewModel.setStatusFilter(filter);
+            updateShiftChips(filter, chipAll, chipDraft, chipPublished, chipInProgress, chipClosed);
+        };
+
+        chipAll.setOnClickListener(filterClickListener);
+        chipDraft.setOnClickListener(filterClickListener);
+        chipPublished.setOnClickListener(filterClickListener);
+        chipInProgress.setOnClickListener(filterClickListener);
+        chipClosed.setOnClickListener(filterClickListener);
+
+        // Copy schedule click
+        findViewById(R.id.btn_copy_schedule).setOnClickListener(v -> showCopyScheduleDialog());
+
         // Set initial date label
         tvSelectedDate.setText(sdf.format(new Date(viewModel.getSelectedDate())));
+    }
+
+    private void showCopyScheduleDialog() {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(viewModel.getSelectedDate());
+        cal.add(Calendar.DATE, 1);
+
+        new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
+            Calendar c = Calendar.getInstance();
+            c.set(year, month, dayOfMonth, 0, 0, 0);
+            c.set(Calendar.MILLISECOND, 0);
+            long targetDate = c.getTimeInMillis();
+
+            new AlertDialog.Builder(this)
+                    .setTitle("Xác nhận sao chép")
+                    .setMessage("Bạn có chắc muốn sao chép toàn bộ khung ca từ ngày " +
+                            sdf.format(new Date(viewModel.getSelectedDate())) +
+                            " sang ngày " + sdf.format(new Date(targetDate)) + "?\n(Không copy phân công nhân sự)")
+                    .setPositiveButton("Sao chép", (dialog, which) -> {
+                        viewModel.copySchedule(viewModel.getSelectedDate(), targetDate);
+                    })
+                    .setNegativeButton("Hủy", null)
+                    .show();
+        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH))
+                .show();
+    }
+
+    private void updateShiftChips(String filter, TextView chipAll, TextView chipDraft, TextView chipPublished, TextView chipInProgress, TextView chipClosed) {
+        int activeBg = R.drawable.bg_button_primary;
+        int activeTextColor = getResources().getColor(R.color.text_on_accent);
+        int inactiveBg = R.drawable.bg_button_secondary;
+        int inactiveTextColor = getResources().getColor(R.color.text_soft);
+
+        chipAll.setBackgroundResource("ALL".equals(filter) ? activeBg : inactiveBg);
+        chipAll.setTextColor("ALL".equals(filter) ? activeTextColor : inactiveTextColor);
+
+        chipDraft.setBackgroundResource(Constants.SHIFT_DRAFT.equals(filter) ? activeBg : inactiveBg);
+        chipDraft.setTextColor(Constants.SHIFT_DRAFT.equals(filter) ? activeTextColor : inactiveTextColor);
+
+        chipPublished.setBackgroundResource(Constants.SHIFT_PUBLISHED.equals(filter) ? activeBg : inactiveBg);
+        chipPublished.setTextColor(Constants.SHIFT_PUBLISHED.equals(filter) ? activeTextColor : inactiveTextColor);
+
+        chipInProgress.setBackgroundResource(Constants.SHIFT_IN_PROGRESS.equals(filter) ? activeBg : inactiveBg);
+        chipInProgress.setTextColor(Constants.SHIFT_IN_PROGRESS.equals(filter) ? activeTextColor : inactiveTextColor);
+
+        chipClosed.setBackgroundResource(Constants.SHIFT_CLOSED.equals(filter) ? activeBg : inactiveBg);
+        chipClosed.setTextColor(Constants.SHIFT_CLOSED.equals(filter) ? activeTextColor : inactiveTextColor);
     }
 
     @Override
@@ -163,30 +243,35 @@ public class ShiftScheduleActivity extends AppCompatActivity {
     }
 
     private void showCreateShiftDialog() {
-        // Sử dụng currentTemplates đã được observe sẵn thay vì getValue()
         if (currentTemplates.isEmpty()) {
             Toast.makeText(this, "Chưa có mẫu ca nào. Hãy tạo mẫu ca trước.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_create_shift, null);
-        Spinner spinner = dialogView.findViewById(R.id.spinner_template);
-
         String[] names = new String[currentTemplates.size()];
+        boolean[] checked = new boolean[currentTemplates.size()];
         for (int i = 0; i < currentTemplates.size(); i++) {
             ShiftTemplateEntity t = currentTemplates.get(i);
             names[i] = t.getTemplateName() + " (" + t.getStartTime() + " - " + t.getEndTime() + ")";
+            checked[i] = false;
         }
-        spinner.setAdapter(new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item, names));
 
         new AlertDialog.Builder(this)
                 .setTitle("Tạo ca cho " + sdf.format(new Date(viewModel.getSelectedDate())))
-                .setView(dialogView)
-                .setPositiveButton("Tạo", (d, w) -> {
-                    int pos = spinner.getSelectedItemPosition();
-                    if (pos >= 0 && pos < currentTemplates.size()) {
-                        viewModel.createShiftFromTemplate(currentTemplates.get(pos));
+                .setMultiChoiceItems(names, checked, (dialog, which, isChecked) -> {
+                    checked[which] = isChecked;
+                })
+                .setPositiveButton("Tạo", (dialog, which) -> {
+                    List<ShiftTemplateEntity> selectedTemplates = new ArrayList<>();
+                    for (int i = 0; i < checked.length; i++) {
+                        if (checked[i]) {
+                            selectedTemplates.add(currentTemplates.get(i));
+                        }
+                    }
+                    if (!selectedTemplates.isEmpty()) {
+                        viewModel.bulkCreateShifts(selectedTemplates);
+                    } else {
+                        Toast.makeText(this, "Vui lòng chọn ít nhất một mẫu ca.", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .setNegativeButton("Hủy", null)
@@ -253,13 +338,25 @@ public class ShiftScheduleActivity extends AppCompatActivity {
             return;
         }
 
+        // Sắp xếp theo số ca trong tuần (ít nhất trước)
+        java.util.Collections.sort(users, (u1, u2) -> {
+            Integer count1 = data.weeklyShiftCounts.get(u1.getUserId());
+            Integer count2 = data.weeklyShiftCounts.get(u2.getUserId());
+            int c1 = count1 != null ? count1 : 0;
+            int c2 = count2 != null ? count2 : 0;
+            return Integer.compare(c1, c2);
+        });
+
         String[] names = new String[users.size()];
         boolean[] checked = new boolean[users.size()];
         boolean[] originalChecked = new boolean[users.size()];
 
         for (int i = 0; i < users.size(); i++) {
             UserEntity u = users.get(i);
-            names[i] = u.getFullName() + " (" + u.getRole() + ")";
+            Integer count = data.weeklyShiftCounts.get(u.getUserId());
+            int cnt = count != null ? count : 0;
+            names[i] = u.getFullName() + " (" + u.getRole() + ") — " + cnt + " ca/tuần";
+            
             boolean isAssigned = false;
             for (ShiftAssignmentEntity a : assigned) {
                 if (a.getUserId() == u.getUserId()) {
@@ -291,8 +388,6 @@ public class ShiftScheduleActivity extends AppCompatActivity {
                             }
                         }
                     }
-                    // Refresh list
-                    viewModel.setDate(viewModel.getSelectedDate());
                 })
                 .setNegativeButton("Hủy", null)
                 .show();

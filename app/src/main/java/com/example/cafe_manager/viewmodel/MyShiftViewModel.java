@@ -8,8 +8,10 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.cafe_manager.data.local.AppDatabase;
+import com.example.cafe_manager.data.local.entity.AttendanceEntity;
 import com.example.cafe_manager.data.local.entity.ShiftAssignmentEntity;
 import com.example.cafe_manager.data.local.entity.ShiftEntity;
+import com.example.cafe_manager.data.repository.AttendanceRepository;
 import com.example.cafe_manager.data.repository.ShiftRepository;
 import com.example.cafe_manager.manager.SessionManager;
 import com.example.cafe_manager.util.AppExecutors;
@@ -22,6 +24,7 @@ import java.util.List;
 public class MyShiftViewModel extends AndroidViewModel {
 
     private final ShiftRepository shiftRepository;
+    private final AttendanceRepository attendanceRepository;
     private final AppDatabase appDatabase;
     private final int currentUserId;
 
@@ -34,11 +37,13 @@ public class MyShiftViewModel extends AndroidViewModel {
         public final ShiftEntity shift;
         public final boolean confirmed;
         public final int assignmentId;
+        public final AttendanceEntity attendance;
 
-        public MyShiftItem(ShiftEntity shift, boolean confirmed, int assignmentId) {
+        public MyShiftItem(ShiftEntity shift, boolean confirmed, int assignmentId, AttendanceEntity attendance) {
             this.shift = shift;
             this.confirmed = confirmed;
             this.assignmentId = assignmentId;
+            this.attendance = attendance;
         }
     }
 
@@ -47,6 +52,7 @@ public class MyShiftViewModel extends AndroidViewModel {
     public MyShiftViewModel(@NonNull Application application) {
         super(application);
         shiftRepository = new ShiftRepository(application);
+        attendanceRepository = new AttendanceRepository(application);
         appDatabase = AppDatabase.getInstance(application);
         currentUserId = SessionManager.getInstance(application).getUserId();
         loadMyShifts();
@@ -69,7 +75,8 @@ public class MyShiftViewModel extends AndroidViewModel {
             for (ShiftAssignmentEntity a : assignments) {
                 ShiftEntity shift = appDatabase.shiftDao().getById(a.getShiftId());
                 if (shift != null && !shift.getStatus().equals("CANCELLED")) {
-                    items.add(new MyShiftItem(shift, a.isConfirmed(), a.getAssignmentId()));
+                    AttendanceEntity attendance = appDatabase.attendanceDao().getByShiftAndUser(a.getShiftId(), currentUserId);
+                    items.add(new MyShiftItem(shift, a.isConfirmed(), a.getAssignmentId(), attendance));
                 }
             }
 
@@ -96,6 +103,36 @@ public class MyShiftViewModel extends AndroidViewModel {
             @Override
             public void onError(Exception e) {
                 messageLive.setValue("Lỗi: " + e.getMessage());
+            }
+        });
+    }
+
+    public void checkIn(int shiftId) {
+        attendanceRepository.checkIn(shiftId, currentUserId, new RepositoryCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                messageLive.setValue("Check-in thành công.");
+                loadMyShifts();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                messageLive.setValue("Lỗi check-in: " + e.getMessage());
+            }
+        });
+    }
+
+    public void checkOut(int shiftId) {
+        attendanceRepository.checkOut(shiftId, currentUserId, new RepositoryCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                messageLive.setValue("Check-out thành công.");
+                loadMyShifts();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                messageLive.setValue("Lỗi check-out: " + e.getMessage());
             }
         });
     }

@@ -7,21 +7,22 @@ import com.example.cafe_manager.data.local.AppDatabase;
 import com.example.cafe_manager.data.local.dao.ShiftAssignmentDao;
 import com.example.cafe_manager.data.local.dao.ShiftDao;
 import com.example.cafe_manager.data.local.dao.ShiftTemplateDao;
+import com.example.cafe_manager.data.local.dao.ShiftTransactionDao;
 import com.example.cafe_manager.data.local.entity.ShiftAssignmentEntity;
 import com.example.cafe_manager.data.local.entity.ShiftEntity;
 import com.example.cafe_manager.data.local.entity.ShiftTemplateEntity;
 import com.example.cafe_manager.util.AppExecutors;
+import com.example.cafe_manager.util.Constants;
 import com.example.cafe_manager.util.RepositoryCallback;
+import com.example.cafe_manager.util.ShiftTimeUtils;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 public class ShiftRepository {
     private final ShiftTemplateDao templateDao;
     private final ShiftDao shiftDao;
     private final ShiftAssignmentDao assignmentDao;
+    private final ShiftTransactionDao transactionDao;
     private final AppExecutors executors;
 
     public ShiftRepository(Application application) {
@@ -29,6 +30,7 @@ public class ShiftRepository {
         templateDao = db.shiftTemplateDao();
         shiftDao = db.shiftDao();
         assignmentDao = db.shiftAssignmentDao();
+        transactionDao = db.shiftTransactionDao();
         executors = AppExecutors.getInstance();
     }
 
@@ -75,26 +77,14 @@ public class ShiftRepository {
         });
     }
 
-    public void openShift(int shiftId, int userId, RepositoryCallback<Void> callback) {
+    public void openShiftWithCash(int shiftId, double openingCash, int userId, RepositoryCallback<Void> callback) {
         executors.diskIO().execute(() -> {
             try {
-                ShiftEntity currentOpen = shiftDao.getCurrentlyOpen();
-                if (currentOpen != null) {
-                    if (currentOpen.getShiftId() == shiftId) {
-                        // Chính ca này đang mở, cho phép đi tiếp (idempotency)
-                        executors.mainThread().execute(() -> callback.onSuccess(null));
-                    } else {
-                        // Báo lỗi chi tiết ca nào đang bị kẹt
-                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-                        String dateStr = sdf.format(new Date(currentOpen.getShiftDate()));
-                        String errorMsg = "Ca '" + currentOpen.getShiftName() + "' ngày " + dateStr + " đang mở. Hãy đóng ca đó trước.";
-                        executors.mainThread().execute(() -> callback.onError(new Exception(errorMsg)));
-                    }
-                    return;
-                }
-                shiftDao.openShift(shiftId, userId, System.currentTimeMillis());
+                transactionDao.openShiftWithCashAtomic(shiftId, openingCash, userId, System.currentTimeMillis());
                 executors.mainThread().execute(() -> callback.onSuccess(null));
-            } catch (Exception e) { executors.mainThread().execute(() -> callback.onError(e)); }
+            } catch (Exception e) {
+                executors.mainThread().execute(() -> callback.onError(e));
+            }
         });
     }
 
@@ -102,15 +92,58 @@ public class ShiftRepository {
     public void assignStaff(ShiftAssignmentEntity assignment, RepositoryCallback<Long> callback) {
         executors.diskIO().execute(() -> {
             try {
+                // Lấy ca làm việc để kiểm tra
+                ShiftEntity shift = shiftDao.getById(assignment.getShiftId());
+                if (shift == null) {
+                    executors.mainThread().execute(() -> callback.onError(new Exception("Ca làm việc không tồn tại.")));
+                    return;
+                }
+
+                // Chặn phân công khi ca đang mở/đóng/hủy
+                if (Constants.SHIFT_IN_PROGRESS.equals(shift.getStatus()) || 
+                    Constants.SHIFT_CLOSED.equals(shift.getStatus()) || 
+                    Constants.SHIFT_CANCELLED.equals(shift.getStatus())) {
+                    executors.mainThread().execute(() -> callback.onError(new Exception("Không thể phân công nhân viên cho ca đang chạy, đã đóng hoặc đã hủy.")));
+                    return;
+                }
+                
+                // Kiểm tra overlap xuyên ngày sử dụng ShiftTimeUtils
+                List<ShiftAssignmentEntity> userAssignments = assignmentDao.getByUserSync(assignment.getUserId());
+                for (ShiftAssignmentEntity existingAssign : userAssignments) {
+                    if (existingAssign.getShiftId() == assignment.getShiftId()) {
+                        continue;
+                    }
+                    ShiftEntity existingShift = shiftDao.getById(existingAssign.getShiftId());
+                    if (existingShift != null && !Constants.SHIFT_CANCELLED.equals(existingShift.getStatus())) {
+                        if (ShiftTimeUtils.checkOverlap(shift.getShiftDate(), shift.getStartTime(), shift.getEndTime(),
+                                     existingShift.getShiftDate(), existingShift.getStartTime(), existingShift.getEndTime())) {
+                            executors.mainThread().execute(() -> callback.onError(new Exception("Nhân viên này đã bị trùng ca làm việc khác (" + existingShift.getShiftName() + ").")));
+                            return;
+                        }
+                    }
+                }
+
                 long id = assignmentDao.insert(assignment);
                 executors.mainThread().execute(() -> callback.onSuccess(id));
-            } catch (Exception e) { executors.mainThread().execute(() -> callback.onError(e)); }
+            } catch (Exception e) {
+                executors.mainThread().execute(() -> callback.onError(e));
+            }
         });
     }
 
     public void removeAssignment(int assignmentId, RepositoryCallback<Void> callback) {
         executors.diskIO().execute(() -> {
             try {
+                String shiftStatus = assignmentDao.getShiftStatusByAssignmentId(assignmentId);
+                if (shiftStatus != null) {
+                    if (Constants.SHIFT_IN_PROGRESS.equals(shiftStatus) || 
+                        Constants.SHIFT_CLOSED.equals(shiftStatus) || 
+                        Constants.SHIFT_CANCELLED.equals(shiftStatus)) {
+                        executors.mainThread().execute(() -> callback.onError(new Exception("Không thể hủy phân công cho ca đang chạy, đã đóng hoặc đã hủy.")));
+                        return;
+                    }
+                }
+
                 assignmentDao.delete(assignmentId);
                 executors.mainThread().execute(() -> callback.onSuccess(null));
             } catch (Exception e) { executors.mainThread().execute(() -> callback.onError(e)); }
@@ -120,6 +153,13 @@ public class ShiftRepository {
     public void confirmAssignment(int assignmentId, RepositoryCallback<Void> callback) {
         executors.diskIO().execute(() -> {
             try {
+                String shiftStatus = assignmentDao.getShiftStatusByAssignmentId(assignmentId);
+                if (shiftStatus != null) {
+                    if (Constants.SHIFT_CLOSED.equals(shiftStatus) || Constants.SHIFT_CANCELLED.equals(shiftStatus)) {
+                        executors.mainThread().execute(() -> callback.onError(new Exception("Không thể xác nhận phân công cho ca đã đóng hoặc đã hủy.")));
+                        return;
+                    }
+                }
                 assignmentDao.confirm(assignmentId);
                 executors.mainThread().execute(() -> callback.onSuccess(null));
             } catch (Exception e) { executors.mainThread().execute(() -> callback.onError(e)); }

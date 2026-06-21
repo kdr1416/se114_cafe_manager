@@ -53,6 +53,18 @@
             style="@style/TextAppearance.Cafe.Caption" />
     </LinearLayout>
 
+    <!-- Understaffed warning -->
+    <TextView
+        android:id="@+id/tv_understaffed_warning"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:textColor="@color/warning"
+        android:textSize="13sp"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:visibility="gone"
+        android:text="⚠️ Thiếu nhân viên" />
+
     <!-- Action button -->
     <Button
         android:id="@+id/btn_action"

@@ -83,6 +83,44 @@ public class ShiftTemplateActivity extends AppCompatActivity {
                 viewModel.clearMessage();
             }
         });
+
+        // Filter chips setup
+        TextView chipAll = findViewById(R.id.chip_template_all);
+        TextView chipActive = findViewById(R.id.chip_template_active);
+        TextView chipInactive = findViewById(R.id.chip_template_inactive);
+
+        View.OnClickListener filterClickListener = v -> {
+            String filter = "ALL";
+            if (v.getId() == R.id.chip_template_all) {
+                filter = "ALL";
+            } else if (v.getId() == R.id.chip_template_active) {
+                filter = "ACTIVE";
+            } else if (v.getId() == R.id.chip_template_inactive) {
+                filter = "INACTIVE";
+            }
+            viewModel.setFilter(filter);
+            updateTemplateChips(filter, chipAll, chipActive, chipInactive);
+        };
+
+        chipAll.setOnClickListener(filterClickListener);
+        chipActive.setOnClickListener(filterClickListener);
+        chipInactive.setOnClickListener(filterClickListener);
+    }
+
+    private void updateTemplateChips(String filter, TextView chipAll, TextView chipActive, TextView chipInactive) {
+        int activeBg = R.drawable.bg_button_primary;
+        int activeTextColor = getResources().getColor(R.color.text_on_accent);
+        int inactiveBg = R.drawable.bg_button_secondary;
+        int inactiveTextColor = getResources().getColor(R.color.text_soft);
+
+        chipAll.setBackgroundResource("ALL".equals(filter) ? activeBg : inactiveBg);
+        chipAll.setTextColor("ALL".equals(filter) ? activeTextColor : inactiveTextColor);
+
+        chipActive.setBackgroundResource("ACTIVE".equals(filter) ? activeBg : inactiveBg);
+        chipActive.setTextColor("ACTIVE".equals(filter) ? activeTextColor : inactiveTextColor);
+
+        chipInactive.setBackgroundResource("INACTIVE".equals(filter) ? activeBg : inactiveBg);
+        chipInactive.setTextColor("INACTIVE".equals(filter) ? activeTextColor : inactiveTextColor);
     }
 
     private void showTemplateDialog(ShiftTemplateEntity existing) {

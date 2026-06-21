@@ -229,9 +229,13 @@ public class PaymentViewModel extends AndroidViewModel {
 
         AppExecutors.getInstance().diskIO().execute(() -> {
             ShiftEntity openShift = appDatabase.shiftDao().getCurrentlyOpen();
-            int shiftId = (openShift != null) ? openShift.getShiftId() : 0;
-
             AppExecutors.getInstance().mainThread().execute(() -> {
+                if (openShift == null) {
+                    loadingLiveData.setValue(false);
+                    errorMessageLiveData.setValue("Chưa có ca bán hàng đang mở. Không thể thanh toán.");
+                    return;
+                }
+                int shiftId = openShift.getShiftId();
                 paymentRepository.payOrder(
                         orderId,
                         tableId,

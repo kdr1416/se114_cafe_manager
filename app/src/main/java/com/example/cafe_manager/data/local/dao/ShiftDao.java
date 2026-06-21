@@ -25,6 +25,9 @@ public interface ShiftDao {
     @Query("SELECT * FROM shifts WHERE shift_date = :date ORDER BY start_time ASC")
     LiveData<List<ShiftEntity>> getByDate(long date);
 
+    @Query("SELECT * FROM shifts WHERE shift_date = :date ORDER BY start_time ASC")
+    List<ShiftEntity> getByDateSync(long date);
+
     @Query("SELECT * FROM shifts WHERE shift_date BETWEEN :from AND :to ORDER BY shift_date ASC, start_time ASC")
     LiveData<List<ShiftEntity>> getByDateRange(long from, long to);
 
