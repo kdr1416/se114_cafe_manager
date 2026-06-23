@@ -81,15 +81,15 @@ public class MyShiftAdapter extends RecyclerView.Adapter<MyShiftAdapter.ViewHold
                 break;
         }
         h.tvShiftStatus.setText(statusLabel);
-        h.tvShiftStatus.setTextColor(h.itemView.getContext().getResources().getColor(statusColor));
+        h.tvShiftStatus.setTextColor(h.itemView.getContext().getColor(statusColor));
 
         // Assignment status text
         if (item.confirmed) {
             h.tvConfirmStatus.setText("✅ Đã xác nhận");
-            h.tvConfirmStatus.setTextColor(h.itemView.getContext().getResources().getColor(R.color.success));
+            h.tvConfirmStatus.setTextColor(h.itemView.getContext().getColor(R.color.success));
         } else {
             h.tvConfirmStatus.setText("⏳ Chờ xác nhận");
-            h.tvConfirmStatus.setTextColor(h.itemView.getContext().getResources().getColor(R.color.warning));
+            h.tvConfirmStatus.setTextColor(h.itemView.getContext().getColor(R.color.warning));
         }
 
         // Attendance details text

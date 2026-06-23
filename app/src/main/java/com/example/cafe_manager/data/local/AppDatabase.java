@@ -110,7 +110,7 @@ public abstract class AppDatabase extends RoomDatabase {
                                     AppDatabase.class,
                                     "cafe_manager.db"
                             )
-                            .fallbackToDestructiveMigration()
+                            .fallbackToDestructiveMigration(true)
                             .addCallback(seedCallback)
                             .build();
                 }

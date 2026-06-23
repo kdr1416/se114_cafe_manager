@@ -19,16 +19,9 @@ public interface ChatReadDao {
            "(SELECT message_id FROM chat_messages WHERE room_id = :roomId)")
     int countReadInRoom(int userId, int roomId);
 
-    @Transaction
-    default void markMessageReadIfNeeded(int messageId, int userId) {
-        if (getByMessageAndUser(messageId, userId) == null) {
-            ChatReadEntity r = new ChatReadEntity();
-            r.setMessageId(messageId);
-            r.setUserId(userId);
-            r.setReadAt(System.currentTimeMillis());
-            insert(r);
-        }
-    }
+    @Query("INSERT OR IGNORE INTO chat_reads (message_id, user_id, read_at) " +
+           "VALUES (:messageId, :userId, :readAt)")
+    void markMessageReadIfNeeded(int messageId, int userId, long readAt);
 
     @Query("INSERT OR IGNORE INTO chat_reads (message_id, user_id, read_at) " +
            "SELECT message_id, :userId, :readAt FROM chat_messages " +

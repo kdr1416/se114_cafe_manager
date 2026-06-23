@@ -97,7 +97,7 @@ public class ChatRepository {
 
     // Read tracking
     public void markMessageRead(int messageId, int userId) {
-        exec.diskIO().execute(() -> readDao.markMessageReadIfNeeded(messageId, userId));
+        exec.diskIO().execute(() -> readDao.markMessageReadIfNeeded(messageId, userId, System.currentTimeMillis()));
     }
 
     public void markAllMessagesRead(int roomId, int userId) {
@@ -120,94 +120,96 @@ public class ChatRepository {
     }
 
     public static void syncShiftChatRoomSync(AppDatabase db, int shiftId) {
-        try {
-            ShiftEntity shift = db.shiftDao().getById(shiftId);
-            if (shift == null) return;
+        db.runInTransaction(() -> {
+            try {
+                ShiftEntity shift = db.shiftDao().getById(shiftId);
+                if (shift == null) return;
 
-            ChatRoomEntity room = db.chatRoomDao().getByShiftId(shiftId);
-            int roomId;
-            if (room == null) {
-                if (Constants.SHIFT_CANCELLED.equals(shift.getStatus())) {
-                    return; // Don't create chat room for cancelled shifts
-                }
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault());
-                String dateStr = sdf.format(new java.util.Date(shift.getShiftDate()));
-                String roomName = shift.getShiftName() + " - " + dateStr + " (" + shift.getStartTime() + "-" + shift.getEndTime() + ")";
-                
-                room = new ChatRoomEntity();
-                room.setRoomName(roomName);
-                room.setRoomType(Constants.CHAT_TYPE_SHIFT);
-                room.setShiftId(shiftId);
-                room.setCreatedBy(shift.getOpenedBy() > 0 ? shift.getOpenedBy() : 1);
-                room.setCreatedAt(System.currentTimeMillis());
-                room.setUpdatedAt(System.currentTimeMillis());
-                room.setIsActive(true);
-                roomId = (int) db.chatRoomDao().insert(room);
-            } else {
-                if (Constants.SHIFT_CANCELLED.equals(shift.getStatus())) {
-                    room.setIsActive(false);
-                    db.chatRoomDao().update(room);
-                    return;
-                }
-                
-                // Update name if shift info changed
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault());
-                String dateStr = sdf.format(new java.util.Date(shift.getShiftDate()));
-                String expectedName = shift.getShiftName() + " - " + dateStr + " (" + shift.getStartTime() + "-" + shift.getEndTime() + ")";
-                
-                boolean changed = false;
-                if (!expectedName.equals(room.getRoomName())) {
-                    room.setRoomName(expectedName);
-                    changed = true;
-                }
-                if (!room.getIsActive()) {
+                ChatRoomEntity room = db.chatRoomDao().getByShiftId(shiftId);
+                int roomId;
+                if (room == null) {
+                    if (Constants.SHIFT_CANCELLED.equals(shift.getStatus())) {
+                        return; // Don't create chat room for cancelled shifts
+                    }
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault());
+                    String dateStr = sdf.format(new java.util.Date(shift.getShiftDate()));
+                    String roomName = shift.getShiftName() + " - " + dateStr + " (" + shift.getStartTime() + "-" + shift.getEndTime() + ")";
+
+                    room = new ChatRoomEntity();
+                    room.setRoomName(roomName);
+                    room.setRoomType(Constants.CHAT_TYPE_SHIFT);
+                    room.setShiftId(shiftId);
+                    room.setCreatedBy(shift.getOpenedBy() > 0 ? shift.getOpenedBy() : 1);
+                    room.setCreatedAt(System.currentTimeMillis());
+                    room.setUpdatedAt(System.currentTimeMillis());
                     room.setIsActive(true);
-                    changed = true;
-                }
-                if (changed) {
-                    db.chatRoomDao().update(room);
-                }
-                roomId = room.getRoomId();
-            }
-
-            // Sync participants
-            List<ShiftAssignmentEntity> assignments = db.shiftAssignmentDao().getByShiftSync(shiftId);
-            List<ChatParticipantEntity> currentParticipants = db.chatParticipantDao().getByRoom(roomId);
-
-            // Add missing
-            for (ShiftAssignmentEntity assign : assignments) {
-                boolean exists = false;
-                for (ChatParticipantEntity part : currentParticipants) {
-                    if (part.getUserId() == assign.getUserId()) {
-                        exists = true;
-                        break;
+                    roomId = (int) db.chatRoomDao().insert(room);
+                } else {
+                    if (Constants.SHIFT_CANCELLED.equals(shift.getStatus())) {
+                        room.setIsActive(false);
+                        db.chatRoomDao().update(room);
+                        return;
                     }
-                }
-                if (!exists) {
-                    ChatParticipantEntity p = new ChatParticipantEntity();
-                    p.setRoomId(roomId);
-                    p.setUserId(assign.getUserId());
-                    p.setJoinedAt(System.currentTimeMillis());
-                    p.setRoleInRoom(Constants.CHAT_ROLE_MEMBER);
-                    db.chatParticipantDao().insert(p);
-                }
-            }
 
-            // Remove extra
-            for (ChatParticipantEntity part : currentParticipants) {
-                boolean stillAssigned = false;
+                    // Update name if shift info changed
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault());
+                    String dateStr = sdf.format(new java.util.Date(shift.getShiftDate()));
+                    String expectedName = shift.getShiftName() + " - " + dateStr + " (" + shift.getStartTime() + "-" + shift.getEndTime() + ")";
+
+                    boolean changed = false;
+                    if (!expectedName.equals(room.getRoomName())) {
+                        room.setRoomName(expectedName);
+                        changed = true;
+                    }
+                    if (!room.getIsActive()) {
+                        room.setIsActive(true);
+                        changed = true;
+                    }
+                    if (changed) {
+                        db.chatRoomDao().update(room);
+                    }
+                    roomId = room.getRoomId();
+                }
+
+                // Sync participants
+                List<ShiftAssignmentEntity> assignments = db.shiftAssignmentDao().getByShiftSync(shiftId);
+                List<ChatParticipantEntity> currentParticipants = db.chatParticipantDao().getByRoom(roomId);
+
+                // Add missing
                 for (ShiftAssignmentEntity assign : assignments) {
-                    if (assign.getUserId() == part.getUserId()) {
-                        stillAssigned = true;
-                        break;
+                    boolean exists = false;
+                    for (ChatParticipantEntity part : currentParticipants) {
+                        if (part.getUserId() == assign.getUserId()) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists) {
+                        ChatParticipantEntity p = new ChatParticipantEntity();
+                        p.setRoomId(roomId);
+                        p.setUserId(assign.getUserId());
+                        p.setJoinedAt(System.currentTimeMillis());
+                        p.setRoleInRoom(Constants.CHAT_ROLE_MEMBER);
+                        db.chatParticipantDao().insert(p);
                     }
                 }
-                if (!stillAssigned) {
-                    db.chatParticipantDao().deleteParticipant(roomId, part.getUserId());
+
+                // Remove extra
+                for (ChatParticipantEntity part : currentParticipants) {
+                    boolean stillAssigned = false;
+                    for (ShiftAssignmentEntity assign : assignments) {
+                        if (assign.getUserId() == part.getUserId()) {
+                            stillAssigned = true;
+                            break;
+                        }
+                    }
+                    if (!stillAssigned) {
+                        db.chatParticipantDao().deleteParticipant(roomId, part.getUserId());
+                    }
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        });
     }
 }

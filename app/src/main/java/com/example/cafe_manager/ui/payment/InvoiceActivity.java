@@ -7,6 +7,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -119,13 +120,16 @@ public class InvoiceActivity extends AppCompatActivity {
     private void setupBackButton() {
         Button btn = findViewById(R.id.btn_back_to_tables);
         btn.setOnClickListener(v -> navigateBackToTables());
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                navigateBackToTables();
+            }
+        });
     }
 
-    @Override
-    public void onBackPressed() {
-        // Override back hardware → cũng về Tables, không quay lại Payment
-        navigateBackToTables();
-    }
+
 
     private void navigateBackToTables() {
         Intent intent = new Intent(this, TableActivity.class);

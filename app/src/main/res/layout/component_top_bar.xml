@@ -11,7 +11,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:padding="@dimen/spacing_lg"
+    android:padding="@dimen/spacing_md"
     android:background="@color/bg_primary">
 
     <ImageButton
@@ -21,7 +21,7 @@
         android:src="@drawable/ic_arrow_back"
         android:background="@drawable/bg_icon_button"
         android:scaleType="centerInside"
-        android:contentDescription="@string/content_desc_back" />
+        android:layout_marginEnd="@dimen/spacing_xs" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -32,20 +32,19 @@
 
         <TextView
             android:id="@+id/tv_title"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.Cafe.Title"
-            tools:text="Tiêu đề"
-            xmlns:tools="http://schemas.android.com/tools" />
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.Cafe.Title" />
 
         <TextView
             android:id="@+id/tv_caption"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="@style/TextAppearance.Cafe.Caption"
-            android:layout_marginTop="@dimen/spacing_xs"
-            tools:text="Mô tả ngắn"
-            xmlns:tools="http://schemas.android.com/tools" />
+            android:layout_marginTop="@dimen/spacing_xs" />
     </LinearLayout>
 
     <FrameLayout
@@ -72,8 +71,8 @@
             android:textSize="10sp"
             android:gravity="center"
             android:layout_gravity="end|top"
-            android:layout_marginEnd="-4dp"
-            android:layout_marginTop="-4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginTop="4dp"
             android:visibility="gone" />
     </FrameLayout>
 
@@ -85,5 +84,6 @@
         android:background="@drawable/bg_icon_button"
         android:scaleType="centerInside"
         android:visibility="gone"
-        android:contentDescription="@string/content_desc_search" />
+        android:contentDescription="@string/content_desc_search"
+        android:layout_marginStart="@dimen/spacing_xs" />
 </LinearLayout>

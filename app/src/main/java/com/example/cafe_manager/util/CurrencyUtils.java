@@ -4,7 +4,7 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 public final class CurrencyUtils {
-    private static final Locale VIETNAM_LOCALE = new Locale("vi", "VN");
+    private static final Locale VIETNAM_LOCALE = Locale.forLanguageTag("vi-VN");
 
     private CurrencyUtils() {
     }

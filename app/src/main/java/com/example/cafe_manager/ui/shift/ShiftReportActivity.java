@@ -98,9 +98,9 @@ public class ShiftReportActivity extends AppCompatActivity {
 
                 // Đổi màu: xanh nếu dương/0, đỏ nếu âm
                 if (diff < 0) {
-                    tvCashDifference.setTextColor(getResources().getColor(R.color.warning));
+                    tvCashDifference.setTextColor(getColor(R.color.warning));
                 } else {
-                    tvCashDifference.setTextColor(getResources().getColor(R.color.success));
+                    tvCashDifference.setTextColor(getColor(R.color.success));
                 }
             } else {
                 tvOpeningCash.setText("—");

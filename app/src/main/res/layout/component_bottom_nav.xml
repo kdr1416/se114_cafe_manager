@@ -9,8 +9,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:background="@drawable/bg_bottom_nav"
-    android:padding="@dimen/spacing_sm"
-    android:layout_margin="@dimen/spacing_md">
+    android:fitsSystemWindows="true">
 
     <LinearLayout
         android:id="@+id/nav_tables"
@@ -20,9 +19,9 @@
         android:orientation="vertical"
         android:gravity="center"
         android:background="@drawable/bg_nav_item_selector"
-        android:padding="@dimen/spacing_sm"
         android:clickable="true"
-        android:focusable="true">
+        android:focusable="true"
+        android:contentDescription="@string/nav_tables">
 
         <ImageView
             android:id="@+id/icon_nav_tables"
@@ -39,7 +38,7 @@
             android:textSize="11sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
-            android:textColor="@color/text_soft"
+            android:textColor="@color/black"
             android:layout_marginTop="@dimen/spacing_xs" />
     </LinearLayout>
 
@@ -51,9 +50,9 @@
         android:orientation="vertical"
         android:gravity="center"
         android:background="@drawable/bg_nav_item_selector"
-        android:padding="@dimen/spacing_sm"
         android:clickable="true"
-        android:focusable="true">
+        android:focusable="true"
+        android:contentDescription="@string/nav_orders">
 
         <ImageView
             android:id="@+id/icon_nav_orders"
@@ -70,7 +69,7 @@
             android:textSize="11sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
-            android:textColor="@color/text_soft"
+            android:textColor="@color/black"
             android:layout_marginTop="@dimen/spacing_xs" />
     </LinearLayout>
 
@@ -82,9 +81,9 @@
         android:orientation="vertical"
         android:gravity="center"
         android:background="@drawable/bg_nav_item_selector"
-        android:padding="@dimen/spacing_sm"
         android:clickable="true"
-        android:focusable="true">
+        android:focusable="true"
+        android:contentDescription="@string/nav_menu">
 
         <ImageView
             android:id="@+id/icon_nav_menu"
@@ -101,7 +100,39 @@
             android:textSize="11sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
-            android:textColor="@color/text_soft"
+            android:textColor="@color/black"
+            android:layout_marginTop="@dimen/spacing_xs" />
+    </LinearLayout>
+
+    <!-- 4th Tab: Tổng quan (Dashboard) -->
+    <LinearLayout
+        android:id="@+id/nav_dashboard"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/bg_nav_item_selector"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Tổng quan">
+
+        <ImageView
+            android:id="@+id/icon_nav_dashboard"
+            android:layout_width="@dimen/icon_md"
+            android:layout_height="@dimen/icon_md"
+            android:src="@drawable/ic_dashboard"
+            android:contentDescription="Tổng quan" />
+
+        <TextView
+            android:id="@+id/text_nav_dashboard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tổng quan"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black"
             android:layout_marginTop="@dimen/spacing_xs" />
     </LinearLayout>
 </LinearLayout>

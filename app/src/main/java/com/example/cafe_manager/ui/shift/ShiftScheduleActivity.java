@@ -43,7 +43,7 @@ public class ShiftScheduleActivity extends AppCompatActivity {
     private ShiftScheduleAdapter adapter;
     private TextView tvSelectedDate, tvEmpty;
     private final SimpleDateFormat sdf =
-            new SimpleDateFormat("EEEE, dd/MM/yyyy", new Locale("vi", "VN"));
+            new SimpleDateFormat("EEEE, dd/MM/yyyy", Locale.forLanguageTag("vi-VN"));
     
     // Thêm list này để tránh lỗi getValue() bị null do LiveData chưa load
     private List<ShiftTemplateEntity> currentTemplates = new ArrayList<>();
@@ -223,9 +223,9 @@ public class ShiftScheduleActivity extends AppCompatActivity {
 
     private void updateShiftChips(String filter, TextView chipAll, TextView chipDraft, TextView chipPublished, TextView chipInProgress, TextView chipClosed) {
         int activeBg = R.drawable.bg_button_primary;
-        int activeTextColor = getResources().getColor(R.color.text_on_accent);
+        int activeTextColor = getColor(R.color.text_on_accent);
         int inactiveBg = R.drawable.bg_button_secondary;
-        int inactiveTextColor = getResources().getColor(R.color.text_soft);
+        int inactiveTextColor = getColor(R.color.text_soft);
 
         chipAll.setBackgroundResource("ALL".equals(filter) ? activeBg : inactiveBg);
         chipAll.setTextColor("ALL".equals(filter) ? activeTextColor : inactiveTextColor);

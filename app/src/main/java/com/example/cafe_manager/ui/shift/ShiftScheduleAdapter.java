@@ -138,7 +138,7 @@ public class ShiftScheduleAdapter extends RecyclerView.Adapter<ShiftScheduleAdap
             case Constants.SHIFT_CLOSED:      colorRes = R.color.text_soft; break;
             default:                          colorRes = R.color.text_mute; break;
         }
-        return view.getContext().getResources().getColor(colorRes);
+        return view.getContext().getColor(colorRes);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

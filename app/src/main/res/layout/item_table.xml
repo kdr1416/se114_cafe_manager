@@ -38,6 +38,8 @@
 
             android:src="@drawable/ic_table"
 
+            android:tint="@color/accent"
+
             android:background="@drawable/bg_media"
 
             android:padding="@dimen/spacing_sm"
