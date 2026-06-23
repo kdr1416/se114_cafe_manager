@@ -94,10 +94,20 @@
         <activity
             android:name=".ui.shift.ShiftReportActivity"
             android:exported="false" />
-                <!-- Đăng ký màn hình quản lý ca làm việc -->
+        <!-- Đăng ký màn hình quản lý ca làm việc -->
         <activity android:name=".ui.shift.ShiftTemplateActivity" android:exported="false" />
         <activity android:name=".ui.shift.ShiftScheduleActivity" android:exported="false" />
         <activity android:name=".ui.shift.MyShiftActivity" android:exported="false" />
+
+        <!-- Đăng ký màn hình truyền thông nội bộ -->
+        <activity android:name=".ui.communication.NewsFeedActivity" android:exported="false" />
+        <activity android:name=".ui.communication.NewsDetailActivity" android:exported="false" />
+        <activity android:name=".ui.communication.NewsPostFormActivity" android:exported="false" />
+        <activity android:name=".ui.communication.ChatRoomListActivity" android:exported="false" />
+        <activity android:name=".ui.communication.ChatMessageActivity"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+        <activity android:name=".ui.communication.NotificationCenterActivity" android:exported="false" />
     </application>
 
 </manifest>

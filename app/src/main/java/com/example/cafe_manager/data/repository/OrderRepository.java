@@ -45,6 +45,12 @@ public void confirmOrder(
             int createdShiftId,
             RepositoryCallback<Long> callback
     ) {
+        if (createdShiftId <= 0) {
+            appExecutors.mainThread().execute(() ->
+                    callback.onError(new Exception("Chưa có ca bán hàng đang mở. Vui lòng yêu cầu quản lý mở ca."))
+            );
+            return;
+        }
         appExecutors.diskIO().execute(() -> {
             try {
                 double totalAmount = 0;

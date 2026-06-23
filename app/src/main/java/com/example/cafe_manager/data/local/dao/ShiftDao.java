@@ -25,6 +25,9 @@ public interface ShiftDao {
     @Query("SELECT * FROM shifts WHERE shift_date = :date ORDER BY start_time ASC")
     LiveData<List<ShiftEntity>> getByDate(long date);
 
+    @Query("SELECT * FROM shifts WHERE shift_date = :date ORDER BY start_time ASC")
+    List<ShiftEntity> getByDateSync(long date);
+
     @Query("SELECT * FROM shifts WHERE shift_date BETWEEN :from AND :to ORDER BY shift_date ASC, start_time ASC")
     LiveData<List<ShiftEntity>> getByDateRange(long from, long to);
 
@@ -42,4 +45,14 @@ public interface ShiftDao {
 
     @Query("UPDATE shifts SET status = 'CLOSED', closed_by = :closedBy, closed_at = :closedAt WHERE shift_id = :id")
     void closeShift(int id, int closedBy, long closedAt);
+
+    /** Lấy các ca mà userId được phân công. */
+    @Query("SELECT DISTINCT s.* FROM shifts s " +
+           "INNER JOIN shift_assignments sa ON s.shift_id = sa.shift_id " +
+           "WHERE sa.user_id = :userId " +
+           "ORDER BY s.shift_date DESC, s.start_time ASC")
+    LiveData<List<ShiftEntity>> getShiftsByUserId(int userId);
+
+    @Query("SELECT * FROM shifts")
+    List<ShiftEntity> getAllSync();
 }

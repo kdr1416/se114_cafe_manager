@@ -73,6 +73,17 @@ public class ShiftCloseViewModel extends AndroidViewModel {
             return;
         }
 
+        // Chặn đóng ca khi vẫn còn hóa đơn/order chưa thanh toán
+        Integer unpaid = unpaidCountLiveData.getValue();
+        if (unpaid == null) {
+            errorLiveData.setValue("Đang tải dữ liệu kiểm tra đơn chưa thanh toán. Vui lòng thử lại sau.");
+            return;
+        }
+        if (unpaid > 0) {
+            errorLiveData.setValue("Không thể đóng ca khi còn " + unpaid + " đơn chưa thanh toán.");
+            return;
+        }
+
         loadingLiveData.setValue(true);
         int closedBy = sessionManager.getUserId();
 

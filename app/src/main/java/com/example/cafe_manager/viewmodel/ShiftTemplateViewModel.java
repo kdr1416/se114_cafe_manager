@@ -5,6 +5,7 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.cafe_manager.data.local.entity.ShiftTemplateEntity;
@@ -16,16 +17,44 @@ import java.util.List;
 public class ShiftTemplateViewModel extends AndroidViewModel {
 
     private final ShiftRepository repository;
-    private final LiveData<List<ShiftTemplateEntity>> templates;
+    private final LiveData<List<ShiftTemplateEntity>> rawTemplates;
+    private final MediatorLiveData<List<ShiftTemplateEntity>> filteredTemplates = new MediatorLiveData<>();
+    private final MutableLiveData<String> currentFilter = new MutableLiveData<>("ALL");
     private final MutableLiveData<String> message = new MutableLiveData<>();
 
     public ShiftTemplateViewModel(@NonNull Application application) {
         super(application);
         this.repository = new ShiftRepository(application);
-        this.templates = repository.getAllTemplates();
+        this.rawTemplates = repository.getAllTemplates();
+
+        filteredTemplates.addSource(rawTemplates, list -> applyFilter());
+        filteredTemplates.addSource(currentFilter, filter -> applyFilter());
     }
 
-    public LiveData<List<ShiftTemplateEntity>> getTemplates() { return templates; }
+    private void applyFilter() {
+        List<ShiftTemplateEntity> list = rawTemplates.getValue();
+        String filter = currentFilter.getValue();
+        if (list == null) {
+            filteredTemplates.setValue(null);
+            return;
+        }
+        if (filter == null || "ALL".equals(filter)) {
+            filteredTemplates.setValue(list);
+        } else {
+            java.util.List<ShiftTemplateEntity> filtered = new java.util.ArrayList<>();
+            boolean wantActive = "ACTIVE".equals(filter);
+            for (ShiftTemplateEntity t : list) {
+                if (t.isActive() == wantActive) {
+                    filtered.add(t);
+                }
+            }
+            filteredTemplates.setValue(filtered);
+        }
+    }
+
+    public LiveData<List<ShiftTemplateEntity>> getTemplates() { return filteredTemplates; }
+    public void setFilter(String filter) { currentFilter.setValue(filter); }
+    public String getFilter() { return currentFilter.getValue(); }
     public LiveData<String> getMessage() { return message; }
     public void clearMessage() { message.setValue(null); }
 
@@ -34,8 +63,8 @@ public class ShiftTemplateViewModel extends AndroidViewModel {
             message.setValue("Tên mẫu ca không được trống.");
             return;
         }
-        if (start.compareTo(end) >= 0) {
-            message.setValue("Giờ bắt đầu phải trước giờ kết thúc.");
+        if (start.equals(end)) {
+            message.setValue("Giờ bắt đầu và kết thúc không được trùng nhau.");
             return;
         }
         if (minStaff <= 0) {

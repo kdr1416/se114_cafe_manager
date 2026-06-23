@@ -42,6 +42,12 @@ public class PaymentRepository {
             int paidShiftId,
             RepositoryCallback<Boolean> callback
     ) {
+        if (paidShiftId <= 0) {
+            appExecutors.mainThread().execute(() ->
+                    callback.onError(new Exception("Chưa có ca bán hàng đang mở. Không thể thanh toán."))
+            );
+            return;
+        }
         appExecutors.diskIO().execute(() -> {
             try {
                 long paidAt = System.currentTimeMillis();

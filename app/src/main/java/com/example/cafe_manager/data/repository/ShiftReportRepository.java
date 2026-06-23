@@ -9,10 +9,12 @@ import com.example.cafe_manager.data.local.dao.OrderDao;
 import com.example.cafe_manager.data.local.dao.PaymentDao;
 import com.example.cafe_manager.data.local.dao.ShiftCashSessionDao;
 import com.example.cafe_manager.data.local.dao.ShiftDao;
+import com.example.cafe_manager.data.local.dao.ShiftTransactionDao;
 import com.example.cafe_manager.data.local.entity.ShiftCashSessionEntity;
 import com.example.cafe_manager.data.local.entity.ShiftEntity;
 import com.example.cafe_manager.model.PaymentMethodStatsRow;
 import com.example.cafe_manager.util.AppExecutors;
+import com.example.cafe_manager.util.Constants;
 import com.example.cafe_manager.util.RepositoryCallback;
 
 import java.util.List;
@@ -23,6 +25,7 @@ public class ShiftReportRepository {
     private final ShiftCashSessionDao cashSessionDao;
     private final PaymentDao paymentDao;
     private final OrderDao orderDao;
+    private final ShiftTransactionDao transactionDao;
     private final AppExecutors appExecutors;
 
     public ShiftReportRepository(Context context) {
@@ -31,6 +34,7 @@ public class ShiftReportRepository {
         this.cashSessionDao = db.shiftCashSessionDao();
         this.paymentDao = db.paymentDao();
         this.orderDao = db.orderDao();
+        this.transactionDao = db.shiftTransactionDao();
         this.appExecutors = AppExecutors.getInstance();
     }
 
@@ -46,7 +50,7 @@ public class ShiftReportRepository {
                 session.setOpeningCash(openingCash);
                 session.setOpenedBy(openedBy);
                 session.setOpenedAt(System.currentTimeMillis());
-                session.setStatus("OPEN");
+                session.setStatus(Constants.CASH_SESSION_OPEN);
 
                 long id = cashSessionDao.insert(session);
                 appExecutors.mainThread().execute(() -> callback.onSuccess(id));
@@ -56,38 +60,15 @@ public class ShiftReportRepository {
         });
     }
 
-    /** Đóng phiên tiền mặt khi đóng ca. */
+    /** Đóng phiên tiền mặt khi đóng ca atomically. */
     public void closeCashSession(int shiftId, double actualCash, int closedBy,
                                  RepositoryCallback<ShiftCashSessionEntity> callback) {
         appExecutors.diskIO().execute(() -> {
             try {
-                ShiftCashSessionEntity session = cashSessionDao.getByShift(shiftId);
-                if (session == null) {
-                    appExecutors.mainThread().execute(() ->
-                            callback.onError(new Exception("Không tìm thấy phiên tiền mặt cho ca này.")));
-                    return;
-                }
-
-                // Tính expectedCash = openingCash + tổng thanh toán tiền mặt trong ca
-                double cashPaymentsTotal = paymentDao.getCashTotalByPaidShiftId(shiftId);
-                double expectedCash = session.getOpeningCash() + cashPaymentsTotal;
-                double difference = actualCash - expectedCash;
                 long now = System.currentTimeMillis();
+                transactionDao.closeShiftWithCashAtomic(shiftId, actualCash, closedBy, now, Constants.PAYMENT_CASH);
 
-                cashSessionDao.closeSession(
-                        session.getSessionId(),
-                        actualCash, // closingCash = actualCash
-                        actualCash,
-                        expectedCash,
-                        difference,
-                        closedBy,
-                        now
-                );
-
-                // Đồng thời đóng ca
-                shiftDao.closeShift(shiftId, closedBy, now);
-
-                // Trả về session đã cập nhật
+                // Trả về session đã đóng
                 ShiftCashSessionEntity closed = cashSessionDao.getByShift(shiftId);
                 appExecutors.mainThread().execute(() -> callback.onSuccess(closed));
             } catch (Exception e) {
@@ -109,7 +90,7 @@ public class ShiftReportRepository {
                 double totalRevenue = paymentDao.getTotalRevenueByPaidShiftId(shiftId);
                 double cashRevenue = paymentDao.getCashTotalByPaidShiftId(shiftId);
                 int paymentCount = paymentDao.countByPaidShiftId(shiftId);
-                int paidOrderCount = orderDao.countPaidByShift(shiftId);
+                int paidOrderCount = paymentDao.countDistinctOrdersByPaidShiftId(shiftId); // Dùng paid_shift_id
                 int unpaidOrderCount = orderDao.countUnpaidByShift(shiftId);
                 List<PaymentMethodStatsRow> methodStats =
                         paymentDao.getPaymentMethodStatsByShift(shiftId);

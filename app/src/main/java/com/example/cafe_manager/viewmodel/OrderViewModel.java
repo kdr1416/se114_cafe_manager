@@ -14,6 +14,7 @@ import com.example.cafe_manager.data.repository.OrderRepository;
 import com.example.cafe_manager.manager.CartManager;
 import com.example.cafe_manager.model.CartItem;
 import com.example.cafe_manager.util.RepositoryCallback;
+import com.example.cafe_manager.util.AppExecutors;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -132,9 +133,13 @@ public class OrderViewModel extends AndroidViewModel {
         // Lấy shift đang mở (chạy trên background)
         com.example.cafe_manager.util.AppExecutors.getInstance().diskIO().execute(() -> {
             ShiftEntity openShift = appDatabase.shiftDao().getCurrentlyOpen();
-            int shiftId = (openShift != null) ? openShift.getShiftId() : 0;
-
             com.example.cafe_manager.util.AppExecutors.getInstance().mainThread().execute(() -> {
+                if (openShift == null) {
+                    loadingLiveData.setValue(false);
+                    errorMessageLiveData.setValue("Chưa có ca bán hàng đang mở. Vui lòng yêu cầu quản lý mở ca.");
+                    return;
+                }
+                int shiftId = openShift.getShiftId();
                 orderRepository.confirmOrder(
                         tableId,
                         currentItems,
@@ -182,29 +187,39 @@ public class OrderViewModel extends AndroidViewModel {
 
         loadingLiveData.setValue(true);
 
-        orderRepository.addItemsToOrder(
-                orderId,
-                items,
-                new RepositoryCallback<Long>() {
-                    @Override
-                    public void onSuccess(Long resultOrderId) {
-                        loadingLiveData.setValue(false);
-                        cartManager.clearCart();
-                        refreshCartState();
-                        confirmSuccessLiveData.setValue(resultOrderId);
-                    }
-
-                    @Override
-                    public void onError(Exception exception) {
-                        loadingLiveData.setValue(false);
-                        errorMessageLiveData.setValue(
-                                exception != null
-                                        ? exception.getMessage()
-                                        : "Thêm món thất bại."
-                        );
-                    }
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            ShiftEntity openShift = appDatabase.shiftDao().getCurrentlyOpen();
+            AppExecutors.getInstance().mainThread().execute(() -> {
+                if (openShift == null) {
+                    loadingLiveData.setValue(false);
+                    errorMessageLiveData.setValue("Chưa có ca bán hàng đang mở. Vui lòng yêu cầu quản lý mở ca.");
+                    return;
                 }
-        );
+                orderRepository.addItemsToOrder(
+                        orderId,
+                        items,
+                        new RepositoryCallback<Long>() {
+                            @Override
+                            public void onSuccess(Long resultOrderId) {
+                                loadingLiveData.setValue(false);
+                                cartManager.clearCart();
+                                refreshCartState();
+                                confirmSuccessLiveData.setValue(resultOrderId);
+                            }
+
+                            @Override
+                            public void onError(Exception exception) {
+                                loadingLiveData.setValue(false);
+                                errorMessageLiveData.setValue(
+                                        exception != null
+                                                ? exception.getMessage()
+                                                : "Thêm món thất bại."
+                                );
+                            }
+                        }
+                );
+            });
+        });
     }
 
     public boolean isAddMode() {

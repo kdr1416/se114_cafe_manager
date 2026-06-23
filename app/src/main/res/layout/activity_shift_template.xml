@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_primary">
+
+    <include
+        android:id="@+id/top_bar"
+        layout="@layout/component_top_bar" />
+
+    <TextView
+        android:id="@+id/tv_template_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:layout_marginStart="@dimen/spacing_lg"
+        android:layout_marginTop="@dimen/spacing_md"
+        android:layout_marginBottom="@dimen/spacing_sm" />
+
+    <!-- Filter Chips -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:layout_marginStart="@dimen/spacing_lg"
+        android:layout_marginEnd="@dimen/spacing_lg"
+        android:layout_marginBottom="@dimen/spacing_sm">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/chip_template_all"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tất cả"
+                android:paddingStart="@dimen/spacing_md"
+                android:paddingEnd="@dimen/spacing_md"
+                android:paddingTop="@dimen/spacing_sm"
+                android:paddingBottom="@dimen/spacing_sm"
+                android:layout_marginEnd="@dimen/spacing_sm"
+                android:background="@drawable/bg_button_primary"
+                style="@style/TextAppearance.Cafe.Caption"
+                android:textColor="@color/text_on_accent" />
+
+            <TextView
+                android:id="@+id/chip_template_active"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Đang hoạt động"
+                android:paddingStart="@dimen/spacing_md"
+                android:paddingEnd="@dimen/spacing_md"
+                android:paddingTop="@dimen/spacing_sm"
+                android:paddingBottom="@dimen/spacing_sm"
+                android:layout_marginEnd="@dimen/spacing_sm"
+                android:background="@drawable/bg_button_secondary"
+                style="@style/TextAppearance.Cafe.Caption"
+                android:textColor="@color/text_soft" />
+
+            <TextView
+                android:id="@+id/chip_template_inactive"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Đã ẩn"
+                android:paddingStart="@dimen/spacing_md"
+                android:paddingEnd="@dimen/spacing_md"
+                android:paddingTop="@dimen/spacing_sm"
+                android:paddingBottom="@dimen/spacing_sm"
+                android:background="@drawable/bg_button_secondary"
+                style="@style/TextAppearance.Cafe.Caption"
+                android:textColor="@color/text_soft" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_templates"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="@dimen/spacing_lg"
+        android:clipToPadding="false" />
+
+</LinearLayout>

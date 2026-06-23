@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="@dimen/spacing_lg"
+    android:paddingVertical="@dimen/spacing_xs"
+    android:gravity="start">
+
+    <TextView
+        android:id="@+id/tv_message_sender"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="2dp"
+        android:layout_marginStart="@dimen/spacing_xs"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:textColor="@color/text_soft"
+        android:textStyle="bold"
+        android:text="Tên người gửi" />
+
+    <TextView
+        android:id="@+id/tv_message_body"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxWidth="260dp"
+        android:background="@drawable/bg_bubble_received"
+        android:paddingHorizontal="@dimen/spacing_lg"
+        android:paddingVertical="@dimen/spacing_md"
+        style="@style/TextAppearance.Cafe.Body"
+        android:textColor="@color/text_primary"
+        android:text="Nội dung tin nhắn nhận được..." />
+
+    <TextView
+        android:id="@+id/tv_message_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginStart="@dimen/spacing_xs"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:textColor="@color/text_mute"
+        android:text="12:00" />
+
+</LinearLayout>
