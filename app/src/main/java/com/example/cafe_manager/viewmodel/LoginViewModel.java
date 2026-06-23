@@ -65,7 +65,7 @@ public class LoginViewModel extends AndroidViewModel {
                     return;
                 }
 
-                sessionManager.saveSession(user);
+                sessionManager.saveLoginSession(user);
                 loginSuccessLive.setValue(true);
             });
         });

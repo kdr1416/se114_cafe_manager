@@ -85,22 +85,6 @@ public class ShiftRepository {
         executors.diskIO().execute(() -> {
             try {
                 transactionDao.openShiftWithCashAtomic(shiftId, openingCash, userId, System.currentTimeMillis());
-                ShiftEntity openShift = shiftDao.getCurrentlyOpen();
-                if (openShift != null) {
-                    if (openShift.getShiftId() == shiftId) {
-                        // If this specific shift is already open, allow proceeding (idempotency)
-                        ChatRepository.syncShiftChatRoomSync(db, shiftId);
-                        executors.mainThread().execute(() -> callback.onSuccess(null));
-                    } else {
-                        // Provide a clear error message about which shift is blocking
-                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-                        String dateStr = sdf.format(new Date(openShift.getShiftDate()));
-                        String errorMsg = "Ca '" + openShift.getShiftName() + "' ngày " + dateStr + " đang mở. Hãy đóng ca đó trước.";
-                        executors.mainThread().execute(() -> callback.onError(new Exception(errorMsg)));
-                    }
-                    return;
-                }
-                shiftDao.openShift(shiftId, userId, System.currentTimeMillis());
                 ChatRepository.syncShiftChatRoomSync(db, shiftId);
                 executors.mainThread().execute(() -> callback.onSuccess(null));
             } catch (Exception e) {

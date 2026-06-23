@@ -109,9 +109,9 @@ public class ShiftTemplateActivity extends AppCompatActivity {
 
     private void updateTemplateChips(String filter, TextView chipAll, TextView chipActive, TextView chipInactive) {
         int activeBg = R.drawable.bg_button_primary;
-        int activeTextColor = getResources().getColor(R.color.text_on_accent);
+        int activeTextColor = getColor(R.color.text_on_accent);
         int inactiveBg = R.drawable.bg_button_secondary;
-        int inactiveTextColor = getResources().getColor(R.color.text_soft);
+        int inactiveTextColor = getColor(R.color.text_soft);
 
         chipAll.setBackgroundResource("ALL".equals(filter) ? activeBg : inactiveBg);
         chipAll.setTextColor("ALL".equals(filter) ? activeTextColor : inactiveTextColor);

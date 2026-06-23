@@ -1,5 +1,6 @@
 package com.example.cafe_manager.ui.dashboard;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
@@ -12,8 +13,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafe_manager.R;
+import com.example.cafe_manager.manager.SessionManager;
 import com.example.cafe_manager.model.DailyRevenueRow;
 import com.example.cafe_manager.model.PaymentMethodStatsRow;
+import com.example.cafe_manager.ui.admin.AdminMenuActivity;
+import com.example.cafe_manager.ui.orderslist.OrdersListActivity;
+import com.example.cafe_manager.ui.table.TableActivity;
 import com.example.cafe_manager.util.Constants;
 import com.example.cafe_manager.util.CurrencyUtils;
 import com.example.cafe_manager.util.DateRange;
@@ -68,6 +73,7 @@ public class DashboardActivity extends AppCompatActivity {
         colorInfo = getColor(R.color.info);
 
         setupTopBar();
+        setupBottomNav();
         bindViews();
         setupChips();
         setupCharts();
@@ -86,6 +92,40 @@ public class DashboardActivity extends AppCompatActivity {
         caption.setText("Thống kê theo khoảng thời gian");
         btnBack.setOnClickListener(v -> finish());
         btnRight.setVisibility(View.GONE);
+    }
+
+    private void setupBottomNav() {
+        View bottomNav = findViewById(R.id.bottom_nav);
+        View navTables = bottomNav.findViewById(R.id.nav_tables);
+        View navOrders = bottomNav.findViewById(R.id.nav_orders);
+        View navMenu = bottomNav.findViewById(R.id.nav_menu);
+        View navDashboard = bottomNav.findViewById(R.id.nav_dashboard);
+
+        navDashboard.setSelected(true);
+
+        navTables.setOnClickListener(v -> {
+            Intent intent = new Intent(this, TableActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+        });
+
+        navOrders.setOnClickListener(v -> {
+            Intent intent = new Intent(this, OrdersListActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+        });
+
+        navMenu.setOnClickListener(v -> {
+            Intent intent = new Intent(this, AdminMenuActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+        });
     }
 
     private void bindViews() {

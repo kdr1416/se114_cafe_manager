@@ -63,3 +63,29 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+
+## UI Redesign Guidelines
+
+### Audit first, fix second
+Before touching any layout file:
+1. List every screen that has the issue
+2. Check if there's a shared component to fix instead of N files
+3. Fix the component, not the instances
+
+### Navigation rules
+- Bottom nav: 3 tabs (Bàn · Đơn hàng · Menu) — keep as-is, it works
+- Screens WITHOUT bottom nav: all admin screens, order flow (Menu→Order→Payment→Invoice)
+- Back button: ALWAYS visible on non-entry screens. Entry screens = TableActivity, LoginActivity
+- Admin access: via top_bar btn_right (gear icon), NOT bottom nav
+
+### Button placement rules
+- Primary action (Xác nhận, Thanh toán...): component_bottom_total_panel, pinned to bottom
+- Destructive actions (Huỷ đơn): text button, top right or inline — never primary style
+- FAB: only on list screens for "add" actions (AdminMenu, UserManagement, PromotionManagement)
+
+### Visual consistency checklist
+- All cards: bg_card drawable, spacing_lg padding
+- All list items: consistent height, no orphaned buttons at random Y positions  
+- Status badges: only use bg_badge_success / bg_badge_warning / bg_badge_notification
+- Icons: stick to existing drawables — do not introduce new icon sets mid-project

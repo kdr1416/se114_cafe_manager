@@ -3,14 +3,15 @@ package com.example.cafe_manager.ui.table;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.PopupMenu;
 import android.widget.TextView;
 
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -121,92 +122,109 @@ public class TableActivity extends AppCompatActivity {
     }
 
     private void showOptionsMenu(View anchor) {
-        PopupMenu popup = new PopupMenu(this, anchor);
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View sheet = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_options_menu, null);
+        dialog.setContentView(sheet);
+
         String role = SessionManager.getInstance(this).getRole();
 
-        popup.getMenu().add(0, 4, 0, "Hồ sơ cá nhân");
-        if (PermissionUtils.canViewReports(role)) {
-            popup.getMenu().add(0, 1, 0, "Lịch sử giao dịch");
-            popup.getMenu().add(0, 2, 0, "Báo cáo doanh thu");
-        }
-        if (PermissionUtils.canManageUsers(role)) {
-            popup.getMenu().add(0, 5, 0, "Quản lý nhân viên");
-        }
-        if (PermissionUtils.canManageTables(role)) {
-            popup.getMenu().add(0, 6, 0, "Quản lý bàn");
-        }
-        if (PermissionUtils.canManagePromotions(role)) {
-            popup.getMenu().add(0, 7, 0, "Quản lý khuyến mãi");
-        }
-        if (PermissionUtils.canManageCategories(role)) {
-            popup.getMenu().add(0, 8, 0, "Quản lý danh mục");
-        }
-        if (PermissionUtils.canManageShifts(role)) {
-            popup.getMenu().add(0, 9, 0, "Đóng ca hiện tại");
-            popup.getMenu().add(0, 10, 0, "Xem báo cáo ca");
+        // ----- Role-based visibility -----
+        sheet.findViewById(R.id.row_history).setVisibility(
+                PermissionUtils.canViewReports(role) ? View.VISIBLE : View.GONE);
+        sheet.findViewById(R.id.row_dashboard).setVisibility(
+                PermissionUtils.canViewReports(role) ? View.VISIBLE : View.GONE);
+        sheet.findViewById(R.id.row_users).setVisibility(
+                PermissionUtils.canManageUsers(role) ? View.VISIBLE : View.GONE);
+        sheet.findViewById(R.id.row_tables).setVisibility(
+                PermissionUtils.canManageTables(role) ? View.VISIBLE : View.GONE);
+        sheet.findViewById(R.id.row_promotions).setVisibility(
+                PermissionUtils.canManagePromotions(role) ? View.VISIBLE : View.GONE);
+        sheet.findViewById(R.id.row_categories).setVisibility(
+                PermissionUtils.canManageCategories(role) ? View.VISIBLE : View.GONE);
+        boolean canManageShifts = PermissionUtils.canManageShifts(role);
+        sheet.findViewById(R.id.row_close_shift).setVisibility(canManageShifts ? View.VISIBLE : View.GONE);
+        sheet.findViewById(R.id.row_shift_report).setVisibility(canManageShifts ? View.VISIBLE : View.GONE);
+        sheet.findViewById(R.id.row_shift_template).setVisibility(canManageShifts ? View.VISIBLE : View.GONE);
+        sheet.findViewById(R.id.row_shift_schedule).setVisibility(canManageShifts ? View.VISIBLE : View.GONE);
 
-        }
-        if (PermissionUtils.canManageShifts(role)) {
-            popup.getMenu().add(0, 11, 0, "Quản lý mẫu ca");
-            popup.getMenu().add(0, 12, 0, "Lịch ca làm việc");
-        }
-        popup.getMenu().add(0, 13, 0, "Ca làm của tôi");
-        popup.getMenu().add(0, 14, 0, "Bảng tin chung");
-        popup.getMenu().add(0, 15, 0, "Chat nội bộ");
-        popup.getMenu().add(0, 3, 0, "Đăng xuất");
-
-        popup.setOnMenuItemClickListener(item -> {
-            switch (item.getItemId()) {
-                case 4:
-                    startActivity(new Intent(this, ProfileActivity.class));
-                    return true;
-                case 1:
-                    startActivity(new Intent(this, HistoryActivity.class));
-                    return true;
-                case 2:
-                    startActivity(new Intent(this, DashboardActivity.class));
-                    return true;
-                case 5:
-                    startActivity(new Intent(this, UserManagementActivity.class));
-                    return true;
-                case 6:
-                    startActivity(new Intent(this, TableManagementActivity.class));
-                    return true;
-                case 7:
-                    startActivity(new Intent(this, PromotionManagementActivity.class));
-                    return true;
-                case 8:
-                    startActivity(new Intent(this, CategoryManagementActivity.class));
-                    return true;
-                case 9:
-                    launchShiftActivity(ShiftCloseActivity.class);
-                    return true;
-                case 10:
-                    launchShiftActivity(ShiftReportActivity.class);
-                    return true;
-                case 11:
-                    startActivity(new Intent(this, ShiftTemplateActivity.class));
-                    return true;
-                case 12:
-                    startActivity(new Intent(this, ShiftScheduleActivity.class));
-                    return true;
-                case 13:
-                    startActivity(new Intent(this, MyShiftActivity.class));
-                    return true;
-                case 14:
-                    startActivity(new Intent(this, com.example.cafe_manager.ui.communication.NewsFeedActivity.class));
-                    return true;
-                case 15:
-                    startActivity(new Intent(this, com.example.cafe_manager.ui.communication.ChatRoomListActivity.class));
-                    return true;
-                case 3:
-                    showLogoutDialog();
-                    return true;
-                default:
-                    return false;
-            }
+        // ----- Click handlers (IDs preserved, same navigation code) -----
+        sheet.findViewById(R.id.row_profile).setOnClickListener(v -> {
+            dialog.dismiss();
+            // case 4
+            startActivity(new Intent(this, ProfileActivity.class));
         });
-        popup.show();
+        sheet.findViewById(R.id.row_my_shift).setOnClickListener(v -> {
+            dialog.dismiss();
+            // case 13
+            startActivity(new Intent(this, MyShiftActivity.class));
+        });
+        sheet.findViewById(R.id.row_history).setOnClickListener(v -> {
+            dialog.dismiss();
+            // case 1
+            startActivity(new Intent(this, HistoryActivity.class));
+        });
+        sheet.findViewById(R.id.row_news).setOnClickListener(v -> {
+            dialog.dismiss();
+            // case 14
+            startActivity(new Intent(this, com.example.cafe_manager.ui.communication.NewsFeedActivity.class));
+        });
+        sheet.findViewById(R.id.row_chat).setOnClickListener(v -> {
+            dialog.dismiss();
+            // case 15
+            startActivity(new Intent(this, com.example.cafe_manager.ui.communication.ChatRoomListActivity.class));
+        });
+        sheet.findViewById(R.id.row_dashboard).setOnClickListener(v -> {
+            dialog.dismiss();
+            // case 2
+            startActivity(new Intent(this, DashboardActivity.class));
+        });
+        sheet.findViewById(R.id.row_users).setOnClickListener(v -> {
+            dialog.dismiss();
+            // case 5
+            startActivity(new Intent(this, UserManagementActivity.class));
+        });
+        sheet.findViewById(R.id.row_tables).setOnClickListener(v -> {
+            dialog.dismiss();
+            // case 6
+            startActivity(new Intent(this, TableManagementActivity.class));
+        });
+        sheet.findViewById(R.id.row_promotions).setOnClickListener(v -> {
+            dialog.dismiss();
+            // case 7
+            startActivity(new Intent(this, PromotionManagementActivity.class));
+        });
+        sheet.findViewById(R.id.row_categories).setOnClickListener(v -> {
+            dialog.dismiss();
+            // case 8
+            startActivity(new Intent(this, CategoryManagementActivity.class));
+        });
+        sheet.findViewById(R.id.row_close_shift).setOnClickListener(v -> {
+            dialog.dismiss();
+            // case 9
+            launchShiftActivity(ShiftCloseActivity.class);
+        });
+        sheet.findViewById(R.id.row_shift_report).setOnClickListener(v -> {
+            dialog.dismiss();
+            // case 10
+            launchShiftActivity(ShiftReportActivity.class);
+        });
+        sheet.findViewById(R.id.row_shift_template).setOnClickListener(v -> {
+            dialog.dismiss();
+            // case 11
+            startActivity(new Intent(this, ShiftTemplateActivity.class));
+        });
+        sheet.findViewById(R.id.row_shift_schedule).setOnClickListener(v -> {
+            dialog.dismiss();
+            // case 12
+            startActivity(new Intent(this, ShiftScheduleActivity.class));
+        });
+        sheet.findViewById(R.id.row_logout).setOnClickListener(v -> {
+            dialog.dismiss();
+            // case 3
+            showLogoutDialog();
+        });
+
+        dialog.show();
     }
 
     private void launchShiftActivity(Class<?> targetActivityClass) {
@@ -250,7 +268,9 @@ public class TableActivity extends AppCompatActivity {
         View navTables = bottomNav.findViewById(R.id.nav_tables);
         View navOrders = bottomNav.findViewById(R.id.nav_orders);
         View navMenu = bottomNav.findViewById(R.id.nav_menu);
+        View navDashboard = bottomNav.findViewById(R.id.nav_dashboard);
         navTables.setSelected(true);
+        navDashboard.setSelected(false);
         navOrders.setOnClickListener(v -> startActivity(new Intent(this, OrdersListActivity.class)));
 
         String role = SessionManager.getInstance(this).getRole();
@@ -259,6 +279,13 @@ public class TableActivity extends AppCompatActivity {
         } else {
             navMenu.setOnClickListener(v -> startActivity(new Intent(this, AdminMenuActivity.class)));
         }
+
+        navDashboard.setOnClickListener(v -> {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        });
     }
 
     private void setupRecyclerView() {

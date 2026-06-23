@@ -18,6 +18,7 @@ import com.example.cafe_manager.data.repository.OrderRepository;
 import com.example.cafe_manager.manager.CartManager;
 import com.example.cafe_manager.model.OrderWithItems;
 import com.example.cafe_manager.ui.admin.AdminMenuActivity;
+import com.example.cafe_manager.ui.dashboard.DashboardActivity;
 import com.example.cafe_manager.ui.menu.MenuActivity;
 import com.example.cafe_manager.ui.payment.PaymentActivity;
 import com.example.cafe_manager.ui.table.TableActivity;
@@ -66,8 +67,10 @@ public class OrdersListActivity extends AppCompatActivity {
         View navTables = bottomNav.findViewById(R.id.nav_tables);
         View navOrders = bottomNav.findViewById(R.id.nav_orders);
         View navMenu = bottomNav.findViewById(R.id.nav_menu);
+        View navDashboard = bottomNav.findViewById(R.id.nav_dashboard);
 
         navOrders.setSelected(true);
+        navDashboard.setSelected(false);
 
         navTables.setOnClickListener(v -> {
             Intent intent = new Intent(this, TableActivity.class);
@@ -79,6 +82,14 @@ public class OrdersListActivity extends AppCompatActivity {
 
         navMenu.setOnClickListener(v -> {
             Intent intent = new Intent(this, AdminMenuActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+        });
+
+        navDashboard.setOnClickListener(v -> {
+            Intent intent = new Intent(this, DashboardActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
                     | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             startActivity(intent);

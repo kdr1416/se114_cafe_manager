@@ -53,11 +53,11 @@ public class ShiftTemplateAdapter extends RecyclerView.Adapter<ShiftTemplateAdap
         if (item.isActive()) {
             holder.tvBadge.setText("Hoạt động");
             holder.tvBadge.setBackgroundResource(R.drawable.bg_badge_success);
-            holder.tvBadge.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.success));
+            holder.tvBadge.setTextColor(holder.itemView.getContext().getColor(R.color.success));
         } else {
             holder.tvBadge.setText("Ngưng");
             holder.tvBadge.setBackgroundResource(R.drawable.bg_badge_warning);
-            holder.tvBadge.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.warning));
+            holder.tvBadge.setTextColor(holder.itemView.getContext().getColor(R.color.warning));
         }
 
         holder.btnEdit.setOnClickListener(v -> listener.onEdit(item));
