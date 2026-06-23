@@ -75,6 +75,15 @@
             style="@style/TextAppearance.Cafe.Body" />
 
         <Button
+            android:id="@+id/btn_chat"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/height_button_sm"
+            style="@style/Widget.Cafe.Button.Secondary"
+            android:text="Chat ca"
+            android:layout_marginEnd="@dimen/spacing_sm"
+            android:visibility="gone" />
+
+        <Button
             android:id="@+id/btn_action"
             android:layout_width="wrap_content"
             android:layout_height="@dimen/height_button_sm"

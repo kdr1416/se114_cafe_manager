@@ -77,6 +77,7 @@ public class TableActivity extends AppCompatActivity {
         TextView caption = topBar.findViewById(R.id.tv_caption);
         View btnBack = topBar.findViewById(R.id.btn_back);
         ImageButton btnRight = topBar.findViewById(R.id.btn_right);
+        ImageButton btnRight2 = topBar.findViewById(R.id.btn_right_2);
 
         // Greeting với tên user (nếu có session)
         title.setText(R.string.title_tables);
@@ -89,6 +90,29 @@ public class TableActivity extends AppCompatActivity {
         }
 
         btnBack.setVisibility(View.GONE);
+
+        // Right icon 2 → Bell
+        View containerBtnRight2 = topBar.findViewById(R.id.container_btn_right_2);
+        if (containerBtnRight2 != null) {
+            containerBtnRight2.setVisibility(View.VISIBLE);
+        }
+        if (btnRight2 != null) {
+            btnRight2.setImageResource(R.drawable.ic_bell);
+            btnRight2.setOnClickListener(v -> startActivity(new Intent(this, com.example.cafe_manager.ui.communication.NotificationCenterActivity.class)));
+        }
+        TextView bellBadge = topBar.findViewById(R.id.badge_right_2);
+        if (bellBadge != null) {
+            com.example.cafe_manager.viewmodel.NewsViewModel newsViewModel = new ViewModelProvider(this).get(com.example.cafe_manager.viewmodel.NewsViewModel.class);
+            int currentUserId = SessionManager.getInstance(this).getUserId();
+            newsViewModel.getUnreadCount(currentUserId).observe(this, count -> {
+                if (count != null && count > 0) {
+                    bellBadge.setVisibility(View.VISIBLE);
+                    bellBadge.setText(count > 99 ? "99+" : String.valueOf(count));
+                } else {
+                    bellBadge.setVisibility(View.GONE);
+                }
+            });
+        }
 
         // Right icon → popup menu: Lịch sử / Báo cáo / Đăng xuất
         btnRight.setVisibility(View.VISIBLE);
@@ -127,6 +151,8 @@ public class TableActivity extends AppCompatActivity {
             popup.getMenu().add(0, 12, 0, "Lịch ca làm việc");
         }
         popup.getMenu().add(0, 13, 0, "Ca làm của tôi");
+        popup.getMenu().add(0, 14, 0, "Bảng tin chung");
+        popup.getMenu().add(0, 15, 0, "Chat nội bộ");
         popup.getMenu().add(0, 3, 0, "Đăng xuất");
 
         popup.setOnMenuItemClickListener(item -> {
@@ -166,6 +192,12 @@ public class TableActivity extends AppCompatActivity {
                     return true;
                 case 13:
                     startActivity(new Intent(this, MyShiftActivity.class));
+                    return true;
+                case 14:
+                    startActivity(new Intent(this, com.example.cafe_manager.ui.communication.NewsFeedActivity.class));
+                    return true;
+                case 15:
+                    startActivity(new Intent(this, com.example.cafe_manager.ui.communication.ChatRoomListActivity.class));
                     return true;
                 case 3:
                     showLogoutDialog();

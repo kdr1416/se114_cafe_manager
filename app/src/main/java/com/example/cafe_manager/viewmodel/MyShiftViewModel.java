@@ -13,6 +13,7 @@ import com.example.cafe_manager.data.local.entity.ShiftAssignmentEntity;
 import com.example.cafe_manager.data.local.entity.ShiftEntity;
 import com.example.cafe_manager.data.repository.AttendanceRepository;
 import com.example.cafe_manager.data.repository.ShiftRepository;
+import com.example.cafe_manager.data.repository.ChatRepository;
 import com.example.cafe_manager.manager.SessionManager;
 import com.example.cafe_manager.util.AppExecutors;
 import com.example.cafe_manager.util.RepositoryCallback;
@@ -135,5 +136,33 @@ public class MyShiftViewModel extends AndroidViewModel {
                 messageLive.setValue("Lỗi check-out: " + e.getMessage());
             }
         });
+    }
+
+    public void getOrCreateShiftChatRoom(int shiftId, RepositoryCallback<Integer> callback) {
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            try {
+                ChatRepository.syncShiftChatRoomSync(appDatabase, shiftId);
+                com.example.cafe_manager.data.local.entity.ChatRoomEntity room = appDatabase.chatRoomDao().getByShiftId(shiftId);
+                if (room != null) {
+                    AppExecutors.getInstance().mainThread().execute(() -> callback.onSuccess(room.getRoomId()));
+                } else {
+                    AppExecutors.getInstance().mainThread().execute(() -> callback.onError(new Exception("Không thể tạo phòng chat cho ca này.")));
+                }
+            } catch (Exception e) {
+                AppExecutors.getInstance().mainThread().execute(() -> callback.onError(e));
+            }
+        });
+    }
+
+    public String getShiftName(int shiftId) {
+        List<MyShiftItem> items = myShiftsLive.getValue();
+        if (items != null) {
+            for (MyShiftItem item : items) {
+                if (item.shift.getShiftId() == shiftId) {
+                    return item.shift.getShiftName();
+                }
+            }
+        }
+        return "Trò chuyện Ca";
     }
 }

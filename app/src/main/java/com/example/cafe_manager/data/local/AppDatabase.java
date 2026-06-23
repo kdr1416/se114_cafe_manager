@@ -43,6 +43,18 @@ import com.example.cafe_manager.data.local.entity.ShiftTemplateEntity;
 import com.example.cafe_manager.data.local.entity.ShiftCashSessionEntity;
 import com.example.cafe_manager.data.local.dao.ShiftCashSessionDao;
 import com.example.cafe_manager.data.local.dao.ShiftTransactionDao;
+import com.example.cafe_manager.data.local.dao.NewsPostDao;
+import com.example.cafe_manager.data.local.dao.NewsReadDao;
+import com.example.cafe_manager.data.local.entity.NewsPostEntity;
+import com.example.cafe_manager.data.local.entity.NewsReadEntity;
+import com.example.cafe_manager.data.local.dao.ChatRoomDao;
+import com.example.cafe_manager.data.local.dao.ChatParticipantDao;
+import com.example.cafe_manager.data.local.dao.ChatMessageDao;
+import com.example.cafe_manager.data.local.dao.ChatReadDao;
+import com.example.cafe_manager.data.local.entity.ChatRoomEntity;
+import com.example.cafe_manager.data.local.entity.ChatParticipantEntity;
+import com.example.cafe_manager.data.local.entity.ChatMessageEntity;
+import com.example.cafe_manager.data.local.entity.ChatReadEntity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,9 +66,10 @@ import java.util.List;
                 OrderEntity.class, OrderItemEntity.class, PaymentEntity.class, UserEntity.class,
                 PromotionEntity.class, AuditLogEntity.class,
                 ShiftTemplateEntity.class, ShiftEntity.class, ShiftAssignmentEntity.class, AttendanceEntity.class,
-                ShiftCashSessionEntity.class
+                ShiftCashSessionEntity.class, NewsPostEntity.class, NewsReadEntity.class,
+                ChatRoomEntity.class, ChatParticipantEntity.class, ChatMessageEntity.class, ChatReadEntity.class
         },
-        version = 9,
+        version = 12,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -79,6 +92,12 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract PaymentTransactionDao paymentTransactionDao();
     public abstract ShiftCashSessionDao shiftCashSessionDao();
     public abstract ShiftTransactionDao shiftTransactionDao();
+    public abstract NewsPostDao newsPostDao();
+    public abstract NewsReadDao newsReadDao();
+    public abstract ChatRoomDao chatRoomDao();
+    public abstract ChatParticipantDao chatParticipantDao();
+    public abstract ChatMessageDao chatMessageDao();
+    public abstract ChatReadDao chatReadDao();
 
     private static volatile AppDatabase instance;
 
@@ -104,6 +123,17 @@ public abstract class AppDatabase extends RoomDatabase {
         @Override
         public void onCreate(@NonNull SupportSQLiteDatabase db) {
             super.onCreate(db);
+            AppExecutors.getInstance().diskIO().execute(() -> {
+                AppDatabase database = instance;
+                if (database != null) {
+                    seedDatabase(database);
+                }
+            });
+        }
+
+        @Override
+        public void onDestructiveMigration(@NonNull SupportSQLiteDatabase db) {
+            super.onDestructiveMigration(db);
             AppExecutors.getInstance().diskIO().execute(() -> {
                 AppDatabase database = instance;
                 if (database != null) {
@@ -152,6 +182,9 @@ public abstract class AppDatabase extends RoomDatabase {
          seedPromotions(db);
          seedUsers(db);
          seedShiftTemplates(db);
+         seedNews(db);
+         seedChatRooms(db);
+         seedShiftChatRooms(db);
          // Đã loại bỏ seedActiveShift để không làm kẹt hệ thống
     }
 
@@ -235,6 +268,100 @@ public abstract class AppDatabase extends RoomDatabase {
             u.setCreatedAt(now);
             u.setUpdatedAt(now);
             db.userDao().insert(u);
+        }
+    }
+
+    private static void seedNews(AppDatabase db) {
+        long now = System.currentTimeMillis();
+        NewsPostEntity welcome = new NewsPostEntity();
+        welcome.setTitle("Chào mừng đến với Cafe Manager");
+        welcome.setContent("Đây là thông báo mẫu. Các nhân viên có thể xem thông báo từ quản lý tại đây.");
+        welcome.setType("GENERAL");
+        welcome.setPriority("NORMAL");
+        welcome.setTargetType("ALL");
+        welcome.setCreatedByUserId(1); // admin
+        welcome.setCreatedAt(now);
+        welcome.setIsPinned(true);
+        welcome.setIsDeleted(false);
+        db.newsPostDao().insert(welcome);
+    }
+
+    private static void seedChatRooms(AppDatabase db) {
+        long now = System.currentTimeMillis();
+        
+        // 1. Get users by role
+        List<UserEntity> admins = db.userDao().getByRoleSync(Constants.ROLE_ADMIN);
+        List<UserEntity> managers = db.userDao().getByRoleSync(Constants.ROLE_MANAGER);
+        List<UserEntity> staffs = db.userDao().getByRoleSync(Constants.ROLE_STAFF);
+
+        int creatorId = 1; // Fallback to user_id = 1 (admin)
+        if (!admins.isEmpty()) {
+            creatorId = admins.get(0).getUserId();
+        } else if (!managers.isEmpty()) {
+            creatorId = managers.get(0).getUserId();
+        }
+
+        // 2. Create "Tất cả quản lý" (Role: MANAGER)
+        ChatRoomEntity managersRoom = new ChatRoomEntity();
+        managersRoom.setRoomName("Tất cả quản lý");
+        managersRoom.setRoomType(Constants.CHAT_TYPE_ROLE);
+        managersRoom.setTargetRole(Constants.ROLE_MANAGER);
+        managersRoom.setCreatedBy(creatorId);
+        managersRoom.setCreatedAt(now);
+        managersRoom.setUpdatedAt(now);
+        managersRoom.setIsActive(true);
+        int managersRoomId = (int) db.chatRoomDao().insert(managersRoom);
+
+        // Add all admins and managers as participants to managersRoom
+        for (UserEntity u : admins) {
+            ChatParticipantEntity p = new ChatParticipantEntity();
+            p.setRoomId(managersRoomId);
+            p.setUserId(u.getUserId());
+            p.setJoinedAt(now);
+            p.setRoleInRoom(Constants.CHAT_ROLE_MEMBER);
+            db.chatParticipantDao().insert(p);
+        }
+        for (UserEntity u : managers) {
+            ChatParticipantEntity p = new ChatParticipantEntity();
+            p.setRoomId(managersRoomId);
+            p.setUserId(u.getUserId());
+            p.setJoinedAt(now);
+            p.setRoleInRoom(Constants.CHAT_ROLE_MEMBER);
+            db.chatParticipantDao().insert(p);
+        }
+
+        // 3. Create "Tất cả nhân viên" (Role: STAFF)
+        ChatRoomEntity staffsRoom = new ChatRoomEntity();
+        staffsRoom.setRoomName("Tất cả nhân viên");
+        staffsRoom.setRoomType(Constants.CHAT_TYPE_ROLE);
+        staffsRoom.setTargetRole(Constants.ROLE_STAFF);
+        staffsRoom.setCreatedBy(creatorId);
+        staffsRoom.setCreatedAt(now);
+        staffsRoom.setUpdatedAt(now);
+        staffsRoom.setIsActive(true);
+        int staffsRoomId = (int) db.chatRoomDao().insert(staffsRoom);
+
+        // Add all staffs as participants
+        for (UserEntity u : staffs) {
+            ChatParticipantEntity p = new ChatParticipantEntity();
+            p.setRoomId(staffsRoomId);
+            p.setUserId(u.getUserId());
+            p.setJoinedAt(now);
+            p.setRoleInRoom(Constants.CHAT_ROLE_MEMBER);
+            db.chatParticipantDao().insert(p);
+        }
+    }
+
+    private static void seedShiftChatRooms(AppDatabase db) {
+        try {
+            List<com.example.cafe_manager.data.local.entity.ShiftEntity> shifts = db.shiftDao().getAllSync();
+            if (shifts != null) {
+                for (com.example.cafe_manager.data.local.entity.ShiftEntity shift : shifts) {
+                    com.example.cafe_manager.data.repository.ChatRepository.syncShiftChatRoomSync(db, shift.getShiftId());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

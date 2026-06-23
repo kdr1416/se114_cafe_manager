@@ -12,6 +12,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafe_manager.R;
 import com.example.cafe_manager.viewmodel.MyShiftViewModel;
+import android.content.Intent;
+import com.example.cafe_manager.ui.communication.ChatMessageActivity;
+import com.example.cafe_manager.util.RepositoryCallback;
 
 public class MyShiftActivity extends AppCompatActivity {
 
@@ -50,6 +53,24 @@ public class MyShiftActivity extends AppCompatActivity {
             @Override
             public void onCheckOut(int shiftId) {
                 viewModel.checkOut(shiftId);
+            }
+
+            @Override
+            public void onChat(int shiftId) {
+                viewModel.getOrCreateShiftChatRoom(shiftId, new RepositoryCallback<Integer>() {
+                    @Override
+                    public void onSuccess(Integer roomId) {
+                        Intent intent = new Intent(MyShiftActivity.this, ChatMessageActivity.class);
+                        intent.putExtra("room_id", roomId);
+                        intent.putExtra("room_name", viewModel.getShiftName(shiftId));
+                        startActivity(intent);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Toast.makeText(MyShiftActivity.this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
         rv.setAdapter(adapter);

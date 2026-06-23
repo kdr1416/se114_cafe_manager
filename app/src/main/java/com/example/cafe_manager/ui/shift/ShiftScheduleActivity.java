@@ -28,6 +28,7 @@ import com.example.cafe_manager.util.Constants;
 import com.example.cafe_manager.util.PermissionUtils;
 import com.example.cafe_manager.util.RepositoryCallback;
 import com.example.cafe_manager.viewmodel.ShiftScheduleViewModel;
+import com.example.cafe_manager.ui.communication.ChatMessageActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -111,6 +112,28 @@ public class ShiftScheduleActivity extends AppCompatActivity {
                         .setPositiveButton("Hủy ca", (d, w) -> viewModel.cancelShift(shift.getShiftId()))
                         .setNegativeButton("Quay lại", null)
                         .show();
+            }
+
+            @Override
+            public void onChatShift(ShiftEntity shift) {
+                viewModel.getOrCreateShiftChatRoom(shift.getShiftId(), new RepositoryCallback<Integer>() {
+                    @Override
+                    public void onSuccess(Integer roomId) {
+                        Intent intent = new Intent(ShiftScheduleActivity.this, ChatMessageActivity.class);
+                        intent.putExtra("room_id", roomId);
+                        
+                        SimpleDateFormat sdfDate = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                        String dateStr = sdfDate.format(new Date(shift.getShiftDate()));
+                        String roomName = shift.getShiftName() + " - " + dateStr + " (" + shift.getStartTime() + "-" + shift.getEndTime() + ")";
+                        intent.putExtra("room_name", roomName);
+                        startActivity(intent);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Toast.makeText(ShiftScheduleActivity.this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
         rv.setAdapter(adapter);

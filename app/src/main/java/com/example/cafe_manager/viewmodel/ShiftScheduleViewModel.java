@@ -182,12 +182,11 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
         });
     }
 
-    // ── Publish / Cancel ──
-
     public void publishShift(int shiftId) {
         AppExecutors.getInstance().diskIO().execute(() -> {
             try {
                 appDatabase.shiftDao().updateStatus(shiftId, Constants.SHIFT_PUBLISHED);
+                com.example.cafe_manager.data.repository.ChatRepository.syncShiftChatRoomSync(appDatabase, shiftId);
                 AppExecutors.getInstance().mainThread().execute(
                         () -> messageLive.setValue("Đã phát hành ca."));
             } catch (Exception e) {
@@ -212,6 +211,7 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
                     return;
                 }
                 appDatabase.shiftDao().updateStatus(shiftId, Constants.SHIFT_CANCELLED);
+                com.example.cafe_manager.data.repository.ChatRepository.syncShiftChatRoomSync(appDatabase, shiftId);
                 AppExecutors.getInstance().mainThread().execute(
                         () -> messageLive.setValue("Đã hủy ca."));
             } catch (Exception e) {
@@ -396,6 +396,22 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
                 AppExecutors.getInstance().mainThread().execute(() -> {
                     messageLive.setValue("Lỗi: " + e.getMessage());
                 });
+            }
+        });
+    }
+
+    public void getOrCreateShiftChatRoom(int shiftId, RepositoryCallback<Integer> callback) {
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            try {
+                com.example.cafe_manager.data.repository.ChatRepository.syncShiftChatRoomSync(appDatabase, shiftId);
+                com.example.cafe_manager.data.local.entity.ChatRoomEntity room = appDatabase.chatRoomDao().getByShiftId(shiftId);
+                if (room != null) {
+                    AppExecutors.getInstance().mainThread().execute(() -> callback.onSuccess(room.getRoomId()));
+                } else {
+                    AppExecutors.getInstance().mainThread().execute(() -> callback.onError(new Exception("Không thể tạo phòng chat cho ca này.")));
+                }
+            } catch (Exception e) {
+                AppExecutors.getInstance().mainThread().execute(() -> callback.onError(e));
             }
         });
     }

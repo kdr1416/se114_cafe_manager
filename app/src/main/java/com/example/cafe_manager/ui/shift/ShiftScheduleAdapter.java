@@ -27,6 +27,7 @@ public class ShiftScheduleAdapter extends RecyclerView.Adapter<ShiftScheduleAdap
         void onCloseShift(ShiftEntity shift);
         void onViewReport(ShiftEntity shift);
         void onCancel(ShiftEntity shift);
+        void onChatShift(ShiftEntity shift);
     }
 
     private List<ShiftScheduleViewModel.ShiftDisplayItem> items = new ArrayList<>();
@@ -83,14 +84,17 @@ public class ShiftScheduleAdapter extends RecyclerView.Adapter<ShiftScheduleAdap
                 case Constants.SHIFT_PUBLISHED:
                     popup.getMenu().add(0, 4, 0, "Mở ca");
                     popup.getMenu().add(0, 2, 0, "Phân công NV");
+                    popup.getMenu().add(0, 7, 0, "Chat nhóm ca");
                     popup.getMenu().add(0, 3, 0, "Hủy ca");
                     break;
                 case Constants.SHIFT_IN_PROGRESS:
                     popup.getMenu().add(0, 5, 0, "Đóng ca");
                     popup.getMenu().add(0, 6, 0, "Xem báo cáo");
+                    popup.getMenu().add(0, 7, 0, "Chat nhóm ca");
                     break;
                 case Constants.SHIFT_CLOSED:
                     popup.getMenu().add(0, 6, 0, "Xem báo cáo");
+                    popup.getMenu().add(0, 7, 0, "Chat nhóm ca");
                     break;
                 default:
                     return; // CANCELLED → no actions
@@ -103,6 +107,7 @@ public class ShiftScheduleAdapter extends RecyclerView.Adapter<ShiftScheduleAdap
                     case 4: listener.onOpenShift(shift); return true;
                     case 5: listener.onCloseShift(shift); return true;
                     case 6: listener.onViewReport(shift); return true;
+                    case 7: listener.onChatShift(shift); return true;
                     default: return false;
                 }
             });

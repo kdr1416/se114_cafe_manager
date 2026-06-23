@@ -52,4 +52,7 @@ public interface ShiftDao {
            "WHERE sa.user_id = :userId " +
            "ORDER BY s.shift_date DESC, s.start_time ASC")
     LiveData<List<ShiftEntity>> getShiftsByUserId(int userId);
+
+    @Query("SELECT * FROM shifts")
+    List<ShiftEntity> getAllSync();
 }

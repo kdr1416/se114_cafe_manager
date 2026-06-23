@@ -31,6 +31,9 @@ public interface UserDao {
     @Query("SELECT * FROM users WHERE role = :role ORDER BY full_name ASC")
     LiveData<List<UserEntity>> getUsersByRole(String role);
 
+    @Query("SELECT * FROM users WHERE role = :role AND is_active = 1")
+    List<UserEntity> getByRoleSync(String role);
+
     @Query("UPDATE users SET is_active = :isActive WHERE user_id = :userId")
     void setActive(int userId, boolean isActive);
 

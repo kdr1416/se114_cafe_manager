@@ -26,6 +26,7 @@ public class MyShiftAdapter extends RecyclerView.Adapter<MyShiftAdapter.ViewHold
         void onConfirm(int assignmentId);
         void onCheckIn(int shiftId);
         void onCheckOut(int shiftId);
+        void onChat(int shiftId);
     }
 
     private List<MyShiftViewModel.MyShiftItem> items = new ArrayList<>();
@@ -164,6 +165,13 @@ public class MyShiftAdapter extends RecyclerView.Adapter<MyShiftAdapter.ViewHold
             // Đã hoàn tất check-out
             h.btnAction.setVisibility(View.GONE);
         }
+
+        // Chat action button
+        boolean canChat = Constants.SHIFT_PUBLISHED.equals(shift.getStatus()) || 
+                          Constants.SHIFT_IN_PROGRESS.equals(shift.getStatus()) || 
+                          Constants.SHIFT_CLOSED.equals(shift.getStatus());
+        h.btnChat.setVisibility(canChat ? View.VISIBLE : View.GONE);
+        h.btnChat.setOnClickListener(v -> listener.onChat(shift.getShiftId()));
     }
 
     private String formatTime(long timestamp) {
@@ -176,7 +184,7 @@ public class MyShiftAdapter extends RecyclerView.Adapter<MyShiftAdapter.ViewHold
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView tvNameDate, tvTime, tvShiftStatus, tvConfirmStatus, tvAttendanceStatus, tvAttendanceDetails;
-        public Button btnAction;
+        public Button btnAction, btnChat;
 
         public ViewHolder(View v) {
             super(v);
@@ -187,6 +195,7 @@ public class MyShiftAdapter extends RecyclerView.Adapter<MyShiftAdapter.ViewHold
             tvAttendanceStatus = v.findViewById(R.id.tv_attendance_status);
             tvAttendanceDetails = v.findViewById(R.id.tv_attendance_details);
             btnAction = v.findViewById(R.id.btn_action);
+            btnChat = v.findViewById(R.id.btn_chat);
         }
     }
 }

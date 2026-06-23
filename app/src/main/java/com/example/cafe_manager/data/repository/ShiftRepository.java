@@ -16,9 +16,13 @@ import com.example.cafe_manager.util.Constants;
 import com.example.cafe_manager.util.RepositoryCallback;
 import com.example.cafe_manager.util.ShiftTimeUtils;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class ShiftRepository {
+    private final AppDatabase db;
     private final ShiftTemplateDao templateDao;
     private final ShiftDao shiftDao;
     private final ShiftAssignmentDao assignmentDao;
@@ -26,7 +30,7 @@ public class ShiftRepository {
     private final AppExecutors executors;
 
     public ShiftRepository(Application application) {
-        AppDatabase db = AppDatabase.getInstance(application);
+        this.db = AppDatabase.getInstance(application);
         templateDao = db.shiftTemplateDao();
         shiftDao = db.shiftDao();
         assignmentDao = db.shiftAssignmentDao();
@@ -80,13 +84,12 @@ public class ShiftRepository {
     public void openShiftWithCash(int shiftId, double openingCash, int userId, RepositoryCallback<Void> callback) {
         executors.diskIO().execute(() -> {
             try {
-<<<<<<< HEAD
                 transactionDao.openShiftWithCashAtomic(shiftId, openingCash, userId, System.currentTimeMillis());
-=======
                 ShiftEntity openShift = shiftDao.getCurrentlyOpen();
                 if (openShift != null) {
                     if (openShift.getShiftId() == shiftId) {
                         // If this specific shift is already open, allow proceeding (idempotency)
+                        ChatRepository.syncShiftChatRoomSync(db, shiftId);
                         executors.mainThread().execute(() -> callback.onSuccess(null));
                     } else {
                         // Provide a clear error message about which shift is blocking
@@ -98,7 +101,7 @@ public class ShiftRepository {
                     return;
                 }
                 shiftDao.openShift(shiftId, userId, System.currentTimeMillis());
->>>>>>> 133595b62c24b13c0d3d38cbe4582385da7ddfea
+                ChatRepository.syncShiftChatRoomSync(db, shiftId);
                 executors.mainThread().execute(() -> callback.onSuccess(null));
             } catch (Exception e) {
                 executors.mainThread().execute(() -> callback.onError(e));
@@ -142,6 +145,7 @@ public class ShiftRepository {
                 }
 
                 long id = assignmentDao.insert(assignment);
+                ChatRepository.syncShiftChatRoomSync(db, assignment.getShiftId());
                 executors.mainThread().execute(() -> callback.onSuccess(id));
             } catch (Exception e) {
                 executors.mainThread().execute(() -> callback.onError(e));
@@ -162,7 +166,11 @@ public class ShiftRepository {
                     }
                 }
 
+                int shiftId = assignmentDao.getShiftIdByAssignmentId(assignmentId);
                 assignmentDao.delete(assignmentId);
+                if (shiftId > 0) {
+                    ChatRepository.syncShiftChatRoomSync(db, shiftId);
+                }
                 executors.mainThread().execute(() -> callback.onSuccess(null));
             } catch (Exception e) { executors.mainThread().execute(() -> callback.onError(e)); }
         });

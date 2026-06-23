@@ -61,6 +61,35 @@ public final class Constants {
     public static final String ATTENDANCE_LATE = "LATE";
     public static final String ATTENDANCE_EARLY_LEAVE = "EARLY_LEAVE";
 
+    // ── News Post Type constants ─────────────────────────────────
+    public static final String NEWS_TYPE_GENERAL = "GENERAL";
+    public static final String NEWS_TYPE_MEETING = "MEETING";
+    public static final String NEWS_TYPE_SHIFT = "SHIFT";
+    public static final String NEWS_TYPE_RULE = "RULE";
+    public static final String NEWS_TYPE_URGENT = "URGENT";
+    public static final String NEWS_TYPE_PROMOTION = "PROMOTION";
+    public static final String NEWS_TYPE_STOCK = "STOCK";
+
+    // ── News Post Priority constants ─────────────────────────────
+    public static final String NEWS_PRIORITY_NORMAL = "NORMAL";
+    public static final String NEWS_PRIORITY_IMPORTANT = "IMPORTANT";
+    public static final String NEWS_PRIORITY_URGENT = "URGENT";
+
+    // ── News Post Target Type constants ──────────────────────────
+    public static final String NEWS_TARGET_ALL = "ALL";
+    public static final String NEWS_TARGET_ROLE = "ROLE";
+    public static final String NEWS_TARGET_SHIFT = "SHIFT";
+
+    // ── Chat Room Type constants ─────────────────────────────────────
+    public static final String CHAT_TYPE_SHIFT = "SHIFT";
+    public static final String CHAT_TYPE_ROLE = "ROLE";
+    public static final String CHAT_TYPE_DIRECT = "DIRECT";
+    public static final String CHAT_TYPE_GROUP = "GROUP";
+
+    // ── Chat Participant Role constants ─────────────────────────────
+    public static final String CHAT_ROLE_OWNER = "OWNER";
+    public static final String CHAT_ROLE_MODERATOR = "MODERATOR";
+    public static final String CHAT_ROLE_MEMBER = "MEMBER";
 
     private Constants() {
     }

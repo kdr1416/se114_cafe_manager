@@ -64,4 +64,10 @@ public interface ShiftAssignmentDao {
            "AND s.shift_date BETWEEN :fromDate AND :toDate " +
            "AND s.status != 'CANCELLED'")
     int countAssignmentsInRange(int userId, long fromDate, long toDate);
+
+    @Query("SELECT shift_id FROM shift_assignments WHERE assignment_id = :id")
+    int getShiftIdByAssignmentId(int id);
+
+    @Query("SELECT * FROM shift_assignments WHERE assignment_id = :id LIMIT 1")
+    ShiftAssignmentEntity getById(int id);
 }

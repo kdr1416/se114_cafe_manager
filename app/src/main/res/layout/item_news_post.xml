@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="@dimen/spacing_lg"
+    android:paddingVertical="@dimen/spacing_sm">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_card"
+        android:orientation="vertical"
+        android:padding="@dimen/spacing_lg">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Badges -->
+            <LinearLayout
+                android:id="@+id/layout_badges"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true">
+
+                <TextView
+                    android:id="@+id/tv_badge_priority"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.Cafe.Badge"
+                    android:background="@drawable/bg_badge_accent"
+                    android:textColor="@color/accent_dark"
+                    android:text="NORMAL"
+                    android:layout_marginEnd="@dimen/spacing_sm" />
+
+                <TextView
+                    android:id="@+id/tv_badge_type"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.Cafe.Badge"
+                    android:background="@drawable/bg_badge_success"
+                    android:textColor="@color/success"
+                    android:text="GENERAL" />
+            </LinearLayout>
+
+            <!-- Pin / Unread indicator -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true">
+
+                <TextView
+                    android:id="@+id/tv_pinned_indicator"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📌 Ghim"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_soft"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    android:layout_marginEnd="@dimen/spacing_sm" />
+
+                <View
+                    android:id="@+id/view_unread_dot"
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_badge_warning"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+        </RelativeLayout>
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/tv_post_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextAppearance.Cafe.Subtitle"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:text="Tiêu đề thông báo" />
+
+        <!-- Snippet -->
+        <TextView
+            android:id="@+id/tv_post_snippet"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextAppearance.Cafe.Body"
+            android:textColor="@color/text_soft"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:text="Nội dung tóm tắt thông báo..." />
+
+        <!-- Footer -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md">
+
+            <TextView
+                android:id="@+id/tv_post_author"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/TextAppearance.Cafe.Caption"
+                android:layout_alignParentStart="true"
+                android:text="Bởi: Admin" />
+
+            <TextView
+                android:id="@+id/tv_post_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/TextAppearance.Cafe.Caption"
+                android:layout_alignParentEnd="true"
+                android:text="21/06/2026 12:00" />
+        </RelativeLayout>
+
+    </LinearLayout>
+</LinearLayout>
