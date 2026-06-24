@@ -22,7 +22,7 @@ public class AuthViewModel extends AndroidViewModel {
 
     public AuthViewModel(@NonNull Application application) {
         super(application);
-        authRepository = new AuthRepository(application);
+        authRepository = AuthRepository.getInstance(application);
         sessionManager = SessionManager.getInstance(application);
     }
 

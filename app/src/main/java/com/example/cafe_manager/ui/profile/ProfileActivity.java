@@ -10,13 +10,14 @@ import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
+import androidx.lifecycle.ViewModelProvider;
+
 import com.example.cafe_manager.R;
-import com.example.cafe_manager.data.local.AppDatabase;
 import com.example.cafe_manager.data.local.entity.UserEntity;
 import com.example.cafe_manager.manager.CartManager;
 import com.example.cafe_manager.manager.SessionManager;
 import com.example.cafe_manager.ui.auth.LoginActivity;
-import com.example.cafe_manager.util.AppExecutors;
+import com.example.cafe_manager.viewmodel.ProfileViewModel;
 
 public class ProfileActivity extends AppCompatActivity {
 
@@ -25,6 +26,7 @@ public class ProfileActivity extends AppCompatActivity {
     private TextView tvUsername;
     private TextView tvRole;
     private TextView tvPhone;
+    private ProfileViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,8 +34,11 @@ public class ProfileActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_profile);
 
+        viewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
+
         setupTopBar();
         bindViews();
+        setupViewModel();
         loadProfile();
     }
 
@@ -65,10 +70,26 @@ public class ProfileActivity extends AppCompatActivity {
         btnLogout.setOnClickListener(v -> showLogoutDialog());
     }
 
+    private void setupViewModel() {
+        viewModel.getUserLiveData().observe(this, user -> {
+            if (user != null) {
+                tvFullName.setText(user.getFullName());
+                tvRole.setText(user.getRole());
+                String phone = user.getPhone();
+                tvPhone.setText(phone != null && !phone.isEmpty() ? phone : "Chưa cập nhật");
+                
+                String fullName = user.getFullName();
+                if (fullName != null && !fullName.isEmpty()) {
+                    tvAvatar.setText(String.valueOf(fullName.charAt(0)).toUpperCase());
+                }
+            }
+        });
+    }
+
     private void loadProfile() {
         SessionManager session = SessionManager.getInstance(this);
 
-        // Show from session immediately
+        // Show from session immediately as fallback
         tvFullName.setText(session.getFullName());
         tvUsername.setText("@" + session.getUsername());
         tvRole.setText(session.getRole());
@@ -78,19 +99,8 @@ public class ProfileActivity extends AppCompatActivity {
             tvAvatar.setText(String.valueOf(fullName.charAt(0)).toUpperCase());
         }
 
-        // Load phone from DB (not stored in session)
-        AppExecutors.getInstance().diskIO().execute(() -> {
-            UserEntity user = AppDatabase.getInstance(this).userDao().getById(session.getUserId());
-            if (user != null) {
-                AppExecutors.getInstance().mainThread().execute(() -> {
-                    String phone = user.getPhone();
-                    tvPhone.setText(phone != null && !phone.isEmpty() ? phone : "Chưa cập nhật");
-                    // Also refresh other fields from DB
-                    tvFullName.setText(user.getFullName());
-                    tvRole.setText(user.getRole());
-                });
-            }
-        });
+        // Fetch fresh details from API
+        viewModel.loadUserProfile(session.getUserId());
     }
 
     private void showLogoutDialog() {

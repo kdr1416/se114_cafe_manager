@@ -168,4 +168,15 @@ public class NewsPostEntity {
     public void setIsDeleted(boolean isDeleted) {
         this.isDeleted = isDeleted;
     }
+
+    // Transient field - not persisted in Room DB, used for read status from server
+    private boolean isRead;
+
+    public boolean getIsRead() {
+        return isRead;
+    }
+
+    public void setIsRead(boolean isRead) {
+        this.isRead = isRead;
+    }
 }

@@ -3,160 +3,136 @@ package com.example.cafe_manager.data.repository;
 import android.content.Context;
 
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
-import com.example.cafe_manager.data.local.AppDatabase;
-import com.example.cafe_manager.data.local.dao.AttendanceDao;
-import com.example.cafe_manager.data.local.dao.ShiftAssignmentDao;
-import com.example.cafe_manager.data.local.dao.ShiftDao;
 import com.example.cafe_manager.data.local.entity.AttendanceEntity;
-import com.example.cafe_manager.data.local.entity.ShiftAssignmentEntity;
-import com.example.cafe_manager.data.local.entity.ShiftEntity;
+import com.example.cafe_manager.data.remote.ApiClient;
+import com.example.cafe_manager.data.remote.AttendanceApiService;
+import com.example.cafe_manager.data.remote.AttendanceResponse;
+import com.example.cafe_manager.data.remote.CheckInRequest;
+import com.example.cafe_manager.data.remote.CheckOutRequest;
 import com.example.cafe_manager.util.AppExecutors;
-import com.example.cafe_manager.util.Constants;
 import com.example.cafe_manager.util.RepositoryCallback;
-import com.example.cafe_manager.util.ShiftTimeUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AttendanceRepository {
 
-    private final AttendanceDao attendanceDao;
-    private final ShiftDao shiftDao;
-    private final ShiftAssignmentDao assignmentDao;
-    private final AppExecutors executors;
+    private static volatile AttendanceRepository instance;
+    private final AttendanceApiService apiService;
+    private final AppExecutors exec;
+    private final MutableLiveData<List<AttendanceEntity>> allAttendancesCache = new MutableLiveData<>();
 
-    public AttendanceRepository(Context context) {
-        AppDatabase db = AppDatabase.getInstance(context);
-        this.attendanceDao = db.attendanceDao();
-        this.shiftDao = db.shiftDao();
-        this.assignmentDao = db.shiftAssignmentDao();
-        this.executors = AppExecutors.getInstance();
+    private AttendanceRepository(Context ctx) {
+        this.apiService = ApiClient.getInstance(ctx).getService(AttendanceApiService.class);
+        this.exec = AppExecutors.getInstance();
+        refreshAttendances();
+    }
+
+    public static AttendanceRepository getInstance(Context ctx) {
+        if (instance == null) {
+            synchronized (AttendanceRepository.class) {
+                if (instance == null) {
+                    instance = new AttendanceRepository(ctx.getApplicationContext());
+                }
+            }
+        }
+        return instance;
     }
 
     public LiveData<List<AttendanceEntity>> getAttendanceForShift(int shiftId) {
-        return attendanceDao.getByShift(shiftId);
+        MutableLiveData<List<AttendanceEntity>> result = new MutableLiveData<>();
+        exec.diskIO().execute(() -> {
+            try {
+                retrofit2.Response<List<AttendanceResponse>> response = apiService.getAttendancesForShift(shiftId).execute();
+                if (response.isSuccessful() && response.body() != null) {
+                    List<AttendanceEntity> entities = new ArrayList<>();
+                    for (AttendanceResponse r : response.body()) {
+                        entities.add(mapResponseToEntity(r));
+                    }
+                    result.postValue(entities);
+                } else {
+                    result.postValue(new ArrayList<>());
+                }
+            } catch (Exception e) {
+                result.postValue(new ArrayList<>());
+            }
+        });
+        return result;
     }
 
     public LiveData<List<AttendanceEntity>> getMyAttendance(int userId) {
-        return attendanceDao.getByUser(userId);
+        // Note: userId is ignored; API returns current user's attendance only
+        return allAttendancesCache;
     }
 
     public void checkIn(int shiftId, int userId, RepositoryCallback<Void> callback) {
-        executors.diskIO().execute(() -> {
+        CheckInRequest request = new CheckInRequest();
+        request.setShiftId(shiftId);
+        // latitude/longitude not provided in current flow, send null
+        exec.diskIO().execute(() -> {
             try {
-                ShiftEntity shift = shiftDao.getById(shiftId);
-                if (shift == null) {
-                    executors.mainThread().execute(() -> callback.onError(new Exception("Ca làm việc không tồn tại.")));
-                    return;
-                }
-
-                // Chặn check-in ca bị CANCELLED
-                if (Constants.SHIFT_CANCELLED.equals(shift.getStatus())) {
-                    executors.mainThread().execute(() -> callback.onError(new Exception("Ca làm việc này đã bị hủy.")));
-                    return;
-                }
-
-                // Chỉ cho phép check-in với ca PUBLISHED hoặc IN_PROGRESS
-                if (!Constants.SHIFT_PUBLISHED.equals(shift.getStatus()) && !Constants.SHIFT_IN_PROGRESS.equals(shift.getStatus())) {
-                    executors.mainThread().execute(() -> callback.onError(new Exception("Chỉ có thể check-in cho ca đã phát hành hoặc đang chạy.")));
-                    return;
-                }
-
-                // Kiểm tra phân công nhân viên
-                ShiftAssignmentEntity assignment = assignmentDao.getByShiftAndUser(shiftId, userId);
-                if (assignment == null) {
-                    executors.mainThread().execute(() -> callback.onError(new Exception("Bạn không được phân công ca làm việc này.")));
-                    return;
-                }
-
-                // Kiểm tra xem nhân sự đã xác nhận phân công chưa
-                if (!assignment.isConfirmed()) {
-                    executors.mainThread().execute(() -> callback.onError(new Exception("Bạn cần xác nhận ca làm việc trước khi check-in.")));
-                    return;
-                }
-
-                AttendanceEntity existing = attendanceDao.getByShiftAndUser(shiftId, userId);
-                long checkInTime = System.currentTimeMillis();
-
-                // Xác định trạng thái muộn (LATE)
-                long shiftStartTime = ShiftTimeUtils.getShiftStartMillis(shift.getShiftDate(), shift.getStartTime());
-                String status = Constants.ATTENDANCE_CHECKED_IN;
-                if (checkInTime > shiftStartTime + (15 * 60 * 1000)) { // Muộn hơn 15 phút
-                    status = Constants.ATTENDANCE_LATE;
-                }
-
-                int lateMin = (checkInTime > shiftStartTime) ? (int) ((checkInTime - shiftStartTime) / 60000) : 0;
-
-                if (existing == null) {
-                    AttendanceEntity attendance = new AttendanceEntity();
-                    attendance.setShiftId(shiftId);
-                    attendance.setUserId(userId);
-                    attendance.setCheckInAt(checkInTime);
-                    attendance.setLateMinutes(lateMin);
-                    attendance.setStatus(status);
-                    attendanceDao.insert(attendance);
+                retrofit2.Response<AttendanceResponse> response = apiService.checkIn(request).execute();
+                if (response.isSuccessful()) {
+                    refreshAttendances();
+                    exec.mainThread().execute(() -> callback.onSuccess(null));
                 } else {
-                    if (existing.getCheckInAt() > 0) {
-                        executors.mainThread().execute(() -> callback.onError(new Exception("Bạn đã check-in ca này rồi.")));
-                        return;
-                    }
-                    existing.setCheckInAt(checkInTime);
-                    existing.setLateMinutes(lateMin);
-                    existing.setStatus(status);
-                    attendanceDao.update(existing);
+                    exec.mainThread().execute(() -> callback.onError(new Exception("Check-in thất bại")));
                 }
-                executors.mainThread().execute(() -> callback.onSuccess(null));
             } catch (Exception e) {
-                executors.mainThread().execute(() -> callback.onError(e));
+                exec.mainThread().execute(() -> callback.onError(e));
             }
         });
     }
 
     public void checkOut(int shiftId, int userId, RepositoryCallback<Void> callback) {
-        executors.diskIO().execute(() -> {
+        CheckOutRequest request = new CheckOutRequest();
+        request.setShiftId(shiftId);
+        // notes not provided in current flow, send null
+        exec.diskIO().execute(() -> {
             try {
-                ShiftEntity shift = shiftDao.getById(shiftId);
-                AttendanceEntity attendance = attendanceDao.getByShiftAndUser(shiftId, userId);
-                if (shift == null || attendance == null) {
-                    executors.mainThread().execute(() -> callback.onError(new Exception("Dữ liệu điểm danh không hợp lệ.")));
-                    return;
+                retrofit2.Response<AttendanceResponse> response = apiService.checkOut(request).execute();
+                if (response.isSuccessful()) {
+                    refreshAttendances();
+                    exec.mainThread().execute(() -> callback.onSuccess(null));
+                } else {
+                    exec.mainThread().execute(() -> callback.onError(new Exception("Check-out thất bại")));
                 }
-
-                if (attendance.getCheckInAt() == 0) {
-                    executors.mainThread().execute(() -> callback.onError(new Exception("Bạn phải check-in trước khi check-out.")));
-                    return;
-                }
-                if (attendance.getCheckOutAt() > 0) {
-                    executors.mainThread().execute(() -> callback.onError(new Exception("Bạn đã check-out ca này rồi.")));
-                    return;
-                }
-
-                long checkOutTime = System.currentTimeMillis();
-                long shiftStartTime = ShiftTimeUtils.getShiftStartMillis(shift.getShiftDate(), shift.getStartTime());
-                long shiftEndTime = ShiftTimeUtils.getShiftEndMillis(shift.getShiftDate(), shift.getStartTime(), shift.getEndTime());
-
-                // Tính toán số phút muộn và về sớm
-                int lateMin = (attendance.getCheckInAt() > shiftStartTime) ? (int) ((attendance.getCheckInAt() - shiftStartTime) / 60000) : 0;
-                int earlyLeaveMin = (checkOutTime < shiftEndTime) ? (int) ((shiftEndTime - checkOutTime) / 60000) : 0;
-
-                String status = Constants.ATTENDANCE_COMPLETED;
-                if (lateMin > 15) {
-                    status = Constants.ATTENDANCE_LATE;
-                }
-                if (earlyLeaveMin > 15) {
-                    status = Constants.ATTENDANCE_EARLY_LEAVE;
-                }
-
-                attendance.setCheckOutAt(checkOutTime);
-                attendance.setLateMinutes(lateMin);
-                attendance.setEarlyLeaveMinutes(earlyLeaveMin);
-                attendance.setStatus(status);
-                attendanceDao.update(attendance);
-
-                executors.mainThread().execute(() -> callback.onSuccess(null));
             } catch (Exception e) {
-                executors.mainThread().execute(() -> callback.onError(e));
+                exec.mainThread().execute(() -> callback.onError(e));
             }
         });
+    }
+
+    private void refreshAttendances() {
+        exec.diskIO().execute(() -> {
+            try {
+                retrofit2.Response<List<AttendanceResponse>> response = apiService.getAllAttendances().execute();
+                if (response.isSuccessful() && response.body() != null) {
+                    List<AttendanceEntity> entities = new ArrayList<>();
+                    for (AttendanceResponse r : response.body()) {
+                        entities.add(mapResponseToEntity(r));
+                    }
+                    allAttendancesCache.postValue(entities);
+                }
+            } catch (Exception e) {
+                // Log error
+            }
+        });
+    }
+
+    private AttendanceEntity mapResponseToEntity(AttendanceResponse r) {
+        AttendanceEntity e = new AttendanceEntity();
+        e.setAttendanceId(r.getAttendanceId());
+        e.setShiftId(r.getShiftId());
+        e.setUserId(r.getUserId() != null ? r.getUserId() : 0);
+        e.setCheckInAt(r.getCheckInAt() != null ? r.getCheckInAt() : 0);
+        e.setCheckOutAt(r.getCheckOutAt() != null ? r.getCheckOutAt() : 0);
+        e.setStatus(r.getStatus());
+        e.setLateMinutes(r.getLateMinutes() != null ? r.getLateMinutes() : 0);
+        e.setEarlyLeaveMinutes(r.getEarlyLeaveMinutes() != null ? r.getEarlyLeaveMinutes() : 0);
+        e.setNotes(r.getNotes());
+        return e;
     }
 }

@@ -10,13 +10,11 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
+import androidx.lifecycle.ViewModelProvider;
+
 import com.example.cafe_manager.R;
-import com.example.cafe_manager.data.local.AppDatabase;
-import com.example.cafe_manager.data.local.dao.UserDao;
-import com.example.cafe_manager.data.local.entity.UserEntity;
 import com.example.cafe_manager.manager.SessionManager;
-import com.example.cafe_manager.util.AppExecutors;
-import com.example.cafe_manager.util.PasswordUtils;
+import com.example.cafe_manager.viewmodel.ProfileViewModel;
 
 public class ChangePasswordActivity extends AppCompatActivity {
 
@@ -24,6 +22,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
     private EditText etNewPassword;
     private EditText etConfirmPassword;
     private Button btnSave;
+    private ProfileViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,8 +30,11 @@ public class ChangePasswordActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_change_password);
 
+        viewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
+
         setupTopBar();
         bindViews();
+        setupViewModel();
     }
 
     private void setupTopBar() {
@@ -55,6 +57,23 @@ public class ChangePasswordActivity extends AppCompatActivity {
         btnSave = findViewById(R.id.btn_save);
 
         btnSave.setOnClickListener(v -> onSave());
+    }
+
+    private void setupViewModel() {
+        viewModel.getChangePasswordSuccess().observe(this, success -> {
+            if (success != null && success) {
+                Toast.makeText(this, "Đổi mật khẩu thành công", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        });
+
+        viewModel.getError().observe(this, error -> {
+            if (error != null) {
+                Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+                btnSave.setEnabled(true);
+                viewModel.clearError();
+            }
+        });
     }
 
     private void onSave() {
@@ -80,34 +99,6 @@ public class ChangePasswordActivity extends AppCompatActivity {
         btnSave.setEnabled(false);
 
         int userId = SessionManager.getInstance(this).getUserId();
-        UserDao userDao = AppDatabase.getInstance(this).userDao();
-
-        AppExecutors.getInstance().diskIO().execute(() -> {
-            UserEntity user = userDao.getById(userId);
-            if (user == null) {
-                AppExecutors.getInstance().mainThread().execute(() -> {
-                    Toast.makeText(this, "Không tìm thấy tài khoản", Toast.LENGTH_SHORT).show();
-                    btnSave.setEnabled(true);
-                });
-                return;
-            }
-
-            String oldHash = PasswordUtils.hashPassword(oldPassword);
-            if (!oldHash.equals(user.getPasswordHash())) {
-                AppExecutors.getInstance().mainThread().execute(() -> {
-                    Toast.makeText(this, "Mật khẩu hiện tại không đúng", Toast.LENGTH_SHORT).show();
-                    btnSave.setEnabled(true);
-                });
-                return;
-            }
-
-            String newHash = PasswordUtils.hashPassword(newPassword);
-            userDao.updatePassword(userId, newHash);
-
-            AppExecutors.getInstance().mainThread().execute(() -> {
-                Toast.makeText(this, "Đổi mật khẩu thành công", Toast.LENGTH_SHORT).show();
-                finish();
-            });
-        });
+        viewModel.changePassword(userId, oldPassword, newPassword);
     }
 }

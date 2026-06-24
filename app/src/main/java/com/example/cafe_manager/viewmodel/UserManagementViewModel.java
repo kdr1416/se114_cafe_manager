@@ -7,7 +7,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.example.cafe_manager.data.local.AppDatabase;
+
 import com.example.cafe_manager.data.local.entity.UserEntity;
 import com.example.cafe_manager.data.repository.AuthRepository;
 import com.example.cafe_manager.manager.SessionManager;
@@ -24,16 +24,29 @@ public class UserManagementViewModel extends AndroidViewModel {
 
     public UserManagementViewModel(@NonNull Application application) {
         super(application);
-        authRepository = new AuthRepository(application);
+        authRepository = AuthRepository.getInstance(application);
         SessionManager sessionManager = SessionManager.getInstance(application);
-        AppDatabase db = AppDatabase.getInstance(application);
 
         String role = sessionManager.getRole();
-        if (Constants.ROLE_ADMIN.equals(role)) {
-            usersLive = db.userDao().getAllUsers();
-        } else {
-            usersLive = db.userDao().getUsersByRole(Constants.ROLE_STAFF);
-        }
+        usersLive = androidx.lifecycle.Transformations.map(authRepository.getAllUsers(), users -> {
+            if (users == null) {
+                return new java.util.ArrayList<>();
+            }
+            if (Constants.ROLE_ADMIN.equals(role)) {
+                return users;
+            } else {
+                List<UserEntity> staffOnly = new java.util.ArrayList<>();
+                for (UserEntity u : users) {
+                    if (Constants.ROLE_STAFF.equals(u.getRole())) {
+                        staffOnly.add(u);
+                    }
+                }
+                return staffOnly;
+            }
+        });
+
+        // Trigger initial API load
+        authRepository.refreshAllUsers();
     }
 
     public LiveData<List<UserEntity>> getUsers() {

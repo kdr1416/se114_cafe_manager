@@ -34,7 +34,7 @@ public class TableViewModel extends AndroidViewModel {
         super(application);
 
         this.tableRepository = TableRepository.getInstance(application);
-        this.areaRepository = new AreaRepository(application);
+        this.areaRepository = AreaRepository.getInstance(application);
 
         LiveData<List<TableEntity>> allTables = tableRepository.getAllTables();
 

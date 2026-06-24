@@ -28,7 +28,7 @@ public class NewsViewModel extends AndroidViewModel {
 
     public NewsViewModel(@NonNull Application app) {
         super(app);
-        repo = new NewsRepository(app);
+        repo = NewsRepository.getInstance(app);
         setupFilterObserver(app);
     }
 

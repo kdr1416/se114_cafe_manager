@@ -29,7 +29,7 @@ public class TableManagementViewModel extends AndroidViewModel {
     public TableManagementViewModel(@NonNull Application application) {
         super(application);
         repository = TableRepository.getInstance(application);
-        areaRepository = new AreaRepository(application);
+        areaRepository = AreaRepository.getInstance(application);
         tables = repository.getAllTables();
         areas = areaRepository.getAllAreas();
 

@@ -61,4 +61,24 @@ public class AreaEntity {
     public void setCreatedAt(long createdAt) {
         this.createdAt = createdAt;
     }
+
+    // Transient fields for API responses (not persisted in Room)
+    private String description;
+    private int tableCount;
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public int getTableCount() {
+        return tableCount;
+    }
+
+    public void setTableCount(int tableCount) {
+        this.tableCount = tableCount;
+    }
 }
