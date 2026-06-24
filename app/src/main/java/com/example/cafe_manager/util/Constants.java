@@ -5,7 +5,7 @@ public final class Constants {
     public static final String ROLE_MANAGER = "MANAGER";
     public static final String ROLE_STAFF = "STAFF";
 
-    public static final String TABLE_EMPTY = "EMPTY";
+    public static final String TABLE_EMPTY = "AVAILABLE";
     public static final String TABLE_OCCUPIED = "OCCUPIED";
 
     public static final String ORDER_OPEN = "OPEN";

@@ -241,10 +241,15 @@ public class TableManagementActivity extends AppCompatActivity {
                     if (existing == null) {
                         viewModel.addTable(name, capacity, area);
                     } else {
-                        existing.setTableName(name);
-                        existing.setCapacity(capacity);
-                        existing.setArea(area);
-                        viewModel.updateTable(existing);
+                        TableEntity updatedTable = new TableEntity(
+                                name,
+                                existing.getStatus(),
+                                capacity,
+                                area,
+                                existing.getCreatedAt()
+                        );
+                        updatedTable.setTableId(existing.getTableId());
+                        viewModel.updateTable(updatedTable);
                     }
                 })
                 .setNegativeButton("Huỷ", null)

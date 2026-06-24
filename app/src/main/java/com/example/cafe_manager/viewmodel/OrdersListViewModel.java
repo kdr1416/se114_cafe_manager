@@ -24,7 +24,7 @@ public class OrdersListViewModel extends AndroidViewModel {
     public OrdersListViewModel(@NonNull Application application) {
         super(application);
 
-        this.orderRepository = new OrderRepository(application);
+        this.orderRepository = OrderRepository.getInstance(application);
 
         this.ordersLive = orderRepository
                 .getActiveOrdersWithItems(Constants.ORDER_CONFIRMED);

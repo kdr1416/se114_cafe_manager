@@ -1,43 +1,58 @@
 package com.example.cafe_manager.data.repository;
 
 import android.content.Context;
+import android.widget.Toast;
 
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
-import com.example.cafe_manager.data.local.AppDatabase;
-import com.example.cafe_manager.data.local.dao.OrderDao;
-import com.example.cafe_manager.data.local.dao.OrderItemDao;
-import com.example.cafe_manager.data.local.dao.OrderTransactionDao;
 import com.example.cafe_manager.data.local.entity.OrderEntity;
 import com.example.cafe_manager.data.local.entity.OrderItemEntity;
+import com.example.cafe_manager.data.remote.ApiClient;
+import com.example.cafe_manager.data.remote.OrderApiService;
+import com.example.cafe_manager.data.remote.OrderDetailResponse;
+import com.example.cafe_manager.data.remote.OrderItemRequest;
+import com.example.cafe_manager.data.remote.OrderRequest;
+import com.example.cafe_manager.data.remote.NetworkException;
 import com.example.cafe_manager.model.CartItem;
+import com.example.cafe_manager.model.OrderWithItems;
 import com.example.cafe_manager.util.AppExecutors;
 import com.example.cafe_manager.util.Constants;
 import com.example.cafe_manager.util.RepositoryCallback;
-import com.example.cafe_manager.model.OrderWithItems;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+/**
+ * Repository quản lý hóa đơn (orders) và chi tiết hóa đơn (order items),
+ * kết nối trực tiếp đến Backend qua Retrofit APIs.
+ */
 public class OrderRepository {
 
-    private final OrderDao orderDao;
-    private final OrderItemDao orderItemDao;
-    private final OrderTransactionDao orderTransactionDao;
+    private static OrderRepository instance;
+
+    private final Context context;
+    private final OrderApiService orderApiService;
     private final AppExecutors appExecutors;
 
-    public OrderRepository(Context context) {
-        AppDatabase db = AppDatabase.getInstance(context);
-        this.orderDao = db.orderDao();
-        this.orderItemDao = db.orderItemDao();
-        this.orderTransactionDao = db.orderTransactionDao();
+    public static synchronized OrderRepository getInstance(Context context) {
+        if (instance == null) {
+            instance = new OrderRepository(context);
+        }
+        return instance;
+    }
+
+    private OrderRepository(Context context) {
+        this.context = context.getApplicationContext();
+        this.orderApiService = ApiClient.getInstance(context).getService(OrderApiService.class);
         this.appExecutors = AppExecutors.getInstance();
     }
 
-public void confirmOrder(
+    public void confirmOrder(
             int tableId,
             List<CartItem> cartItems,
             String note,
@@ -51,45 +66,40 @@ public void confirmOrder(
             );
             return;
         }
+
         appExecutors.diskIO().execute(() -> {
             try {
-                double totalAmount = 0;
-                List<OrderItemEntity> orderItems = new ArrayList<>();
+                // 1. Tạo hóa đơn trống trên backend
+                Response<OrderEntity> createResp = orderApiService.createOrder(new OrderRequest(tableId, note)).execute();
+                if (!createResp.isSuccessful() || createResp.body() == null) {
+                    throw parseError(createResp);
+                }
+                OrderEntity order = createResp.body();
+                int orderId = order.getOrderId();
 
+                // 2. Thêm từng món ăn vào hóa đơn đồng bộ
                 for (CartItem cartItem : cartItems) {
-                    totalAmount += cartItem.getSubtotal();
-
-                    OrderItemEntity item = new OrderItemEntity();
-                    item.setProductId(cartItem.getProductId());
-                    item.setProductNameSnapshot(cartItem.getProductName());
-                    item.setQuantity(cartItem.getQuantity());
-                    item.setUnitPrice(cartItem.getUnitPrice());
-                    item.setSubtotal(cartItem.getSubtotal());
-                    item.setNote(cartItem.getNote());
-
-                    orderItems.add(item);
+                    OrderItemRequest itemReq = new OrderItemRequest(
+                            cartItem.getProductId(),
+                            cartItem.getQuantity(),
+                            cartItem.getNote()
+                    );
+                    Response<OrderDetailResponse> addResp = orderApiService.addItem(orderId, itemReq).execute();
+                    if (!addResp.isSuccessful()) {
+                        throw parseError(addResp);
+                    }
                 }
 
-                OrderEntity order = new OrderEntity();
-                order.setTableId(tableId);
-                order.setOrderCode("ORD" + System.currentTimeMillis());
-                order.setStatus(Constants.ORDER_CONFIRMED);
-                order.setTotalAmount(totalAmount);
-                order.setNote(note);
-                order.setCreatedAt(System.currentTimeMillis());
+                // 3. Xác nhận hóa đơn
+                Response<OrderEntity> confirmResp = orderApiService.confirmOrder(orderId).execute();
+                if (!confirmResp.isSuccessful()) {
+                    throw parseError(confirmResp);
+                }
 
-                long orderId = orderTransactionDao.confirmOrderAtomic(
-                        order,
-                        orderItems,
-                        tableId,
-                        Constants.TABLE_OCCUPIED,
-                        createdByUserId,
-                        createdShiftId
-                );
-
-                appExecutors.mainThread().execute(() ->
-                        callback.onSuccess(orderId)
-                );
+                appExecutors.mainThread().execute(() -> {
+                    TableRepository.getInstance(context).refreshAllTables();
+                    callback.onSuccess((long) orderId);
+                });
 
             } catch (Exception e) {
                 appExecutors.mainThread().execute(() ->
@@ -100,45 +110,206 @@ public void confirmOrder(
     }
 
     public OrderEntity getActiveOrderByTable(int tableId) {
-        return orderDao.getActiveByTableId(tableId, Constants.ORDER_CONFIRMED);
+        try {
+            // Lấy tất cả hóa đơn đang phục vụ (CONFIRMED) từ backend và lọc theo tableId
+            Response<List<OrderEntity>> resp = orderApiService.getAllOrders(Constants.ORDER_CONFIRMED).execute();
+            if (resp.isSuccessful() && resp.body() != null) {
+                for (OrderEntity o : resp.body()) {
+                    if (o.getTableId() == tableId) {
+                        return o;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public LiveData<OrderEntity> getActiveOrderByTableLive(int tableId) {
-        return orderDao.getActiveByTableIdLive(tableId, Constants.ORDER_CONFIRMED);
+        MutableLiveData<OrderEntity> liveData = new MutableLiveData<>();
+        appExecutors.diskIO().execute(() -> {
+            try {
+                Response<List<OrderEntity>> resp = orderApiService.getAllOrders(Constants.ORDER_CONFIRMED).execute();
+                if (resp.isSuccessful() && resp.body() != null) {
+                    for (OrderEntity o : resp.body()) {
+                        if (o.getTableId() == tableId) {
+                            liveData.postValue(o);
+                            return;
+                        }
+                    }
+                }
+                liveData.postValue(null);
+            } catch (Exception e) {
+                liveData.postValue(null);
+            }
+        });
+        return liveData;
     }
 
     public LiveData<OrderEntity> getOrderLive(int orderId) {
-        return orderDao.getByIdLive(orderId);
+        MutableLiveData<OrderEntity> liveData = new MutableLiveData<>();
+        orderApiService.getOrderDetail(orderId).enqueue(new Callback<OrderDetailResponse>() {
+            @Override
+            public void onResponse(Call<OrderDetailResponse> call, Response<OrderDetailResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    liveData.postValue(response.body().getOrder());
+                } else {
+                    liveData.postValue(null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<OrderDetailResponse> call, Throwable t) {
+                liveData.postValue(null);
+            }
+        });
+        return liveData;
     }
 
     public LiveData<List<OrderEntity>> getActiveOrders() {
-        return orderDao.getAllByStatus(Constants.ORDER_CONFIRMED);
+        MutableLiveData<List<OrderEntity>> liveData = new MutableLiveData<>();
+        orderApiService.getAllOrders(Constants.ORDER_CONFIRMED).enqueue(new Callback<List<OrderEntity>>() {
+            @Override
+            public void onResponse(Call<List<OrderEntity>> call, Response<List<OrderEntity>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    liveData.postValue(response.body());
+                } else {
+                    liveData.postValue(null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<OrderEntity>> call, Throwable t) {
+                liveData.postValue(null);
+            }
+        });
+        return liveData;
     }
 
     public LiveData<List<OrderEntity>> getOrdersByStatus(String status) {
-        return orderDao.getAllByStatus(status);
+        MutableLiveData<List<OrderEntity>> liveData = new MutableLiveData<>();
+        orderApiService.getAllOrders(status).enqueue(new Callback<List<OrderEntity>>() {
+            @Override
+            public void onResponse(Call<List<OrderEntity>> call, Response<List<OrderEntity>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    liveData.postValue(response.body());
+                } else {
+                    liveData.postValue(null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<OrderEntity>> call, Throwable t) {
+                liveData.postValue(null);
+            }
+        });
+        return liveData;
     }
 
     public LiveData<List<OrderWithItems>> getActiveOrdersWithItems(String status) {
-        return orderDao.getOrdersWithItemsByStatus(status);
+        MutableLiveData<List<OrderWithItems>> liveData = new MutableLiveData<>();
+        appExecutors.diskIO().execute(() -> {
+            try {
+                Response<List<OrderEntity>> resp = orderApiService.getAllOrders(status).execute();
+                if (resp.isSuccessful() && resp.body() != null) {
+                    List<OrderWithItems> result = new ArrayList<>();
+                    for (OrderEntity order : resp.body()) {
+                        Response<OrderDetailResponse> detailResp = orderApiService.getOrderDetail(order.getOrderId()).execute();
+                        if (detailResp.isSuccessful() && detailResp.body() != null) {
+                            OrderWithItems owi = new OrderWithItems();
+                            owi.setOrder(order);
+                            owi.setItems(detailResp.body().getItems());
+                            owi.setTableName("Bàn " + order.getTableId());
+                            result.add(owi);
+                        }
+                    }
+                    liveData.postValue(result);
+                } else {
+                    liveData.postValue(new ArrayList<>());
+                }
+            } catch (Exception e) {
+                liveData.postValue(new ArrayList<>());
+            }
+        });
+        return liveData;
     }
 
     public LiveData<List<OrderWithItems>> getPaidOrdersInRange(long fromMs, long toMs) {
-        return orderDao.getPaidOrdersInRange(Constants.ORDER_PAID, fromMs, toMs);
+        MutableLiveData<List<OrderWithItems>> liveData = new MutableLiveData<>();
+        appExecutors.diskIO().execute(() -> {
+            try {
+                Response<List<OrderEntity>> resp = orderApiService.getAllOrders(Constants.ORDER_PAID).execute();
+                if (resp.isSuccessful() && resp.body() != null) {
+                    List<OrderWithItems> result = new ArrayList<>();
+                    for (OrderEntity order : resp.body()) {
+                        long paidAt = order.getPaidAt();
+                        if (paidAt >= fromMs && paidAt <= toMs) {
+                            Response<OrderDetailResponse> detailResp = orderApiService.getOrderDetail(order.getOrderId()).execute();
+                            if (detailResp.isSuccessful() && detailResp.body() != null) {
+                                OrderWithItems owi = new OrderWithItems();
+                                owi.setOrder(order);
+                                owi.setItems(detailResp.body().getItems());
+                                owi.setTableName("Bàn " + order.getTableId());
+                                result.add(owi);
+                            }
+                        }
+                    }
+                    liveData.postValue(result);
+                } else {
+                    liveData.postValue(new ArrayList<>());
+                }
+            } catch (Exception e) {
+                liveData.postValue(new ArrayList<>());
+            }
+        });
+        return liveData;
     }
 
     public LiveData<Integer> countPaidInRange(long fromMs, long toMs) {
-        return orderDao.countPaidInRange(Constants.ORDER_PAID, fromMs, toMs);
+        MutableLiveData<Integer> liveData = new MutableLiveData<>();
+        appExecutors.diskIO().execute(() -> {
+            try {
+                Response<List<OrderEntity>> resp = orderApiService.getAllOrders(Constants.ORDER_PAID).execute();
+                if (resp.isSuccessful() && resp.body() != null) {
+                    int count = 0;
+                    for (OrderEntity order : resp.body()) {
+                        long paidAt = order.getPaidAt();
+                        if (paidAt >= fromMs && paidAt <= toMs) {
+                            count++;
+                        }
+                    }
+                    liveData.postValue(count);
+                } else {
+                    liveData.postValue(0);
+                }
+            } catch (Exception e) {
+                liveData.postValue(0);
+            }
+        });
+        return liveData;
     }
 
     public LiveData<List<OrderItemEntity>> getItemsByOrderId(int orderId) {
-        return orderItemDao.getByOrderId(orderId);
+        MutableLiveData<List<OrderItemEntity>> liveData = new MutableLiveData<>();
+        orderApiService.getOrderDetail(orderId).enqueue(new Callback<OrderDetailResponse>() {
+            @Override
+            public void onResponse(Call<OrderDetailResponse> call, Response<OrderDetailResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    liveData.postValue(response.body().getItems());
+                } else {
+                    liveData.postValue(null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<OrderDetailResponse> call, Throwable t) {
+                liveData.postValue(null);
+            }
+        });
+        return liveData;
     }
 
-    /**
-     * Atomic: thêm items vào order existing + cộng dồn total.
-     * Dùng khi nhân viên gọi thêm món cho bàn đang OCCUPIED.
-     */
     public void addItemsToOrder(
             int orderId,
             List<CartItem> cartItems,
@@ -146,57 +317,69 @@ public void confirmOrder(
     ) {
         appExecutors.diskIO().execute(() -> {
             try {
-                double deltaAmount = 0;
-                List<OrderItemEntity> newItems = new ArrayList<>();
-
-                for (CartItem c : cartItems) {
-                    deltaAmount += c.getSubtotal();
-
-                    OrderItemEntity item = new OrderItemEntity();
-                    item.setProductId(c.getProductId());
-                    item.setProductNameSnapshot(c.getProductName());
-                    item.setQuantity(c.getQuantity());
-                    item.setUnitPrice(c.getUnitPrice());
-                    item.setSubtotal(c.getSubtotal());
-                    item.setNote(c.getNote());
-
-                    newItems.add(item);
+                for (CartItem cartItem : cartItems) {
+                    OrderItemRequest itemReq = new OrderItemRequest(
+                            cartItem.getProductId(),
+                            cartItem.getQuantity(),
+                            cartItem.getNote()
+                    );
+                    Response<OrderDetailResponse> addResp = orderApiService.addItem(orderId, itemReq).execute();
+                    if (!addResp.isSuccessful()) {
+                        throw parseError(addResp);
+                    }
                 }
-
-                orderTransactionDao.addItemsToOrderAtomic(orderId, newItems, deltaAmount);
-
                 appExecutors.mainThread().execute(() ->
-                        callback.onSuccess((long) orderId));
+                        callback.onSuccess((long) orderId)
+                );
             } catch (Exception e) {
                 appExecutors.mainThread().execute(() ->
-                        callback.onError(e));
+                        callback.onError(e)
+                );
             }
         });
     }
 
-    /**
-     * Atomic: cancel order → status=CANCELLED + bàn=EMPTY.
-     */
     public void cancelOrder(
             int orderId,
             int tableId,
             RepositoryCallback<Boolean> callback
     ) {
-        appExecutors.diskIO().execute(() -> {
-            try {
-                orderTransactionDao.cancelOrderAtomic(
-                        orderId,
-                        tableId,
-                        Constants.ORDER_CANCELLED,
-                        Constants.TABLE_EMPTY
+        orderApiService.cancelOrder(orderId).enqueue(new Callback<OrderEntity>() {
+            @Override
+            public void onResponse(Call<OrderEntity> call, Response<OrderEntity> response) {
+                if (response.isSuccessful()) {
+                    appExecutors.mainThread().execute(() -> {
+                        TableRepository.getInstance(context).refreshAllTables();
+                        callback.onSuccess(true);
+                    });
+                } else {
+                    appExecutors.mainThread().execute(() -> callback.onError(parseError(response)));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<OrderEntity> call, Throwable t) {
+                appExecutors.mainThread().execute(() ->
+                        callback.onError(new NetworkException("Không có kết nối mạng", t))
                 );
-                appExecutors.mainThread().execute(() ->
-                        callback.onSuccess(true));
-            } catch (Exception e) {
-                appExecutors.mainThread().execute(() ->
-                        callback.onError(e));
             }
         });
     }
 
+    private Exception parseError(Response<?> response) {
+        if (response == null) return new NetworkException("Không có kết nối mạng");
+        switch (response.code()) {
+            case 401: return new Exception("Phiên đăng nhập hết hạn (401)");
+            case 403: return new Exception("Không có quyền thực hiện (403)");
+            case 404: return new Exception("Không tìm thấy dữ liệu (404)");
+            case 500: return new Exception("Lỗi máy chủ (500)");
+            default:  return new Exception("Lỗi hệ thống: " + response.code());
+        }
+    }
+
+    private void showError(final Exception e) {
+        appExecutors.mainThread().execute(() ->
+                Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show()
+        );
+    }
 }

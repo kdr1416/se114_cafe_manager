@@ -136,9 +136,13 @@ public class CategoryManagementActivity extends AppCompatActivity {
                     if (existing == null) {
                         viewModel.addCategory(name, desc);
                     } else {
-                        existing.setCategoryName(name);
-                        existing.setDescription(desc);
-                        viewModel.updateCategory(existing);
+                        CategoryEntity updatedCategory = new CategoryEntity(
+                                name,
+                                existing.isActive(),
+                                desc
+                        );
+                        updatedCategory.setCategoryId(existing.getCategoryId());
+                        viewModel.updateCategory(updatedCategory);
                     }
                 })
                 .setNegativeButton("Huỷ", null)

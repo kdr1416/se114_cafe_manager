@@ -37,7 +37,7 @@ public class OrderViewModel extends AndroidViewModel {
     public OrderViewModel(@NonNull Application application) {
         super(application);
 
-        this.orderRepository = new OrderRepository(application);
+        this.orderRepository = OrderRepository.getInstance(application);
         this.cartManager = CartManager.getInstance();
         this.sessionManager = SessionManager.getInstance(application);
         this.appDatabase = AppDatabase.getInstance(application);

@@ -178,10 +178,18 @@ public class UserManagementActivity extends AppCompatActivity {
                         }
                         viewModel.createUser(username, fullName, phone, role, password);
                     } else {
-                        existing.setFullName(fullName);
-                        existing.setPhone(phone);
-                        existing.setRole(role);
-                        viewModel.updateUser(existing);
+                        com.example.cafe_manager.data.local.entity.UserEntity updatedUser = new com.example.cafe_manager.data.local.entity.UserEntity();
+                        updatedUser.setUserId(existing.getUserId());
+                        updatedUser.setUsername(existing.getUsername());
+                        updatedUser.setPasswordHash(existing.getPasswordHash());
+                        updatedUser.setFullName(fullName);
+                        updatedUser.setPhone(phone);
+                        updatedUser.setRole(role);
+                        updatedUser.setActive(existing.isActive());
+                        updatedUser.setCreatedAt(existing.getCreatedAt());
+                        updatedUser.setUpdatedAt(System.currentTimeMillis());
+                        updatedUser.setLastLoginAt(existing.getLastLoginAt());
+                        viewModel.updateUser(updatedUser);
                     }
                 })
                 .setNegativeButton("Huỷ", null)

@@ -30,7 +30,7 @@ public class HistoryViewModel extends AndroidViewModel {
 
     public HistoryViewModel(@NonNull Application application) {
         super(application);
-        this.orderRepository = new OrderRepository(application);
+        this.orderRepository = OrderRepository.getInstance(application);
         this.paymentDao = AppDatabase.getInstance(application).paymentDao();
 
         this.ordersLive = Transformations.switchMap(periodLive, period -> {

@@ -117,7 +117,7 @@ public class OrdersListActivity extends AppCompatActivity {
     }
 
     private void setupViewModel() {
-        orderRepository = new OrderRepository(this);
+        orderRepository = OrderRepository.getInstance(this);
         viewModel = new ViewModelProvider(this).get(OrdersListViewModel.class);
 
         viewModel.getOrders().observe(this, orders -> {

@@ -221,15 +221,11 @@ public class PaymentActivity extends AppCompatActivity {
                     : getString(R.string.btn_confirm_payment));
         });
 
-        // Success → mở Invoice
+        // Success → Hiện hộp thoại thành công & quay về màn hình bàn ăn
         paymentVm.getPaySuccess().observe(this, success -> {
             if (Boolean.TRUE.equals(success)) {
                 paymentVm.clearPaySuccess();
-                Intent intent = new Intent(this, InvoiceActivity.class);
-                intent.putExtra(InvoiceActivity.EXTRA_ORDER_ID, orderId);
-                intent.putExtra(InvoiceActivity.EXTRA_TABLE_NAME, tableName);
-                startActivity(intent);
-                finish();
+                showPaymentSuccessDialog();
             }
         });
 
@@ -251,6 +247,34 @@ public class PaymentActivity extends AppCompatActivity {
 
         // Confirm button
         btnConfirm.setOnClickListener(v -> paymentVm.confirmPayment());
+    }
+
+    private void showPaymentSuccessDialog() {
+        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Thành công")
+                .setMessage("Thanh toán thành công!")
+                .setCancelable(false)
+                .setPositiveButton("OK", (d, which) -> {
+                    navigateToTableActivity();
+                })
+                .create();
+
+        dialog.show();
+
+        // Tự động chuyển hướng sau 3 giây (3000ms)
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (!isFinishing() && dialog.isShowing()) {
+                dialog.dismiss();
+                navigateToTableActivity();
+            }
+        }, 3000);
+    }
+
+    private void navigateToTableActivity() {
+        Intent intent = new Intent(this, TableActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        finish();
     }
 
     private void updateMethodRadios(String selectedMethod) {

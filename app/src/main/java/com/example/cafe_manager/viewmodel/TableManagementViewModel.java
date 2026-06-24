@@ -28,7 +28,7 @@ public class TableManagementViewModel extends AndroidViewModel {
 
     public TableManagementViewModel(@NonNull Application application) {
         super(application);
-        repository = new TableRepository(application);
+        repository = TableRepository.getInstance(application);
         areaRepository = new AreaRepository(application);
         tables = repository.getAllTables();
         areas = areaRepository.getAllAreas();
@@ -47,6 +47,7 @@ public class TableManagementViewModel extends AndroidViewModel {
     }
 
     public LiveData<List<TableEntity>> getTables() { return tables; }
+    public LiveData<Boolean> getIsLoading() { return repository.getIsLoading(); }
     public LiveData<List<AreaEntity>> getAreas() { return areas; }
     public LiveData<Integer> getTotalCount() { return totalCount; }
     public LiveData<Integer> getEmptyCount() { return emptyCount; }

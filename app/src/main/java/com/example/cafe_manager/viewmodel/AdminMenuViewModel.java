@@ -29,7 +29,7 @@ public class AdminMenuViewModel extends AndroidViewModel {
     public AdminMenuViewModel(@NonNull Application application) {
         super(application);
 
-        this.menuRepository = new MenuRepository(application);
+        this.menuRepository = MenuRepository.getInstance(application);
         this.categoriesLive = menuRepository.getActiveCategories();
 
         this.productsLive = Transformations.switchMap(selectedCategoryIdLive, id -> {

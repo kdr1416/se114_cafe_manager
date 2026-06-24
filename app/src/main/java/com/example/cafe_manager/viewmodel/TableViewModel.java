@@ -33,7 +33,7 @@ public class TableViewModel extends AndroidViewModel {
     public TableViewModel(@NonNull Application application) {
         super(application);
 
-        this.tableRepository = new TableRepository(application);
+        this.tableRepository = TableRepository.getInstance(application);
         this.areaRepository = new AreaRepository(application);
 
         LiveData<List<TableEntity>> allTables = tableRepository.getAllTables();
@@ -91,6 +91,10 @@ public class TableViewModel extends AndroidViewModel {
 
     public LiveData<List<TableEntity>> getTables() {
         return tablesLiveData;
+    }
+
+    public LiveData<Boolean> getIsLoading() {
+        return tableRepository.getIsLoading();
     }
 
     public LiveData<List<String>> getAreas() {

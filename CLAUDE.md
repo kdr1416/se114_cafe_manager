@@ -89,3 +89,29 @@ Before touching any layout file:
 - All list items: consistent height, no orphaned buttons at random Y positions  
 - Status badges: only use bg_badge_success / bg_badge_warning / bg_badge_notification
 - Icons: stick to existing drawables — do not introduce new icon sets mid-project
+
+## Promotion Engine (TODO - post backend)
+
+1. Bulk discount (mua nhiều giảm nhiều)
+   - Tier-based: buy X get Y% off
+   - Apply per product or per category
+
+2. Product-specific promotion  
+   - Discount on specific product IDs
+   - Buy A get B free (BOGO)
+
+3. Order total discount
+   - Min order value threshold
+   - Percentage or fixed amount off
+
+4. Loyalty / Khách hàng thân thiết
+   - Customer entity: phone, name, points, tier
+   - Earn points per order (configurable rate)
+   - Redeem points as discount
+   - Tier levels: Bronze / Silver / Gold
+
+## Backend considerations
+- Promotion stacking rules (can promotions combine?)
+- Promotion priority when multiple apply
+- Points expiry policy
+- Customer lookup by phone at POS

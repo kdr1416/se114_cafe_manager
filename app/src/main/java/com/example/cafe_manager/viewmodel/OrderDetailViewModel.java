@@ -31,8 +31,8 @@ public class OrderDetailViewModel extends AndroidViewModel {
     public OrderDetailViewModel(@NonNull Application application) {
         super(application);
 
-        OrderRepository orderRepository = new OrderRepository(application);
-        PaymentRepository paymentRepository = new PaymentRepository(application);
+        OrderRepository orderRepository = OrderRepository.getInstance(application);
+        PaymentRepository paymentRepository = PaymentRepository.getInstance(application);
 
         this.orderLive = Transformations.switchMap(
                 orderIdLive,

@@ -45,7 +45,7 @@ public class PaymentViewModel extends AndroidViewModel {
 
     public PaymentViewModel(@NonNull Application application) {
         super(application);
-        this.paymentRepository = new PaymentRepository(application);
+        this.paymentRepository = PaymentRepository.getInstance(application);
         this.promotionRepository = new PromotionRepository(application);
         this.sessionManager = SessionManager.getInstance(application);
         this.appDatabase = AppDatabase.getInstance(application);

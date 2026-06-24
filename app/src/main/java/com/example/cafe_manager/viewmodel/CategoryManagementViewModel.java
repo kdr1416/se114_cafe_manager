@@ -20,7 +20,7 @@ public class CategoryManagementViewModel extends AndroidViewModel {
 
     public CategoryManagementViewModel(@NonNull Application application) {
         super(application);
-        repository = new MenuRepository(application);
+        repository = MenuRepository.getInstance(application);
         categories = repository.getAllCategories();
     }
 

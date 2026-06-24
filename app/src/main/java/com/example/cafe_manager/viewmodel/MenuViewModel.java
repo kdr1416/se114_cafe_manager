@@ -24,7 +24,7 @@ public class MenuViewModel extends AndroidViewModel {
 
     public MenuViewModel(@NonNull Application application) {
         super(application);
-        this.menuRepository = new MenuRepository(application);
+        this.menuRepository = MenuRepository.getInstance(application);
         this.cartManager = CartManager.getInstance();
         refreshCartSummary();
     }

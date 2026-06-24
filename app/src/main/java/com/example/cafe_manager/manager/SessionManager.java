@@ -18,6 +18,7 @@ public class SessionManager {
     private static final String KEY_FULL_NAME = "full_name";
     private static final String KEY_ROLE = "role";
     private static final String KEY_LOGGED_IN = "is_logged_in";
+    private static final String KEY_TOKEN = "jwt_token";
 
     private static volatile SessionManager instance;
     private final SharedPreferences prefs;
@@ -86,6 +87,18 @@ public class SessionManager {
 
     public boolean isStaff() {
         return Constants.ROLE_STAFF.equals(getRole());
+    }
+
+    public void saveToken(String token) {
+        prefs.edit().putString(KEY_TOKEN, token).apply();
+    }
+
+    public String getToken() {
+        return prefs.getString(KEY_TOKEN, null);
+    }
+
+    public void clearToken() {
+        prefs.edit().remove(KEY_TOKEN).apply();
     }
 
     public void logout() {

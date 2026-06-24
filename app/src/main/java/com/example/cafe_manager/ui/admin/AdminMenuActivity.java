@@ -322,10 +322,16 @@ public class AdminMenuActivity extends AppCompatActivity {
                     if (existing == null) {
                         viewModel.addProduct(categoryId, name, price);
                     } else {
-                        existing.setProductName(name);
-                        existing.setPrice(price);
-                        existing.setCategoryId(categoryId);
-                        viewModel.updateProduct(existing);
+                        ProductEntity updatedProduct = new ProductEntity(
+                                categoryId,
+                                name,
+                                price,
+                                existing.getImageUrl(),
+                                existing.isActive(),
+                                existing.getCreatedAt()
+                        );
+                        updatedProduct.setProductId(existing.getProductId());
+                        viewModel.updateProduct(updatedProduct);
                     }
                 })
                 .setNegativeButton(R.string.btn_cancel, null)
