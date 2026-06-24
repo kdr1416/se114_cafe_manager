@@ -116,6 +116,94 @@ public class PaymentRepository {
         return liveData;
     }
 
+    public void getRevenueInRange(long start, long end, RepositoryCallback<Double> callback) {
+        paymentApiService.getRevenueInRange(start, end).enqueue(new Callback<Double>() {
+            @Override
+            public void onResponse(Call<Double> call, Response<Double> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    if (callback != null) {
+                        callback.onSuccess(response.body());
+                    }
+                } else {
+                    Exception e = parseError(response);
+                    showError(e);
+                    if (callback != null) {
+                        callback.onError(e);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Double> call, Throwable t) {
+                Exception e = new NetworkException("Không có kết nối mạng", t);
+                showError(e);
+                if (callback != null) {
+                    callback.onError(e);
+                }
+            }
+        });
+    }
+
+    public void countPaymentsInRange(long start, long end, RepositoryCallback<Long> callback) {
+        paymentApiService.countPaymentsInRange(start, end).enqueue(new Callback<Long>() {
+            @Override
+            public void onResponse(Call<Long> call, Response<Long> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    if (callback != null) {
+                        callback.onSuccess(response.body());
+                    }
+                } else {
+                    Exception e = parseError(response);
+                    showError(e);
+                    if (callback != null) {
+                        callback.onError(e);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Long> call, Throwable t) {
+                Exception e = new NetworkException("Không có kết nối mạng", t);
+                showError(e);
+                if (callback != null) {
+                    callback.onError(e);
+                }
+            }
+        });
+    }
+
+    public LiveData<Double> getRevenueInRangeLive(long start, long end) {
+        MutableLiveData<Double> liveData = new MutableLiveData<>(0.0);
+        getRevenueInRange(start, end, new RepositoryCallback<Double>() {
+            @Override
+            public void onSuccess(Double result) {
+                liveData.postValue(result);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                liveData.postValue(0.0);
+            }
+        });
+        return liveData;
+    }
+
+    public LiveData<Long> countPaymentsInRangeLive(long start, long end) {
+        MutableLiveData<Long> liveData = new MutableLiveData<>(0L);
+        countPaymentsInRange(start, end, new RepositoryCallback<Long>() {
+            @Override
+            public void onSuccess(Long result) {
+                liveData.postValue(result);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                liveData.postValue(0L);
+            }
+        });
+        return liveData;
+    }
+
     private Exception parseError(Response<?> response) {
         if (response == null) return new NetworkException("Không có kết nối mạng");
         switch (response.code()) {

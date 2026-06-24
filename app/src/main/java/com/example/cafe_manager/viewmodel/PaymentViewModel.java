@@ -46,7 +46,7 @@ public class PaymentViewModel extends AndroidViewModel {
     public PaymentViewModel(@NonNull Application application) {
         super(application);
         this.paymentRepository = PaymentRepository.getInstance(application);
-        this.promotionRepository = new PromotionRepository(application);
+        this.promotionRepository = PromotionRepository.getInstance(application);
         this.sessionManager = SessionManager.getInstance(application);
         this.appDatabase = AppDatabase.getInstance(application);
     }
@@ -158,10 +158,10 @@ public class PaymentViewModel extends AndroidViewModel {
             // không phải số → thử như mã promo
         }
 
-        // Query DB trên background
-        AppExecutors.getInstance().diskIO().execute(() -> {
-            final PromotionEntity promo = promotionRepository.getByCode(input);
-            AppExecutors.getInstance().mainThread().execute(() -> {
+        // Query API an toàn thông qua callback
+        promotionRepository.getByCode(input, new RepositoryCallback<PromotionEntity>() {
+            @Override
+            public void onSuccess(PromotionEntity promo) {
                 if (promo == null) {
                     promoMessageLiveData.setValue("Mã giảm giá không hợp lệ.");
                     return;
@@ -190,7 +190,12 @@ public class PaymentViewModel extends AndroidViewModel {
                 promoMessageLiveData.setValue(
                         "Áp dụng mã " + promo.getCode() + ": -"
                                 + CurrencyUtils.formatVnd(discount));
-            });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                promoMessageLiveData.setValue(e.getMessage());
+            }
         });
     }
 

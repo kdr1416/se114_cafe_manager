@@ -16,21 +16,21 @@ public class PromotionViewModel extends AndroidViewModel {
 
     private final PromotionRepository repository;
     private final LiveData<List<PromotionEntity>> promotions;
-    private final LiveData<Integer> totalCount;
-    private final LiveData<Integer> activeCount;
+    private final LiveData<Long> totalCount;
+    private final LiveData<Long> activeCount;
     private final MutableLiveData<String> message = new MutableLiveData<>();
 
     public PromotionViewModel(@NonNull Application application) {
         super(application);
-        repository = new PromotionRepository(application);
+        repository = PromotionRepository.getInstance(application);
         promotions = repository.getAll();
-        totalCount = repository.getTotalCount();
-        activeCount = repository.getActiveCount();
+        totalCount = repository.getTotalCountLive();
+        activeCount = repository.getActiveCountLive();
     }
 
     public LiveData<List<PromotionEntity>> getPromotions() { return promotions; }
-    public LiveData<Integer> getTotalCount() { return totalCount; }
-    public LiveData<Integer> getActiveCount() { return activeCount; }
+    public LiveData<Long> getTotalCount() { return totalCount; }
+    public LiveData<Long> getActiveCount() { return activeCount; }
     public LiveData<String> getMessage() { return message; }
 
     public void clearMessage() { message.setValue(null); }

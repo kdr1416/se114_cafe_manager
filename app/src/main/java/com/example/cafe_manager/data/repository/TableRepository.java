@@ -11,6 +11,7 @@ import com.example.cafe_manager.data.remote.ApiClient;
 import com.example.cafe_manager.data.remote.TableApiService;
 import com.example.cafe_manager.data.remote.NetworkException;
 import com.example.cafe_manager.util.AppExecutors;
+import com.example.cafe_manager.util.RepositoryCallback;
 
 import java.util.List;
 
@@ -159,7 +160,7 @@ public class TableRepository {
     /**
      * Thêm bàn mới. Cập nhật trực tiếp cache LiveData.
      */
-    public void insert(TableEntity table, Runnable onSuccess) {
+    public void insert(TableEntity table, RepositoryCallback<TableEntity> callback) {
         isLoading.postValue(true);
         tableApiService.createTable(table).enqueue(new Callback<TableEntity>() {
             @Override
@@ -177,18 +178,42 @@ public class TableRepository {
                             refreshAllTables();
                         }
                     });
-                    if (onSuccess != null) {
-                        appExecutors.mainThread().execute(onSuccess);
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onSuccess(newTable));
                     }
                 } else {
-                    showError(parseError(response));
+                    Exception e = parseError(response);
+                    showError(e);
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onError(e));
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<TableEntity> call, Throwable t) {
                 isLoading.postValue(false);
-                showError(new NetworkException("Không có kết nối mạng", t));
+                Exception e = new NetworkException("Không có kết nối mạng", t);
+                showError(e);
+                if (callback != null) {
+                    appExecutors.mainThread().execute(() -> callback.onError(e));
+                }
+            }
+        });
+    }
+
+    @Deprecated
+    public void insert(TableEntity table, Runnable onSuccess) {
+        insert(table, new RepositoryCallback<TableEntity>() {
+            @Override
+            public void onSuccess(TableEntity result) {
+                if (onSuccess != null) {
+                    appExecutors.mainThread().execute(onSuccess);
+                }
+            }
+            @Override
+            public void onError(Exception e) {
+                // Lỗi hiển thị qua showError
             }
         });
     }
@@ -196,7 +221,7 @@ public class TableRepository {
     /**
      * Cập nhật thông tin bàn. Cập nhật trực tiếp cache LiveData.
      */
-    public void update(TableEntity table, Runnable onSuccess) {
+    public void update(TableEntity table, RepositoryCallback<TableEntity> callback) {
         isLoading.postValue(true);
         tableApiService.updateTable(table.getTableId(), table).enqueue(new Callback<TableEntity>() {
             @Override
@@ -219,18 +244,42 @@ public class TableRepository {
                             refreshAllTables();
                         }
                     });
-                    if (onSuccess != null) {
-                        appExecutors.mainThread().execute(onSuccess);
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onSuccess(updatedTable));
                     }
                 } else {
-                    showError(parseError(response));
+                    Exception e = parseError(response);
+                    showError(e);
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onError(e));
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<TableEntity> call, Throwable t) {
                 isLoading.postValue(false);
-                showError(new NetworkException("Không có kết nối mạng", t));
+                Exception e = new NetworkException("Không có kết nối mạng", t);
+                showError(e);
+                if (callback != null) {
+                    appExecutors.mainThread().execute(() -> callback.onError(e));
+                }
+            }
+        });
+    }
+
+    @Deprecated
+    public void update(TableEntity table, Runnable onSuccess) {
+        update(table, new RepositoryCallback<TableEntity>() {
+            @Override
+            public void onSuccess(TableEntity result) {
+                if (onSuccess != null) {
+                    appExecutors.mainThread().execute(onSuccess);
+                }
+            }
+            @Override
+            public void onError(Exception e) {
+                // Lỗi hiển thị qua showError
             }
         });
     }
@@ -238,7 +287,7 @@ public class TableRepository {
     /**
      * Xóa bàn ăn. Cập nhật trực tiếp cache LiveData.
      */
-    public void delete(int tableId, Runnable onSuccess, Runnable onError) {
+    public void delete(int tableId, RepositoryCallback<Void> callback) {
         isLoading.postValue(true);
         tableApiService.deleteTable(tableId).enqueue(new Callback<Void>() {
             @Override
@@ -260,13 +309,14 @@ public class TableRepository {
                             refreshAllTables();
                         }
                     });
-                    if (onSuccess != null) {
-                        appExecutors.mainThread().execute(onSuccess);
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onSuccess(null));
                     }
                 } else {
-                    showError(parseError(response));
-                    if (onError != null) {
-                        appExecutors.mainThread().execute(onError);
+                    Exception e = parseError(response);
+                    showError(e);
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onError(e));
                     }
                 }
             }
@@ -274,7 +324,26 @@ public class TableRepository {
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
                 isLoading.postValue(false);
-                showError(new NetworkException("Không có kết nối mạng", t));
+                Exception e = new NetworkException("Không có kết nối mạng", t);
+                showError(e);
+                if (callback != null) {
+                    appExecutors.mainThread().execute(() -> callback.onError(e));
+                }
+            }
+        });
+    }
+
+    @Deprecated
+    public void delete(int tableId, Runnable onSuccess, Runnable onError) {
+        delete(tableId, new RepositoryCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                if (onSuccess != null) {
+                    appExecutors.mainThread().execute(onSuccess);
+                }
+            }
+            @Override
+            public void onError(Exception e) {
                 if (onError != null) {
                     appExecutors.mainThread().execute(onError);
                 }

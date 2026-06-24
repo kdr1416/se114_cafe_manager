@@ -12,6 +12,7 @@ import com.example.cafe_manager.data.remote.ApiClient;
 import com.example.cafe_manager.data.remote.MenuApiService;
 import com.example.cafe_manager.data.remote.NetworkException;
 import com.example.cafe_manager.util.AppExecutors;
+import com.example.cafe_manager.util.RepositoryCallback;
 
 import java.util.List;
 
@@ -178,7 +179,7 @@ public class MenuRepository {
         });
     }
 
-    public void insertProduct(ProductEntity product) {
+    public void insertProduct(ProductEntity product, RepositoryCallback<ProductEntity> callback) {
         menuApiService.createProduct(product).enqueue(new Callback<ProductEntity>() {
             @Override
             public void onResponse(Call<ProductEntity> call, Response<ProductEntity> response) {
@@ -205,19 +206,35 @@ public class MenuRepository {
                             }
                         }
                     });
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onSuccess(newProduct));
+                    }
                 } else {
-                    showError(parseError(response));
+                    Exception e = parseError(response);
+                    showError(e);
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onError(e));
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<ProductEntity> call, Throwable t) {
-                showError(new NetworkException("Không có kết nối mạng", t));
+                Exception e = new NetworkException("Không có kết nối mạng", t);
+                showError(e);
+                if (callback != null) {
+                    appExecutors.mainThread().execute(() -> callback.onError(e));
+                }
             }
         });
     }
 
-    public void updateProduct(ProductEntity product) {
+    @Deprecated
+    public void insertProduct(ProductEntity product) {
+        insertProduct(product, null);
+    }
+
+    public void updateProduct(ProductEntity product, RepositoryCallback<ProductEntity> callback) {
         menuApiService.updateProduct(product.getProductId(), product).enqueue(new Callback<ProductEntity>() {
             @Override
             public void onResponse(Call<ProductEntity> call, Response<ProductEntity> response) {
@@ -263,16 +280,32 @@ public class MenuRepository {
                             refreshActiveProducts();
                         }
                     });
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onSuccess(updatedProduct));
+                    }
                 } else {
-                    showError(parseError(response));
+                    Exception e = parseError(response);
+                    showError(e);
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onError(e));
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<ProductEntity> call, Throwable t) {
-                showError(new NetworkException("Không có kết nối mạng", t));
+                Exception e = new NetworkException("Không có kết nối mạng", t);
+                showError(e);
+                if (callback != null) {
+                    appExecutors.mainThread().execute(() -> callback.onError(e));
+                }
             }
         });
+    }
+
+    @Deprecated
+    public void updateProduct(ProductEntity product) {
+        updateProduct(product, null);
     }
 
     public void updateProductActiveStatus(int productId, boolean isActive) {
@@ -320,7 +353,7 @@ public class MenuRepository {
         }
     }
 
-    public void insertCategory(CategoryEntity category, Runnable onSuccess) {
+    public void insertCategory(CategoryEntity category, RepositoryCallback<CategoryEntity> callback) {
         menuApiService.createCategory(category).enqueue(new Callback<CategoryEntity>() {
             @Override
             public void onResponse(Call<CategoryEntity> call, Response<CategoryEntity> response) {
@@ -347,22 +380,44 @@ public class MenuRepository {
                             refreshActiveCategories();
                         }
                     });
-                    if (onSuccess != null) {
-                        appExecutors.mainThread().execute(onSuccess);
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onSuccess(newCategory));
                     }
                 } else {
-                    showError(parseError(response));
+                    Exception e = parseError(response);
+                    showError(e);
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onError(e));
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<CategoryEntity> call, Throwable t) {
-                showError(new NetworkException("Không có kết nối mạng", t));
+                Exception e = new NetworkException("Không có kết nối mạng", t);
+                showError(e);
+                if (callback != null) {
+                    appExecutors.mainThread().execute(() -> callback.onError(e));
+                }
             }
         });
     }
 
-    public void updateCategory(CategoryEntity category, Runnable onSuccess) {
+    @Deprecated
+    public void insertCategory(CategoryEntity category, Runnable onSuccess) {
+        insertCategory(category, new RepositoryCallback<CategoryEntity>() {
+            @Override
+            public void onSuccess(CategoryEntity result) {
+                if (onSuccess != null) {
+                    appExecutors.mainThread().execute(onSuccess);
+                }
+            }
+            @Override
+            public void onError(Exception e) {}
+        });
+    }
+
+    public void updateCategory(CategoryEntity category, RepositoryCallback<CategoryEntity> callback) {
         menuApiService.updateCategory(category.getCategoryId(), category).enqueue(new Callback<CategoryEntity>() {
             @Override
             public void onResponse(Call<CategoryEntity> call, Response<CategoryEntity> response) {
@@ -399,22 +454,44 @@ public class MenuRepository {
                             refreshActiveCategories();
                         }
                     });
-                    if (onSuccess != null) {
-                        appExecutors.mainThread().execute(onSuccess);
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onSuccess(updatedCategory));
                     }
                 } else {
-                    showError(parseError(response));
+                    Exception e = parseError(response);
+                    showError(e);
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onError(e));
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<CategoryEntity> call, Throwable t) {
-                showError(new NetworkException("Không có kết nối mạng", t));
+                Exception e = new NetworkException("Không có kết nối mạng", t);
+                showError(e);
+                if (callback != null) {
+                    appExecutors.mainThread().execute(() -> callback.onError(e));
+                }
             }
         });
     }
 
-    public void deleteCategory(int categoryId, Runnable onSuccess, Runnable onError) {
+    @Deprecated
+    public void updateCategory(CategoryEntity category, Runnable onSuccess) {
+        updateCategory(category, new RepositoryCallback<CategoryEntity>() {
+            @Override
+            public void onSuccess(CategoryEntity result) {
+                if (onSuccess != null) {
+                    appExecutors.mainThread().execute(onSuccess);
+                }
+            }
+            @Override
+            public void onError(Exception e) {}
+        });
+    }
+
+    public void deleteCategory(int categoryId, RepositoryCallback<Void> callback) {
         menuApiService.getProducts(categoryId, null).enqueue(new Callback<List<ProductEntity>>() {
             @Override
             public void onResponse(Call<List<ProductEntity>> call, Response<List<ProductEntity>> response) {
@@ -426,8 +503,10 @@ public class MenuRepository {
                         }
                     }
                     if (activeProductsCount > 0) {
-                        if (onError != null) {
-                            appExecutors.mainThread().execute(onError);
+                        Exception e = new Exception("Không thể xóa danh mục chứa sản phẩm đang hoạt động");
+                        showError(e);
+                        if (callback != null) {
+                            appExecutors.mainThread().execute(() -> callback.onError(e));
                         }
                     } else {
                         menuApiService.deleteCategory(categoryId).enqueue(new Callback<Void>() {
@@ -461,37 +540,59 @@ public class MenuRepository {
                                             activeCategoriesLive.setValue(newActive);
                                         }
                                     });
-                                    if (onSuccess != null) {
-                                        appExecutors.mainThread().execute(onSuccess);
+                                    if (callback != null) {
+                                        appExecutors.mainThread().execute(() -> callback.onSuccess(null));
                                     }
                                 } else {
-                                    showError(parseError(response));
-                                    if (onError != null) {
-                                        appExecutors.mainThread().execute(onError);
+                                    Exception e = parseError(response);
+                                    showError(e);
+                                    if (callback != null) {
+                                        appExecutors.mainThread().execute(() -> callback.onError(e));
                                     }
                                 }
                             }
 
                             @Override
                             public void onFailure(Call<Void> call, Throwable t) {
-                                showError(new NetworkException("Không có kết nối mạng", t));
-                                if (onError != null) {
-                                    appExecutors.mainThread().execute(onError);
+                                Exception e = new NetworkException("Không có kết nối mạng", t);
+                                showError(e);
+                                if (callback != null) {
+                                    appExecutors.mainThread().execute(() -> callback.onError(e));
                                 }
                             }
                         });
                     }
                 } else {
-                    showError(parseError(response));
-                    if (onError != null) {
-                        appExecutors.mainThread().execute(onError);
+                    Exception e = parseError(response);
+                    showError(e);
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onError(e));
                     }
                 }
             }
 
             @Override
             public void onFailure(Call<List<ProductEntity>> call, Throwable t) {
-                showError(new NetworkException("Không có kết nối mạng", t));
+                Exception e = new NetworkException("Không có kết nối mạng", t);
+                showError(e);
+                if (callback != null) {
+                    appExecutors.mainThread().execute(() -> callback.onError(e));
+                }
+            }
+        });
+    }
+
+    @Deprecated
+    public void deleteCategory(int categoryId, Runnable onSuccess, Runnable onError) {
+        deleteCategory(categoryId, new RepositoryCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                if (onSuccess != null) {
+                    appExecutors.mainThread().execute(onSuccess);
+                }
+            }
+            @Override
+            public void onError(Exception e) {
                 if (onError != null) {
                     appExecutors.mainThread().execute(onError);
                 }
