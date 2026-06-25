@@ -198,6 +198,27 @@ public class ShiftRepository {
         });
     }
 
+    public void insertShiftNoRefresh(ShiftEntity shift, RepositoryCallback<Long> callback) {
+        exec.diskIO().execute(() -> {
+            try {
+                CreateShiftRequest request = new CreateShiftRequest();
+                request.setTemplateId(shift.getTemplateId());
+                request.setShiftName(shift.getShiftName());
+                request.setShiftDate(shift.getShiftDate());
+                request.setStartTime(shift.getStartTime());
+                request.setEndTime(shift.getEndTime());
+                retrofit2.Response<ShiftResponse> response = apiService.createShift(request).execute();
+                if (response.isSuccessful() && response.body() != null) {
+                    exec.mainThread().execute(() -> callback.onSuccess((long) response.body().getShiftId()));
+                } else {
+                    exec.mainThread().execute(() -> callback.onError(new Exception("Không thể tạo ca")));
+                }
+            } catch (Exception e) {
+                exec.mainThread().execute(() -> callback.onError(e));
+            }
+        });
+    }
+
     public void openShiftWithCash(int shiftId, double openingCash, int userId, RepositoryCallback<Void> callback) {
         exec.diskIO().execute(() -> {
             try {
