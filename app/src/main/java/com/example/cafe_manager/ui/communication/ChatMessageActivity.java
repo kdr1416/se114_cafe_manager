@@ -61,13 +61,7 @@ public class ChatMessageActivity extends AppCompatActivity {
             return;
         }
 
-        // Check participant access
-        ChatParticipantEntity participant = db.chatParticipantDao().getByRoomAndUser(roomId, currentUserId);
-        if (participant == null) {
-            Toast.makeText(this, "Bạn không có quyền truy cập phòng chat này", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
+        // Check participant access - Server will validate when fetching messages
 
         initViews();
         setupTopBar();
@@ -198,5 +192,22 @@ public class ChatMessageActivity extends AppCompatActivity {
             btnMessageSend.setEnabled(true);
             btnMessageSend.setAlpha(1.0f);
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        String token = SessionManager.getInstance(this).getToken();
+        if (token != null) {
+            viewModel.connectWebSocket(token);
+            viewModel.subscribeToRoom(roomId);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        viewModel.unsubscribeFromRoom(roomId);
+        viewModel.disconnectWebSocket();
     }
 }

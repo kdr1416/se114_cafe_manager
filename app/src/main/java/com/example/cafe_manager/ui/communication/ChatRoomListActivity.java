@@ -88,6 +88,9 @@ public class ChatRoomListActivity extends AppCompatActivity {
                 // Observe unread counts and latest messages for each room dynamically
                 for (ChatRoomEntity room : rooms) {
                     int roomId = room.getRoomId();
+                    
+                    // Subscribe to WebSocket updates for this room
+                    viewModel.subscribeToRoom(roomId);
 
                     // Observe unread count
                     viewModel.getUnreadCountForRoom(roomId, currentUserId).observe(this, count -> {
@@ -120,5 +123,20 @@ public class ChatRoomListActivity extends AppCompatActivity {
                 adapter.setUserNames(userNamesMap);
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        String token = SessionManager.getInstance(this).getToken();
+        if (token != null) {
+            viewModel.connectWebSocket(token);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        viewModel.disconnectWebSocket();
     }
 }

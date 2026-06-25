@@ -15,6 +15,7 @@ import com.example.cafe_manager.data.local.entity.ShiftEntity;
 import com.example.cafe_manager.data.local.entity.ShiftTemplateEntity;
 import com.example.cafe_manager.data.local.entity.UserEntity;
 import com.example.cafe_manager.data.repository.ShiftRepository;
+import com.example.cafe_manager.data.repository.ChatRepository;
 import com.example.cafe_manager.manager.SessionManager;
 import com.example.cafe_manager.util.AppExecutors;
 import com.example.cafe_manager.util.Constants;
@@ -436,18 +437,30 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
     }
 
     public void getOrCreateShiftChatRoom(int shiftId, RepositoryCallback<Integer> callback) {
-        AppExecutors.getInstance().diskIO().execute(() -> {
-            try {
-                com.example.cafe_manager.data.repository.ChatRepository.syncShiftChatRoomSync(appDatabase, shiftId);
-                com.example.cafe_manager.data.local.entity.ChatRoomEntity room = appDatabase.chatRoomDao().getByShiftId(shiftId);
-                if (room != null) {
-                    AppExecutors.getInstance().mainThread().execute(() -> callback.onSuccess(room.getRoomId()));
-                } else {
-                    AppExecutors.getInstance().mainThread().execute(() -> callback.onError(new Exception("Không thể tạo phòng chat cho ca này.")));
+        ChatRepository.getInstance(getApplication()).syncShiftRoom(shiftId, () -> {
+            List<com.example.cafe_manager.data.local.entity.ChatRoomEntity> rooms = ChatRepository.getInstance(getApplication()).getActiveRooms().getValue();
+            if (rooms != null) {
+                for (com.example.cafe_manager.data.local.entity.ChatRoomEntity room : rooms) {
+                    if (room.getShiftId() != null && room.getShiftId() == shiftId) {
+                        callback.onSuccess(room.getRoomId());
+                        return;
+                    }
                 }
-            } catch (Exception e) {
-                AppExecutors.getInstance().mainThread().execute(() -> callback.onError(e));
             }
+            ChatRepository.getInstance(getApplication()).refreshRoomsFromApi(() -> {
+                List<com.example.cafe_manager.data.local.entity.ChatRoomEntity> updatedRooms = ChatRepository.getInstance(getApplication()).getActiveRooms().getValue();
+                if (updatedRooms != null) {
+                    for (com.example.cafe_manager.data.local.entity.ChatRoomEntity room : updatedRooms) {
+                        if (room.getShiftId() != null && room.getShiftId() == shiftId) {
+                            callback.onSuccess(room.getRoomId());
+                            return;
+                        }
+                    }
+                }
+                callback.onError(new Exception("Không tìm thấy phòng chat cho ca này trên server."));
+            });
+        }, () -> {
+            callback.onError(new Exception("Lỗi đồng bộ phòng chat ca làm việc với server."));
         });
     }
 }

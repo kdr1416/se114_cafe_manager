@@ -82,4 +82,20 @@ public class ChatViewModel extends AndroidViewModel {
     public void clearMessage() {
         message.setValue(null);
     }
+
+    public void connectWebSocket(String token) {
+        repo.connectWebSocket(token);
+    }
+
+    public void disconnectWebSocket() {
+        repo.disconnectWebSocket();
+    }
+
+    public void subscribeToRoom(int roomId) {
+        repo.subscribeToRoom(roomId);
+    }
+
+    public void unsubscribeFromRoom(int roomId) {
+        repo.unsubscribeFromRoom(roomId);
+    }
 }
