@@ -69,7 +69,7 @@ import java.util.List;
                 ShiftCashSessionEntity.class, NewsPostEntity.class, NewsReadEntity.class,
                 ChatRoomEntity.class, ChatParticipantEntity.class, ChatMessageEntity.class, ChatReadEntity.class
         },
-        version = 12,
+        version = 13,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {

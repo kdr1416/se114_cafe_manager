@@ -105,4 +105,14 @@ public class MenuViewModel extends AndroidViewModel {
     public void refreshCartBar() {
         refreshCartSummary();
     }
+
+    public void refreshCategories() {
+        menuRepository.refreshActiveCategories();
+        menuRepository.refreshAllCategories();
+    }
+
+    public void refreshProducts() {
+        menuRepository.refreshActiveProducts();
+        menuRepository.refreshAllProducts();
+    }
 }

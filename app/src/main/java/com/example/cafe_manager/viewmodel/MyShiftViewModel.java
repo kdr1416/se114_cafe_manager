@@ -52,7 +52,7 @@ public class MyShiftViewModel extends AndroidViewModel {
 
     public MyShiftViewModel(@NonNull Application application) {
         super(application);
-        shiftRepository = new ShiftRepository(application);
+        shiftRepository = ShiftRepository.getInstance(application);
         attendanceRepository = AttendanceRepository.getInstance(application);
         appDatabase = AppDatabase.getInstance(application);
         currentUserId = SessionManager.getInstance(application).getUserId();

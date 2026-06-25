@@ -136,4 +136,18 @@ public class TableViewModel extends AndroidViewModel {
 
         return count;
     }
+
+    public void refreshTables() {
+        tableRepository.refreshAllTables();
+    }
+
+    public void refreshAreas() {
+        try {
+            java.lang.reflect.Method method = areaRepository.getClass().getDeclaredMethod("refreshAreas");
+            method.setAccessible(true);
+            method.invoke(areaRepository);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

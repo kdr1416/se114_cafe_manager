@@ -24,7 +24,7 @@ public class ShiftTemplateViewModel extends AndroidViewModel {
 
     public ShiftTemplateViewModel(@NonNull Application application) {
         super(application);
-        this.repository = new ShiftRepository(application);
+        this.repository = ShiftRepository.getInstance(application);
         this.rawTemplates = repository.getAllTemplates();
 
         filteredTemplates.addSource(rawTemplates, list -> applyFilter());

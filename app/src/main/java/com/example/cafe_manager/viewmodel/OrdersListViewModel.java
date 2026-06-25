@@ -5,6 +5,7 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
 import com.example.cafe_manager.data.local.entity.OrderItemEntity;
@@ -17,7 +18,7 @@ import java.util.List;
 public class OrdersListViewModel extends AndroidViewModel {
 
     private final OrderRepository orderRepository;
-
+    private final MutableLiveData<Boolean> refreshTrigger = new MutableLiveData<>(true);
     private final LiveData<List<OrderWithItems>> ordersLive;
     private final LiveData<Integer> activeCountLive;
 
@@ -26,8 +27,9 @@ public class OrdersListViewModel extends AndroidViewModel {
 
         this.orderRepository = OrderRepository.getInstance(application);
 
-        this.ordersLive = orderRepository
-                .getActiveOrdersWithItems(Constants.ORDER_CONFIRMED);
+        this.ordersLive = Transformations.switchMap(refreshTrigger, trigger ->
+                orderRepository.getActiveOrdersWithItems(Constants.ORDER_CONFIRMED)
+        );
 
         this.activeCountLive = Transformations.map(
                 ordersLive,
@@ -81,5 +83,9 @@ public class OrdersListViewModel extends AndroidViewModel {
             total += it.getSubtotal();
         }
         return total;
+    }
+
+    public void refreshOrders() {
+        refreshTrigger.setValue(true);
     }
 }

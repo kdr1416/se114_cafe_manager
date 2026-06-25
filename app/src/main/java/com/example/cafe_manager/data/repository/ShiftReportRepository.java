@@ -1,41 +1,46 @@
 package com.example.cafe_manager.data.repository;
 
 import android.content.Context;
-
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
-import com.example.cafe_manager.data.local.AppDatabase;
-import com.example.cafe_manager.data.local.dao.OrderDao;
-import com.example.cafe_manager.data.local.dao.PaymentDao;
-import com.example.cafe_manager.data.local.dao.ShiftCashSessionDao;
-import com.example.cafe_manager.data.local.dao.ShiftDao;
-import com.example.cafe_manager.data.local.dao.ShiftTransactionDao;
 import com.example.cafe_manager.data.local.entity.ShiftCashSessionEntity;
-import com.example.cafe_manager.data.local.entity.ShiftEntity;
+import com.example.cafe_manager.data.remote.ApiClient;
+import com.example.cafe_manager.data.remote.CloseShiftRequest;
+import com.example.cafe_manager.data.remote.ShiftApiService;
+import com.example.cafe_manager.data.remote.ShiftReportResponse;
+import com.example.cafe_manager.data.remote.ShiftResponse;
 import com.example.cafe_manager.model.PaymentMethodStatsRow;
 import com.example.cafe_manager.util.AppExecutors;
-import com.example.cafe_manager.util.Constants;
 import com.example.cafe_manager.util.RepositoryCallback;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ShiftReportRepository {
 
-    private final ShiftDao shiftDao;
-    private final ShiftCashSessionDao cashSessionDao;
-    private final PaymentDao paymentDao;
-    private final OrderDao orderDao;
-    private final ShiftTransactionDao transactionDao;
+    private static volatile ShiftReportRepository instance;
+    private final ShiftApiService apiService;
     private final AppExecutors appExecutors;
 
-    public ShiftReportRepository(Context context) {
-        AppDatabase db = AppDatabase.getInstance(context);
-        this.shiftDao = db.shiftDao();
-        this.cashSessionDao = db.shiftCashSessionDao();
-        this.paymentDao = db.paymentDao();
-        this.orderDao = db.orderDao();
-        this.transactionDao = db.shiftTransactionDao();
+    private ShiftReportRepository(Context context) {
+        this.apiService = ApiClient.getInstance(context).getService(ShiftApiService.class);
         this.appExecutors = AppExecutors.getInstance();
+    }
+
+    public static ShiftReportRepository getInstance(Context context) {
+        if (instance == null) {
+            synchronized (ShiftReportRepository.class) {
+                if (instance == null) {
+                    instance = new ShiftReportRepository(context.getApplicationContext());
+                }
+            }
+        }
+        return instance;
     }
 
     // ── Cash Session ──
@@ -43,36 +48,59 @@ public class ShiftReportRepository {
     /** Mở phiên tiền mặt khi mở ca. */
     public void openCashSession(int shiftId, double openingCash, int openedBy,
                                 RepositoryCallback<Long> callback) {
-        appExecutors.diskIO().execute(() -> {
-            try {
-                ShiftCashSessionEntity session = new ShiftCashSessionEntity();
-                session.setShiftId(shiftId);
-                session.setOpeningCash(openingCash);
-                session.setOpenedBy(openedBy);
-                session.setOpenedAt(System.currentTimeMillis());
-                session.setStatus(Constants.CASH_SESSION_OPEN);
-
-                long id = cashSessionDao.insert(session);
-                appExecutors.mainThread().execute(() -> callback.onSuccess(id));
-            } catch (Exception e) {
-                appExecutors.mainThread().execute(() -> callback.onError(e));
-            }
-        });
+        appExecutors.mainThread().execute(() -> callback.onSuccess(0L));
     }
 
     /** Đóng phiên tiền mặt khi đóng ca atomically. */
     public void closeCashSession(int shiftId, double actualCash, int closedBy,
                                  RepositoryCallback<ShiftCashSessionEntity> callback) {
-        appExecutors.diskIO().execute(() -> {
-            try {
-                long now = System.currentTimeMillis();
-                transactionDao.closeShiftWithCashAtomic(shiftId, actualCash, closedBy, now, Constants.PAYMENT_CASH);
+        CloseShiftRequest request = new CloseShiftRequest();
+        request.setClosingCash(actualCash);
+        apiService.closeShift(shiftId, request).enqueue(new Callback<ShiftResponse>() {
+            @Override
+            public void onResponse(Call<ShiftResponse> call, Response<ShiftResponse> response) {
+                if (response.isSuccessful()) {
+                    // Fetch report to extract cash session info
+                    apiService.getShiftReport(shiftId).enqueue(new Callback<ShiftReportResponse>() {
+                        @Override
+                        public void onResponse(Call<ShiftReportResponse> callReport, Response<ShiftReportResponse> responseReport) {
+                            if (responseReport.isSuccessful() && responseReport.body() != null) {
+                                ShiftReportResponse report = responseReport.body();
+                                ShiftCashSessionEntity session = new ShiftCashSessionEntity();
+                                session.setShiftId(shiftId);
+                                session.setOpeningCash(report.getOpeningCash() != null ? report.getOpeningCash() : 0.0);
+                                session.setClosingCash(report.getClosingCash() != null ? report.getClosingCash() : 0.0);
+                                session.setExpectedCash(report.getExpectedCash() != null ? report.getExpectedCash() : 0.0);
+                                session.setActualCash(report.getClosingCash() != null ? report.getClosingCash() : 0.0);
+                                session.setCashDifference(report.getCashDifference() != null ? report.getCashDifference() : 0.0);
+                                session.setStatus(report.getStatus());
+                                session.setClosedBy(closedBy);
+                                session.setClosedAt(System.currentTimeMillis());
+                                callback.onSuccess(session);
+                            } else {
+                                callback.onError(new Exception("Lỗi khi tải báo cáo đóng ca: " + responseReport.code()));
+                            }
+                        }
 
-                // Trả về session đã đóng
-                ShiftCashSessionEntity closed = cashSessionDao.getByShift(shiftId);
-                appExecutors.mainThread().execute(() -> callback.onSuccess(closed));
-            } catch (Exception e) {
-                appExecutors.mainThread().execute(() -> callback.onError(e));
+                        @Override
+                        public void onFailure(Call<ShiftReportResponse> callReport, Throwable t) {
+                            callback.onError(new Exception("Lỗi kết nối khi tải báo cáo đóng ca: " + t.getMessage(), t));
+                        }
+                    });
+                } else {
+                    String errorMsg = "Lỗi khi đóng ca";
+                    try {
+                        if (response.errorBody() != null) {
+                            errorMsg = response.errorBody().string();
+                        }
+                    } catch (Exception ignored) {}
+                    callback.onError(new Exception(errorMsg));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ShiftResponse> call, Throwable t) {
+                callback.onError(new Exception("Lỗi kết nối khi đóng ca: " + t.getMessage(), t));
             }
         });
     }
@@ -80,41 +108,93 @@ public class ShiftReportRepository {
     // ── Report queries ──
 
     public LiveData<ShiftCashSessionEntity> getCashSessionLive(int shiftId) {
-        return cashSessionDao.getByShiftLive(shiftId);
+        MutableLiveData<ShiftCashSessionEntity> liveData = new MutableLiveData<>();
+        apiService.getShiftReport(shiftId).enqueue(new Callback<ShiftReportResponse>() {
+            @Override
+            public void onResponse(Call<ShiftReportResponse> call, Response<ShiftReportResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ShiftReportResponse report = response.body();
+                    ShiftCashSessionEntity session = new ShiftCashSessionEntity();
+                    session.setShiftId(shiftId);
+                    session.setOpeningCash(report.getOpeningCash() != null ? report.getOpeningCash() : 0.0);
+                    session.setClosingCash(report.getClosingCash() != null ? report.getClosingCash() : 0.0);
+                    session.setExpectedCash(report.getExpectedCash() != null ? report.getExpectedCash() : 0.0);
+                    session.setActualCash(report.getClosingCash() != null ? report.getClosingCash() : 0.0);
+                    session.setCashDifference(report.getCashDifference() != null ? report.getCashDifference() : 0.0);
+                    session.setStatus(report.getStatus());
+                    liveData.setValue(session);
+                } else {
+                    liveData.setValue(null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ShiftReportResponse> call, Throwable t) {
+                liveData.setValue(null);
+            }
+        });
+        return liveData;
     }
 
     /** Lấy tổng doanh thu theo ca (background, không LiveData). */
     public void getShiftRevenueSummary(int shiftId, RepositoryCallback<ShiftRevenueSummary> callback) {
-        appExecutors.diskIO().execute(() -> {
-            try {
-                double totalRevenue = paymentDao.getTotalRevenueByPaidShiftId(shiftId);
-                double cashRevenue = paymentDao.getCashTotalByPaidShiftId(shiftId);
-                int paymentCount = paymentDao.countByPaidShiftId(shiftId);
-                int paidOrderCount = paymentDao.countDistinctOrdersByPaidShiftId(shiftId); // Dùng paid_shift_id
-                int unpaidOrderCount = orderDao.countUnpaidByShift(shiftId);
-                List<PaymentMethodStatsRow> methodStats =
-                        paymentDao.getPaymentMethodStatsByShift(shiftId);
+        apiService.getShiftReport(shiftId).enqueue(new Callback<ShiftReportResponse>() {
+            @Override
+            public void onResponse(Call<ShiftReportResponse> call, Response<ShiftReportResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ShiftReportResponse report = response.body();
 
-                ShiftRevenueSummary summary = new ShiftRevenueSummary(
-                        totalRevenue, cashRevenue, paymentCount,
-                        paidOrderCount, unpaidOrderCount, methodStats
-                );
+                    List<PaymentMethodStatsRow> methodStats = new ArrayList<>();
+                    if (report.getPaymentMethodStats() != null) {
+                        for (ShiftReportResponse.PaymentMethodStatsResponse stats : report.getPaymentMethodStats()) {
+                            PaymentMethodStatsRow row = new PaymentMethodStatsRow();
+                            row.paymentMethod = stats.getPaymentMethod();
+                            row.orderCount = stats.getOrderCount() != null ? stats.getOrderCount() : 0;
+                            row.totalRevenue = stats.getTotalRevenue() != null ? stats.getTotalRevenue() : 0.0;
+                            methodStats.add(row);
+                        }
+                    }
 
-                appExecutors.mainThread().execute(() -> callback.onSuccess(summary));
-            } catch (Exception e) {
-                appExecutors.mainThread().execute(() -> callback.onError(e));
+                    int paidOrderCount = report.getPaymentCount() != null ? report.getPaymentCount() : 0;
+                    int unpaidOrderCount = report.getUnpaidOrders() != null ? report.getUnpaidOrders() : 0;
+
+                    ShiftRevenueSummary summary = new ShiftRevenueSummary(
+                            report.getTotalRevenue(),
+                            report.getCashRevenue() != null ? report.getCashRevenue() : 0.0,
+                            report.getPaymentCount() != null ? report.getPaymentCount() : 0,
+                            paidOrderCount,
+                            unpaidOrderCount,
+                            methodStats
+                    );
+                    callback.onSuccess(summary);
+                } else {
+                    callback.onError(new Exception("Lỗi khi lấy báo cáo doanh thu: " + response.code()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ShiftReportResponse> call, Throwable t) {
+                callback.onError(new Exception("Lỗi kết nối khi lấy báo cáo doanh thu: " + t.getMessage(), t));
             }
         });
     }
 
     /** Lấy số đơn chưa thanh toán (để check trước khi đóng ca). */
     public void getUnpaidOrderCount(int shiftId, RepositoryCallback<Integer> callback) {
-        appExecutors.diskIO().execute(() -> {
-            try {
-                int count = orderDao.countUnpaidByShift(shiftId);
-                appExecutors.mainThread().execute(() -> callback.onSuccess(count));
-            } catch (Exception e) {
-                appExecutors.mainThread().execute(() -> callback.onError(e));
+        apiService.getShiftReport(shiftId).enqueue(new Callback<ShiftReportResponse>() {
+            @Override
+            public void onResponse(Call<ShiftReportResponse> call, Response<ShiftReportResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    int unpaidCount = response.body().getUnpaidOrders() != null ? response.body().getUnpaidOrders() : 0;
+                    callback.onSuccess(unpaidCount);
+                } else {
+                    callback.onError(new Exception("Lỗi khi kiểm tra hóa đơn chưa thanh toán: " + response.code()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ShiftReportResponse> call, Throwable t) {
+                callback.onError(new Exception("Lỗi kết nối khi kiểm tra hóa đơn chưa thanh toán: " + t.getMessage(), t));
             }
         });
     }

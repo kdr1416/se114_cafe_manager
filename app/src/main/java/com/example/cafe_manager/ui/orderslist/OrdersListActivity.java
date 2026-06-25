@@ -3,6 +3,8 @@ package com.example.cafe_manager.ui.orderslist;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,6 +38,10 @@ public class OrdersListActivity extends AppCompatActivity {
     private View emptyState;
     private RecyclerView rvOrders;
 
+    private Handler pollingHandler;
+    private Runnable pollingRunnable;
+    private static final long POLLING_INTERVAL_MS = 5000L;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,6 +53,40 @@ public class OrdersListActivity extends AppCompatActivity {
         bindViews();
         setupRecyclerView();
         setupViewModel();
+        setupPolling();
+    }
+
+    private void setupPolling() {
+        pollingHandler = new Handler(Looper.getMainLooper());
+        pollingRunnable = new Runnable() {
+            @Override
+            public void run() {
+                refreshData();
+                pollingHandler.postDelayed(this, POLLING_INTERVAL_MS);
+            }
+        };
+    }
+
+    private void refreshData() {
+        if (viewModel != null) {
+            viewModel.refreshOrders();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (pollingHandler != null && pollingRunnable != null) {
+            pollingHandler.post(pollingRunnable);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (pollingHandler != null && pollingRunnable != null) {
+            pollingHandler.removeCallbacks(pollingRunnable);
+        }
     }
 
     private void setupTopBar() {

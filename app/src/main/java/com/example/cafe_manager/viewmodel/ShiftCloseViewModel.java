@@ -7,18 +7,16 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.example.cafe_manager.data.local.AppDatabase;
 import com.example.cafe_manager.data.local.entity.ShiftCashSessionEntity;
 import com.example.cafe_manager.data.local.entity.ShiftEntity;
 import com.example.cafe_manager.data.repository.ShiftReportRepository;
+import com.example.cafe_manager.data.repository.ShiftRepository;
 import com.example.cafe_manager.manager.SessionManager;
-import com.example.cafe_manager.util.AppExecutors;
 import com.example.cafe_manager.util.RepositoryCallback;
 
 public class ShiftCloseViewModel extends AndroidViewModel {
 
     private final ShiftReportRepository reportRepository;
-    private final AppDatabase appDatabase;
     private final SessionManager sessionManager;
 
     private int shiftId = -1;
@@ -31,8 +29,7 @@ public class ShiftCloseViewModel extends AndroidViewModel {
 
     public ShiftCloseViewModel(@NonNull Application application) {
         super(application);
-        this.reportRepository = new ShiftReportRepository(application);
-        this.appDatabase = AppDatabase.getInstance(application);
+        this.reportRepository = ShiftReportRepository.getInstance(application);
         this.sessionManager = SessionManager.getInstance(application);
     }
 
@@ -43,9 +40,16 @@ public class ShiftCloseViewModel extends AndroidViewModel {
     }
 
     private void loadShiftInfo() {
-        AppExecutors.getInstance().diskIO().execute(() -> {
-            ShiftEntity shift = appDatabase.shiftDao().getById(shiftId);
-            AppExecutors.getInstance().mainThread().execute(() -> shiftLiveData.setValue(shift));
+        ShiftRepository.getInstance(getApplication()).getShiftById(shiftId, new RepositoryCallback<ShiftEntity>() {
+            @Override
+            public void onSuccess(ShiftEntity result) {
+                shiftLiveData.setValue(result);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                errorLiveData.setValue("Lỗi tải thông tin ca: " + e.getMessage());
+            }
         });
     }
 
