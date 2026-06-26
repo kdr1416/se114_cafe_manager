@@ -87,7 +87,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/row_history"
+        android:id="@+id/row_my_availability"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -102,13 +102,40 @@
             android:layout_height="36dp"
             android:background="@drawable/bg_icon_button"
             android:padding="@dimen/spacing_xs"
-            android:src="@drawable/ic_receipt"
-            android:contentDescription="Lịch sử giao dịch" />
+            android:src="@drawable/ic_check"
+            android:contentDescription="Lịch rảnh của tôi" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Lịch sử giao dịch"
+            android:text="Lịch rảnh của tôi"
+            android:textAppearance="@style/TextAppearance.Cafe.Body"
+            android:layout_marginStart="@dimen/spacing_md" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/row_leave_request"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="@dimen/spacing_sm"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_icon_button"
+            android:padding="@dimen/spacing_xs"
+            android:src="@drawable/ic_close"
+            android:contentDescription="Đơn xin nghỉ" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Đơn xin nghỉ"
             android:textAppearance="@style/TextAppearance.Cafe.Body"
             android:layout_marginStart="@dimen/spacing_md" />
     </LinearLayout>
@@ -184,6 +211,33 @@
         android:layout_marginBottom="@dimen/spacing_xs" />
 
     <LinearLayout
+        android:id="@+id/row_history"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="@dimen/spacing_sm"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_icon_button"
+            android:padding="@dimen/spacing_xs"
+            android:src="@drawable/ic_receipt"
+            android:contentDescription="Lịch sử giao dịch" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lịch sử giao dịch"
+            android:textAppearance="@style/TextAppearance.Cafe.Body"
+            android:layout_marginStart="@dimen/spacing_md" />
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/row_dashboard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -230,9 +284,37 @@
             android:contentDescription="Quản lý nhân viên" />
 
         <TextView
+            android:id="@+id/tv_row_users_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Quản lý nhân viên"
+            android:textAppearance="@style/TextAppearance.Cafe.Body"
+            android:layout_marginStart="@dimen/spacing_md" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/row_attendance_report"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="@dimen/spacing_sm"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_icon_button"
+            android:padding="@dimen/spacing_xs"
+            android:src="@drawable/ic_check"
+            android:contentDescription="Quản lý chấm công" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Quản lý chấm công"
             android:textAppearance="@style/TextAppearance.Cafe.Body"
             android:layout_marginStart="@dimen/spacing_md" />
     </LinearLayout>
@@ -335,7 +417,7 @@
         android:layout_marginBottom="@dimen/spacing_xs" />
 
     <LinearLayout
-        android:id="@+id/row_close_shift"
+        android:id="@+id/row_leave_approval"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -343,7 +425,8 @@
         android:padding="@dimen/spacing_sm"
         android:background="?attr/selectableItemBackground"
         android:clickable="true"
-        android:focusable="true">
+        android:focusable="true"
+        android:visibility="gone">
 
         <ImageView
             android:layout_width="36dp"
@@ -351,12 +434,12 @@
             android:background="@drawable/bg_icon_button"
             android:padding="@dimen/spacing_xs"
             android:src="@drawable/ic_check"
-            android:contentDescription="Đóng ca hiện tại" />
+            android:contentDescription="Duyệt đơn xin nghỉ" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Đóng ca hiện tại"
+            android:text="Duyệt đơn xin nghỉ"
             android:textAppearance="@style/TextAppearance.Cafe.Body"
             android:layout_marginStart="@dimen/spacing_md" />
     </LinearLayout>

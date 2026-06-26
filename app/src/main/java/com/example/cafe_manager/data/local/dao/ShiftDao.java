@@ -31,6 +31,9 @@ public interface ShiftDao {
     @Query("SELECT * FROM shifts WHERE shift_date BETWEEN :from AND :to ORDER BY shift_date ASC, start_time ASC")
     LiveData<List<ShiftEntity>> getByDateRange(long from, long to);
 
+    @Query("SELECT * FROM shifts WHERE shift_date BETWEEN :from AND :to ORDER BY shift_date ASC, start_time ASC")
+    List<ShiftEntity> getByDateRangeSync(long from, long to);
+
     @Query("SELECT * FROM shifts WHERE shift_id = :id LIMIT 1")
     ShiftEntity getById(int id);
 

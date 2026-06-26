@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.cafe_manager.data.local.AppDatabase;
 import com.example.cafe_manager.data.local.entity.ShiftAssignmentEntity;
 import com.example.cafe_manager.data.local.entity.ShiftEntity;
 import com.example.cafe_manager.data.local.entity.ShiftTemplateEntity;
@@ -32,6 +33,7 @@ public class ShiftRepository {
     private static volatile ShiftRepository instance;
     private final ShiftApiService apiService;
     private final AppExecutors exec;
+    private final Context appContext;
 
     // Caches
     private final MutableLiveData<List<ShiftTemplateEntity>> allTemplatesCache = new MutableLiveData<>();
@@ -39,6 +41,7 @@ public class ShiftRepository {
     private final MutableLiveData<List<ShiftEntity>> allShiftsCache = new MutableLiveData<>();
 
     private ShiftRepository(Context ctx) {
+        this.appContext = ctx.getApplicationContext();
         this.apiService = ApiClient.getInstance(ctx).getService(ShiftApiService.class);
         this.exec = AppExecutors.getInstance();
         // Setup active templates filter
@@ -80,6 +83,21 @@ public class ShiftRepository {
         return activeTemplatesCache;
     }
 
+    private Exception parseError(retrofit2.Response<?> response, String defaultMsg) {
+        try {
+            if (response.errorBody() != null) {
+                String errorStr = response.errorBody().string();
+                org.json.JSONObject json = new org.json.JSONObject(errorStr);
+                if (json.has("message")) {
+                    return new Exception(json.getString("message"));
+                }
+            }
+        } catch (Exception e) {
+            // ignore and fallback
+        }
+        return new Exception(defaultMsg);
+    }
+
     public void insertTemplate(ShiftTemplateEntity template, RepositoryCallback<Long> callback) {
         exec.diskIO().execute(() -> {
             try {
@@ -94,7 +112,8 @@ public class ShiftRepository {
                     refreshTemplates();
                     exec.mainThread().execute(() -> callback.onSuccess((long) response.body().getTemplateId()));
                 } else {
-                    exec.mainThread().execute(() -> callback.onError(new Exception("Không thể tạo mẫu ca")));
+                    Exception parsed = parseError(response, "Không thể tạo mẫu ca");
+                    exec.mainThread().execute(() -> callback.onError(parsed));
                 }
             } catch (Exception e) {
                 exec.mainThread().execute(() -> callback.onError(e));
@@ -116,7 +135,8 @@ public class ShiftRepository {
                     refreshTemplates();
                     exec.mainThread().execute(() -> callback.onSuccess(null));
                 } else {
-                    exec.mainThread().execute(() -> callback.onError(new Exception("Không thể cập nhật mẫu ca")));
+                    Exception parsed = parseError(response, "Không thể cập nhật mẫu ca");
+                    exec.mainThread().execute(() -> callback.onError(parsed));
                 }
             } catch (Exception e) {
                 exec.mainThread().execute(() -> callback.onError(e));
@@ -132,7 +152,8 @@ public class ShiftRepository {
                     refreshTemplates();
                     exec.mainThread().execute(() -> callback.onSuccess(null));
                 } else {
-                    exec.mainThread().execute(() -> callback.onError(new Exception("Không thể ngưng hoạt động mẫu ca")));
+                    Exception parsed = parseError(response, "Không thể ngưng hoạt động mẫu ca");
+                    exec.mainThread().execute(() -> callback.onError(parsed));
                 }
             } catch (Exception e) {
                 exec.mainThread().execute(() -> callback.onError(e));
@@ -274,7 +295,6 @@ public class ShiftRepository {
             try {
                 AssignStaffRequest request = new AssignStaffRequest();
                 request.setUserId(assignment.getUserId());
-                request.setRole(assignment.getRole());
                 retrofit2.Response<Void> response = apiService.assignStaff(assignment.getShiftId(), request).execute();
                 if (response.isSuccessful()) {
                     exec.mainThread().execute(() -> callback.onSuccess(null));
@@ -334,6 +354,21 @@ public class ShiftRepository {
                     exec.mainThread().execute(() -> callback.onSuccess(entity));
                 } else {
                     exec.mainThread().execute(() -> callback.onError(new Exception("Không thể tải thông tin ca: " + response.code())));
+                }
+            } catch (Exception e) {
+                exec.mainThread().execute(() -> callback.onError(e));
+            }
+        });
+    }
+
+    public void getAssignmentsForShift(int shiftId, RepositoryCallback<List<ShiftAssignmentResponse>> callback) {
+        exec.diskIO().execute(() -> {
+            try {
+                retrofit2.Response<List<ShiftAssignmentResponse>> response = apiService.getAssignments(shiftId).execute();
+                if (response.isSuccessful() && response.body() != null) {
+                    exec.mainThread().execute(() -> callback.onSuccess(response.body()));
+                } else {
+                    exec.mainThread().execute(() -> callback.onError(new Exception("Không thể tải danh sách phân công: " + response.code())));
                 }
             } catch (Exception e) {
                 exec.mainThread().execute(() -> callback.onError(e));
@@ -404,6 +439,73 @@ public class ShiftRepository {
 
     private void refreshShifts() {
         refreshShiftsFromApi(null);
+    }
+
+    public void syncMyShiftsAndAssignments(RepositoryCallback<Void> callback) {
+        exec.diskIO().execute(() -> {
+            try {
+                // 1. Fetch all shifts from API
+                retrofit2.Response<List<ShiftResponse>> shiftsResp = apiService.getShifts(null, null).execute();
+                if (!shiftsResp.isSuccessful() || shiftsResp.body() == null) {
+                    throw new Exception("Lỗi tải danh sách ca làm việc từ server: " + shiftsResp.code());
+                }
+
+                // 2. Fetch my assignments from API
+                retrofit2.Response<List<ShiftAssignmentResponse>> assignsResp = apiService.getMyAssignments().execute();
+                if (!assignsResp.isSuccessful() || assignsResp.body() == null) {
+                    throw new Exception("Lỗi tải danh sách phân công từ server: " + assignsResp.code());
+                }
+
+                AppDatabase db = AppDatabase.getInstance(appContext);
+
+                // 3. Save shifts to Room DB
+                db.runInTransaction(() -> {
+                    for (ShiftResponse r : shiftsResp.body()) {
+                        ShiftEntity shiftEntity = mapShiftResponseToEntity(r);
+                        ShiftEntity existing = db.shiftDao().getById(shiftEntity.getShiftId());
+                        if (existing == null) {
+                            db.shiftDao().insert(shiftEntity);
+                        } else {
+                            db.shiftDao().update(shiftEntity);
+                        }
+                    }
+
+                    // Save assignments to Room DB
+                    for (ShiftAssignmentResponse r : assignsResp.body()) {
+                        ShiftAssignmentEntity assignEntity = new ShiftAssignmentEntity();
+                        assignEntity.setAssignmentId(r.getAssignmentId());
+                        assignEntity.setShiftId(r.getShiftId());
+                        assignEntity.setUserId(r.getUserId());
+                        assignEntity.setRole(r.getRole());
+                        assignEntity.setConfirmed(r.getConfirmed() != null ? r.getConfirmed() : false);
+                        assignEntity.setCreatedAt(r.getCreatedAt() != null ? r.getCreatedAt() : 0);
+
+                        ShiftAssignmentEntity existing = db.shiftAssignmentDao().getById(assignEntity.getAssignmentId());
+                        if (existing == null) {
+                            db.shiftAssignmentDao().insert(assignEntity);
+                        } else {
+                            db.shiftAssignmentDao().update(assignEntity);
+                        }
+                    }
+                });
+
+                // Post the shifts to allShiftsCache as well to update memory caches
+                List<ShiftEntity> entities = new ArrayList<>();
+                for (ShiftResponse r : shiftsResp.body()) {
+                    entities.add(mapShiftResponseToEntity(r));
+                }
+                allShiftsCache.postValue(entities);
+
+                if (callback != null) {
+                    exec.mainThread().execute(() -> callback.onSuccess(null));
+                }
+            } catch (Exception e) {
+                android.util.Log.e("ShiftRepository", "syncMyShiftsAndAssignments error", e);
+                if (callback != null) {
+                    exec.mainThread().execute(() -> callback.onError(e));
+                }
+            }
+        });
     }
 
     // ── Mapping ──

@@ -21,6 +21,13 @@
             android:layout_weight="1"
             style="@style/TextAppearance.Cafe.Subtitle" />
 
+        <CheckBox
+            android:id="@+id/cb_select_shift"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_marginEnd="@dimen/spacing_sm" />
+
         <TextView
             android:id="@+id/tv_status"
             android:layout_width="wrap_content"
@@ -52,6 +59,15 @@
             android:layout_height="wrap_content"
             style="@style/TextAppearance.Cafe.Caption" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_staff_names"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_xs"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:textColor="@color/text_soft"
+        android:visibility="gone" />
 
     <!-- Understaffed warning -->
     <TextView

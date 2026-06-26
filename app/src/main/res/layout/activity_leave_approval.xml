@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_primary">
+
+    <include
+        android:id="@+id/top_bar"
+        layout="@layout/component_top_bar" />
+
+    <!-- Status Filter Buttons Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="@dimen/spacing_lg"
+        android:weightSum="3">
+
+        <Button
+            android:id="@+id/btnFilterPending"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="@dimen/spacing_xs"
+            android:text="Chờ duyệt"
+            android:padding="0dp"
+            style="@style/Widget.Cafe.Button.Secondary"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btnFilterApproved"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="@dimen/spacing_xs"
+            android:text="Đã duyệt"
+            android:padding="0dp"
+            style="@style/Widget.Cafe.Button.Secondary"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btnFilterRejected"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:layout_marginStart="@dimen/spacing_xs"
+            android:text="Từ chối"
+            android:padding="0dp"
+            style="@style/Widget.Cafe.Button.Secondary"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- List Section -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerLeaveApproval"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingHorizontal="@dimen/spacing_lg"
+            android:paddingBottom="@dimen/spacing_lg"
+            android:clipToPadding="false" />
+
+        <ProgressBar
+            android:id="@+id/progressLoading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvEmptyState"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_margin="@dimen/spacing_xl"
+            android:text="Không có đơn chờ duyệt"
+            style="@style/TextAppearance.Cafe.Body"
+            android:textColor="@color/text_mute"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+</LinearLayout>

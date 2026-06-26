@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@drawable/bg_card"
+    android:padding="@dimen/spacing_lg"
+    android:layout_marginBottom="@dimen/spacing_md"
+    android:gravity="center_vertical"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
+
+    <!-- Initials Avatar Indicator -->
+    <TextView
+        android:id="@+id/tv_initials"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@drawable/bg_icon_button"
+        android:gravity="center"
+        android:text="NV"
+        style="@style/TextAppearance.Cafe.Subtitle"
+        android:textColor="@color/accent" />
+
+    <!-- Name & Role Info -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="@dimen/spacing_md">
+
+        <TextView
+            android:id="@+id/tv_employee_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nguyễn Văn A"
+            style="@style/TextAppearance.Cafe.Subtitle"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:id="@+id/tv_role"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="STAFF"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:paddingHorizontal="@dimen/spacing_sm"
+            android:paddingVertical="2dp"
+            android:background="@drawable/bg_badge_accent"
+            style="@style/TextAppearance.Cafe.Caption"
+            android:textSize="10sp"
+            android:textColor="@color/text_on_accent" />
+    </LinearLayout>
+
+    <!-- Stats Info (Right Aligned) -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="end"
+        android:layout_marginStart="@dimen/spacing_md">
+
+        <TextView
+            android:id="@+id/tv_shifts_hours"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="18 ca - 72.0h"
+            style="@style/TextAppearance.Cafe.BodyBold"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:id="@+id/tv_order_stats"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📦 0 đơn · 💰 0đ"
+            android:layout_marginTop="2dp"
+            style="@style/TextAppearance.Cafe.Caption"
+            android:textColor="@color/text_soft" />
+
+        <TextView
+            android:id="@+id/tv_attendance_rate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="90.0%"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:paddingHorizontal="@dimen/spacing_sm"
+            android:paddingVertical="2dp"
+            android:background="@drawable/bg_badge_success"
+            style="@style/TextAppearance.Cafe.Caption"
+            android:textColor="@color/success" />
+    </LinearLayout>
+</LinearLayout>

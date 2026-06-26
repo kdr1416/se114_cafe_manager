@@ -65,6 +65,13 @@ public interface ShiftAssignmentDao {
            "AND s.status != 'CANCELLED'")
     int countAssignmentsInRange(int userId, long fromDate, long toDate);
 
+    @Query("SELECT sa.* FROM shift_assignments sa " +
+           "INNER JOIN shifts s ON sa.shift_id = s.shift_id " +
+           "WHERE sa.user_id = :userId " +
+           "AND s.shift_date BETWEEN :fromDate AND :toDate " +
+           "AND s.status != 'CANCELLED'")
+    List<ShiftAssignmentEntity> getAssignmentsInRange(int userId, long fromDate, long toDate);
+
     @Query("SELECT shift_id FROM shift_assignments WHERE assignment_id = :id")
     int getShiftIdByAssignmentId(int id);
 

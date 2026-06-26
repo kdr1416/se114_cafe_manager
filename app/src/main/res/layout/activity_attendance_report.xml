@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_primary">
+
+    <!-- Top Bar -->
+    <include
+        android:id="@+id/top_bar"
+        layout="@layout/component_top_bar" />
+
+    <!-- Month Selector Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingVertical="@dimen/spacing_md"
+        android:background="@color/surface"
+        android:elevation="2dp">
+
+        <ImageButton
+            android:id="@+id/btn_prev_month"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_arrow_back"
+            android:background="@drawable/bg_icon_button"
+            android:contentDescription="Tháng trước"
+            android:layout_marginEnd="@dimen/spacing_lg" />
+
+        <TextView
+            android:id="@+id/tv_month_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tháng 06 / 2026"
+            style="@style/TextAppearance.Cafe.Subtitle"
+            android:textColor="@color/text_primary" />
+
+        <ImageButton
+            android:id="@+id/btn_next_month"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_arrow_back"
+            android:rotation="180"
+            android:background="@drawable/bg_icon_button"
+            android:contentDescription="Tháng sau"
+            android:layout_marginStart="@dimen/spacing_lg" />
+    </LinearLayout>
+
+    <!-- TabLayout -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface"
+        app:tabTextColor="@color/text_soft"
+        app:tabSelectedTextColor="@color/accent"
+        app:tabIndicatorColor="@color/accent"
+        app:tabMode="fixed"
+        app:tabGravity="fill" />
+
+    <!-- Tab Contents Container -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="@dimen/spacing_md"
+        android:paddingTop="@dimen/spacing_md">
+
+        <!-- Tab 1: Overall Team Summary -->
+        <LinearLayout
+            android:id="@+id/layout_tab_team"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_team_attendance"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="@dimen/spacing_xl" />
+        </LinearLayout>
+
+        <!-- Tab 2: Individual Employee Details -->
+        <LinearLayout
+            android:id="@+id/layout_tab_details"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- Employee Dropdown Selector -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/spacing_md"
+                android:layout_marginBottom="@dimen/spacing_md">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Chọn nhân viên"
+                    style="@style/TextAppearance.Cafe.Caption"
+                    android:textColor="@color/text_soft"
+                    android:layout_marginBottom="@dimen/spacing_xs" />
+
+                <Spinner
+                    android:id="@+id/spinner_employees"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/height_input"
+                    android:background="@drawable/bg_input" />
+            </LinearLayout>
+
+            <!-- Quick Summary Cards for Selected Employee -->
+            <LinearLayout
+                android:id="@+id/layout_user_summary_cards"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/spacing_sm">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card"
+                    android:padding="@dimen/spacing_md"
+                    android:gravity="center"
+                    android:layout_marginEnd="@dimen/spacing_sm">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tổng số ca"
+                        style="@style/TextAppearance.Cafe.Caption"
+                        android:textColor="@color/text_soft" />
+
+                    <TextView
+                        android:id="@+id/tv_total_shifts"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        style="@style/TextAppearance.Cafe.Title"
+                        android:textColor="@color/accent"
+                        android:layout_marginTop="@dimen/spacing_xs" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card"
+                    android:padding="@dimen/spacing_md"
+                    android:gravity="center"
+                    android:layout_marginStart="@dimen/spacing_sm">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tổng số giờ"
+                        style="@style/TextAppearance.Cafe.Caption"
+                        android:textColor="@color/text_soft" />
+
+                    <TextView
+                        android:id="@+id/tv_total_hours"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0.0h"
+                        style="@style/TextAppearance.Cafe.Title"
+                        android:textColor="@color/accent"
+                        android:layout_marginTop="@dimen/spacing_xs" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Second Row of Quick Summary Cards for Selected Employee -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/spacing_md">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card"
+                    android:padding="@dimen/spacing_md"
+                    android:gravity="center"
+                    android:layout_marginEnd="@dimen/spacing_sm">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Đơn hàng"
+                        style="@style/TextAppearance.Cafe.Caption"
+                        android:textColor="@color/text_soft" />
+
+                    <TextView
+                        android:id="@+id/tv_total_orders"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        style="@style/TextAppearance.Cafe.Title"
+                        android:textColor="@color/accent"
+                        android:layout_marginTop="@dimen/spacing_xs" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card"
+                    android:padding="@dimen/spacing_md"
+                    android:gravity="center"
+                    android:layout_marginStart="@dimen/spacing_sm">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Doanh thu"
+                        style="@style/TextAppearance.Cafe.Caption"
+                        android:textColor="@color/text_soft" />
+
+                    <TextView
+                        android:id="@+id/tv_total_revenue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0đ"
+                        style="@style/TextAppearance.Cafe.Title"
+                        android:textColor="@color/accent"
+                        android:layout_marginTop="@dimen/spacing_xs" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_attendance_records"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="@dimen/spacing_xl" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

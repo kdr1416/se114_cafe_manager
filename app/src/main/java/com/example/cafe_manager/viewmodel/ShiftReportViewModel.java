@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.example.cafe_manager.data.local.entity.ShiftCashSessionEntity;
 import com.example.cafe_manager.data.local.entity.ShiftEntity;
+import com.example.cafe_manager.data.remote.ShiftReportResponse;
 import com.example.cafe_manager.data.repository.ShiftReportRepository;
 import com.example.cafe_manager.data.repository.ShiftRepository;
 import com.example.cafe_manager.util.RepositoryCallback;
@@ -21,6 +22,7 @@ public class ShiftReportViewModel extends AndroidViewModel {
     private final MutableLiveData<ShiftEntity> shiftLiveData = new MutableLiveData<>();
     private final MutableLiveData<ShiftReportRepository.ShiftRevenueSummary> summaryLiveData =
             new MutableLiveData<>();
+    private final MutableLiveData<ShiftReportResponse> reportDetailsLiveData = new MutableLiveData<>();
     private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
 
     public ShiftReportViewModel(@NonNull Application application) {
@@ -57,12 +59,26 @@ public class ShiftReportViewModel extends AndroidViewModel {
                         errorLiveData.setValue(e.getMessage());
                     }
                 });
+
+        // Load full report details (including order history)
+        reportRepository.getShiftReportDetails(shiftId, new RepositoryCallback<ShiftReportResponse>() {
+            @Override
+            public void onSuccess(ShiftReportResponse result) {
+                reportDetailsLiveData.setValue(result);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                errorLiveData.setValue("Lỗi tải chi tiết ca: " + e.getMessage());
+            }
+        });
     }
 
     // ── LiveData getters ──
 
     public LiveData<ShiftEntity> getShift() { return shiftLiveData; }
     public LiveData<ShiftReportRepository.ShiftRevenueSummary> getSummary() { return summaryLiveData; }
+    public LiveData<ShiftReportResponse> getReportDetails() { return reportDetailsLiveData; }
     public LiveData<ShiftCashSessionEntity> getCashSession() {
         return reportRepository.getCashSessionLive(shiftId);
     }

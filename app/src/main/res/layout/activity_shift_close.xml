@@ -70,7 +70,8 @@
                 android:layout_height="wrap_content"
                 style="@style/TextAppearance.Cafe.SectionLabel"
                 android:text="Tiền mặt thực tế trong két (VNĐ)"
-                android:layout_marginBottom="@dimen/spacing_sm" />
+                android:layout_marginBottom="@dimen/spacing_sm"
+                android:visibility="gone" />
 
             <EditText
                 android:id="@+id/et_actual_cash"
@@ -81,7 +82,8 @@
                 android:hint="Nhập số tiền thực tế"
                 android:paddingStart="@dimen/spacing_md"
                 android:paddingEnd="@dimen/spacing_md"
-                android:layout_marginBottom="@dimen/spacing_xl" />
+                android:layout_marginBottom="@dimen/spacing_xl"
+                android:visibility="gone" />
 
         </LinearLayout>
     </ScrollView>

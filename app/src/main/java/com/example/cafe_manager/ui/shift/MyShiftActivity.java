@@ -15,6 +15,7 @@ import com.example.cafe_manager.viewmodel.MyShiftViewModel;
 import android.content.Intent;
 import com.example.cafe_manager.ui.communication.ChatMessageActivity;
 import com.example.cafe_manager.util.RepositoryCallback;
+import com.example.cafe_manager.data.local.entity.ShiftEntity;
 
 public class MyShiftActivity extends AppCompatActivity {
 
@@ -41,11 +42,6 @@ public class MyShiftActivity extends AppCompatActivity {
         rv.setLayoutManager(new LinearLayoutManager(this));
         adapter = new MyShiftAdapter(new MyShiftAdapter.OnMyShiftActionListener() {
             @Override
-            public void onConfirm(int assignmentId) {
-                viewModel.confirmAssignment(assignmentId);
-            }
-
-            @Override
             public void onCheckIn(int shiftId) {
                 viewModel.checkIn(shiftId);
             }
@@ -71,6 +67,19 @@ public class MyShiftActivity extends AppCompatActivity {
                         Toast.makeText(MyShiftActivity.this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
+            }
+
+            @Override
+            public void onLeaveRequest(ShiftEntity shift) {
+                if (shift == null) return;
+                long startAt = com.example.cafe_manager.util.ShiftTimeUtils.getShiftStartMillis(shift.getShiftDate(), shift.getStartTime());
+                long endAt = com.example.cafe_manager.util.ShiftTimeUtils.getShiftEndMillis(shift.getShiftDate(), shift.getStartTime(), shift.getEndTime());
+
+                Intent intent = new Intent(MyShiftActivity.this, com.example.cafe_manager.ui.leave.LeaveRequestActivity.class);
+                intent.putExtra("EXTRA_START_AT", startAt);
+                intent.putExtra("EXTRA_END_AT", endAt);
+                intent.putExtra("EXTRA_SHIFT_NAME", shift.getShiftName());
+                startActivity(intent);
             }
         });
         rv.setAdapter(adapter);

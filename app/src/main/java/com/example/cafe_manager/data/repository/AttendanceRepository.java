@@ -5,6 +5,7 @@ import android.content.Context;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.cafe_manager.data.local.AppDatabase;
 import com.example.cafe_manager.data.local.entity.AttendanceEntity;
 import com.example.cafe_manager.data.remote.ApiClient;
 import com.example.cafe_manager.data.remote.AttendanceApiService;
@@ -22,9 +23,11 @@ public class AttendanceRepository {
     private static volatile AttendanceRepository instance;
     private final AttendanceApiService apiService;
     private final AppExecutors exec;
+    private final Context appContext;
     private final MutableLiveData<List<AttendanceEntity>> allAttendancesCache = new MutableLiveData<>();
 
     private AttendanceRepository(Context ctx) {
+        this.appContext = ctx.getApplicationContext();
         this.apiService = ApiClient.getInstance(ctx).getService(AttendanceApiService.class);
         this.exec = AppExecutors.getInstance();
         refreshAttendances();
@@ -74,11 +77,23 @@ public class AttendanceRepository {
         exec.diskIO().execute(() -> {
             try {
                 retrofit2.Response<AttendanceResponse> response = apiService.checkIn(request).execute();
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
+                    AttendanceResponse r = response.body();
+                    AppDatabase db = AppDatabase.getInstance(appContext);
+                    AttendanceEntity entity = mapResponseToEntity(r);
+                    AttendanceEntity existing = db.attendanceDao().getByShiftAndUser(entity.getShiftId(), entity.getUserId());
+                    if (existing == null) {
+                        db.attendanceDao().insert(entity);
+                    } else {
+                        entity.setAttendanceId(existing.getAttendanceId());
+                        db.attendanceDao().update(entity);
+                    }
+                    
                     refreshAttendances();
                     exec.mainThread().execute(() -> callback.onSuccess(null));
                 } else {
-                    exec.mainThread().execute(() -> callback.onError(new Exception("Check-in thất bại")));
+                    Exception err = parseError(response, "Check-in thất bại");
+                    exec.mainThread().execute(() -> callback.onError(err));
                 }
             } catch (Exception e) {
                 exec.mainThread().execute(() -> callback.onError(e));
@@ -93,11 +108,23 @@ public class AttendanceRepository {
         exec.diskIO().execute(() -> {
             try {
                 retrofit2.Response<AttendanceResponse> response = apiService.checkOut(request).execute();
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
+                    AttendanceResponse r = response.body();
+                    AppDatabase db = AppDatabase.getInstance(appContext);
+                    AttendanceEntity entity = mapResponseToEntity(r);
+                    AttendanceEntity existing = db.attendanceDao().getByShiftAndUser(entity.getShiftId(), entity.getUserId());
+                    if (existing == null) {
+                        db.attendanceDao().insert(entity);
+                    } else {
+                        entity.setAttendanceId(existing.getAttendanceId());
+                        db.attendanceDao().update(entity);
+                    }
+                    
                     refreshAttendances();
                     exec.mainThread().execute(() -> callback.onSuccess(null));
                 } else {
-                    exec.mainThread().execute(() -> callback.onError(new Exception("Check-out thất bại")));
+                    Exception err = parseError(response, "Check-out thất bại");
+                    exec.mainThread().execute(() -> callback.onError(err));
                 }
             } catch (Exception e) {
                 exec.mainThread().execute(() -> callback.onError(e));
@@ -105,21 +132,61 @@ public class AttendanceRepository {
         });
     }
 
-    private void refreshAttendances() {
+    public void syncMyAttendances(RepositoryCallback<Void> callback) {
         exec.diskIO().execute(() -> {
             try {
                 retrofit2.Response<List<AttendanceResponse>> response = apiService.getAllAttendances().execute();
                 if (response.isSuccessful() && response.body() != null) {
                     List<AttendanceEntity> entities = new ArrayList<>();
-                    for (AttendanceResponse r : response.body()) {
-                        entities.add(mapResponseToEntity(r));
-                    }
+                    AppDatabase db = AppDatabase.getInstance(appContext);
+                    db.runInTransaction(() -> {
+                        for (AttendanceResponse r : response.body()) {
+                            AttendanceEntity entity = mapResponseToEntity(r);
+                            AttendanceEntity existing = db.attendanceDao().getByShiftAndUser(entity.getShiftId(), entity.getUserId());
+                            if (existing == null) {
+                                db.attendanceDao().insert(entity);
+                            } else {
+                                entity.setAttendanceId(existing.getAttendanceId());
+                                db.attendanceDao().update(entity);
+                            }
+                            entities.add(entity);
+                        }
+                    });
                     allAttendancesCache.postValue(entities);
+                    if (callback != null) {
+                        exec.mainThread().execute(() -> callback.onSuccess(null));
+                    }
+                } else {
+                    if (callback != null) {
+                        Exception err = parseError(response, "Đồng bộ điểm danh thất bại");
+                        exec.mainThread().execute(() -> callback.onError(err));
+                    }
                 }
             } catch (Exception e) {
-                // Log error
+                if (callback != null) {
+                    exec.mainThread().execute(() -> callback.onError(e));
+                }
             }
         });
+    }
+
+    private void refreshAttendances() {
+        syncMyAttendances(null);
+    }
+
+    private Exception parseError(retrofit2.Response<?> response, String defaultMsg) {
+        try {
+            if (response.errorBody() != null) {
+                String errorStr = response.errorBody().string();
+                org.json.JSONObject json = new org.json.JSONObject(errorStr);
+                if (json.has("message")) {
+                    return new Exception(json.getString("message"));
+                }
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+        return new Exception(defaultMsg);
     }
 
     private AttendanceEntity mapResponseToEntity(AttendanceResponse r) {

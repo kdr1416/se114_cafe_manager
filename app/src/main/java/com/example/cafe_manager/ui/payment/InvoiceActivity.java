@@ -34,6 +34,7 @@ public class InvoiceActivity extends AppCompatActivity {
     private TextView tvInvoiceCode, tvInvoiceTable;
     private TextView tvSubtotal, tvDiscount, tvFinalAmount;
     private TextView tvMethod, tvPaidAt;
+    private TextView tvCreatedBy, tvCashier;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +78,8 @@ public class InvoiceActivity extends AppCompatActivity {
         tvFinalAmount = findViewById(R.id.tv_final_amount);
         tvMethod = findViewById(R.id.tv_method);
         tvPaidAt = findViewById(R.id.tv_paid_at);
+        tvCreatedBy = findViewById(R.id.tv_created_by);
+        tvCashier = findViewById(R.id.tv_cashier);
 
         tvInvoiceTable.setText(tableName);
     }
@@ -96,6 +99,23 @@ public class InvoiceActivity extends AppCompatActivity {
         detailVm.getOrder().observe(this, order -> {
             if (order != null) {
                 tvInvoiceCode.setText("#" + order.getOrderCode());
+                if (order.getCreatedByUserId() > 0) {
+                    com.example.cafe_manager.util.AppExecutors.getInstance().diskIO().execute(() -> {
+                        com.example.cafe_manager.data.local.entity.UserEntity creator =
+                                com.example.cafe_manager.data.local.AppDatabase.getInstance(this).userDao().getById(order.getCreatedByUserId());
+                        if (creator != null) {
+                            com.example.cafe_manager.util.AppExecutors.getInstance().mainThread().execute(() -> {
+                                tvCreatedBy.setText(creator.getFullName());
+                            });
+                        } else {
+                            com.example.cafe_manager.util.AppExecutors.getInstance().mainThread().execute(() -> {
+                                tvCreatedBy.setText("Không rõ");
+                            });
+                        }
+                    });
+                } else {
+                    tvCreatedBy.setText("Không rõ");
+                }
             }
         });
 
@@ -114,6 +134,24 @@ public class InvoiceActivity extends AppCompatActivity {
             tvMethod.setText(StatusUtils.getPaymentMethodDisplayName(
                     payment.getPaymentMethod()));
             tvPaidAt.setText(DateTimeUtils.formatDateTime(payment.getPaidAt()));
+
+            if (payment.getCashierUserId() > 0) {
+                com.example.cafe_manager.util.AppExecutors.getInstance().diskIO().execute(() -> {
+                    com.example.cafe_manager.data.local.entity.UserEntity cashier =
+                            com.example.cafe_manager.data.local.AppDatabase.getInstance(this).userDao().getById(payment.getCashierUserId());
+                    if (cashier != null) {
+                        com.example.cafe_manager.util.AppExecutors.getInstance().mainThread().execute(() -> {
+                            tvCashier.setText(cashier.getFullName());
+                        });
+                    } else {
+                        com.example.cafe_manager.util.AppExecutors.getInstance().mainThread().execute(() -> {
+                            tvCashier.setText("Không rõ");
+                        });
+                    }
+                });
+            } else {
+                tvCashier.setText("Không rõ");
+            }
         });
     }
 
@@ -132,6 +170,10 @@ public class InvoiceActivity extends AppCompatActivity {
 
 
     private void navigateBackToTables() {
+        if (getIntent().getBooleanExtra("finish_only", false)) {
+            finish();
+            return;
+        }
         Intent intent = new Intent(this, TableActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
                 | Intent.FLAG_ACTIVITY_SINGLE_TOP);

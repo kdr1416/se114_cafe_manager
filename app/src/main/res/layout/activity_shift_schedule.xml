@@ -9,6 +9,40 @@
         android:id="@+id/top_bar"
         layout="@layout/component_top_bar" />
 
+    <!-- Week navigation -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="@dimen/spacing_md"
+        android:background="@color/surface"
+        android:gravity="center_vertical">
+
+        <ImageButton
+            android:id="@+id/btn_prev_week"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_chevron_left"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Tuần trước" />
+
+        <TextView
+            android:id="@+id/tv_week_range"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            style="@style/TextAppearance.Cafe.BodyBold" />
+
+        <ImageButton
+            android:id="@+id/btn_next_week"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_chevron_right"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Tuần sau" />
+    </LinearLayout>
+
     <!-- Date selector & Copy schedule -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -156,8 +190,79 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_shifts"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:padding="@dimen/spacing_lg"
         android:clipToPadding="false" />
+
+    <!-- Bottom Actions Container -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_card"
+        android:padding="@dimen/spacing_lg"
+        android:elevation="8dp"
+        android:layout_margin="@dimen/spacing_md">
+
+        <!-- Normal mode view: visible when selectionMode is GONE/false -->
+        <LinearLayout
+            android:id="@+id/layout_normal_mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Phát hành lịch ca"
+                style="@style/TextAppearance.Cafe.Subtitle"
+                android:textColor="@color/text_soft" />
+
+            <Button
+                android:id="@+id/btn_toggle_publish_mode"
+                style="@style/Widget.Cafe.Button.Primary"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/height_icon_button"
+                android:text="Phát hành" />
+        </LinearLayout>
+
+        <!-- Selection mode view: visible when selectionMode is VISIBLE/true -->
+        <LinearLayout
+            android:id="@+id/layout_publish_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tv_selection_count"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Đã chọn 0 ca"
+                style="@style/TextAppearance.Cafe.BodyBold"
+                android:textColor="@color/text_primary" />
+
+            <Button
+                android:id="@+id/btn_cancel_selection"
+                style="@style/Widget.Cafe.Button.Secondary"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/height_icon_button"
+                android:layout_marginEnd="@dimen/spacing_sm"
+                android:text="Hủy" />
+
+            <Button
+                android:id="@+id/btn_confirm_publish"
+                style="@style/Widget.Cafe.Button.Primary"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/height_icon_button"
+                android:text="Xác nhận" />
+        </LinearLayout>
+    </LinearLayout>
 
 </LinearLayout>

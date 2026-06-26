@@ -239,20 +239,16 @@ public class OrderRepository {
         MutableLiveData<List<OrderWithItems>> liveData = new MutableLiveData<>();
         appExecutors.diskIO().execute(() -> {
             try {
-                Response<List<OrderEntity>> resp = orderApiService.getAllOrders(Constants.ORDER_PAID).execute();
+                Response<List<OrderDetailResponse>> resp = orderApiService.getPaidOrdersHistory(fromMs, toMs).execute();
                 if (resp.isSuccessful() && resp.body() != null) {
                     List<OrderWithItems> result = new ArrayList<>();
-                    for (OrderEntity order : resp.body()) {
-                        long paidAt = order.getPaidAt();
-                        if (paidAt >= fromMs && paidAt <= toMs) {
-                            Response<OrderDetailResponse> detailResp = orderApiService.getOrderDetail(order.getOrderId()).execute();
-                            if (detailResp.isSuccessful() && detailResp.body() != null) {
-                                OrderWithItems owi = new OrderWithItems();
-                                owi.setOrder(order);
-                                owi.setItems(detailResp.body().getItems());
-                                owi.setTableName("Bàn " + order.getTableId());
-                                result.add(owi);
-                            }
+                    for (OrderDetailResponse detail : resp.body()) {
+                        if (detail.getOrder() != null) {
+                            OrderWithItems owi = new OrderWithItems();
+                            owi.setOrder(detail.getOrder());
+                            owi.setItems(detail.getItems());
+                            owi.setTableName("Bàn " + detail.getOrder().getTableId());
+                            result.add(owi);
                         }
                     }
                     liveData.postValue(result);
@@ -260,6 +256,7 @@ public class OrderRepository {
                     liveData.postValue(new ArrayList<>());
                 }
             } catch (Exception e) {
+                e.printStackTrace();
                 liveData.postValue(new ArrayList<>());
             }
         });

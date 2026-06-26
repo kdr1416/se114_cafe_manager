@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_primary">
+
+    <!-- Top Bar -->
+    <include
+        android:id="@+id/top_bar"
+        layout="@layout/component_top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true" />
+
+    <!-- Main Content -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/top_bar"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_lg">
+
+            <!-- Period Navigation & Mode Selector -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <ImageButton
+                    android:id="@+id/btn_prev_period"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_chevron_left"
+                    android:background="@drawable/bg_icon_button"
+                    android:scaleType="centerInside"
+                    android:contentDescription="Previous Period" />
+
+                <TextView
+                    android:id="@+id/tv_period_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:textAppearance="@style/TextAppearance.Cafe.BodyBold"
+                    tools:text="Tháng 6/2026" />
+
+                <ImageButton
+                    android:id="@+id/btn_next_period"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_chevron_right"
+                    android:background="@drawable/bg_icon_button"
+                    android:scaleType="centerInside"
+                    android:contentDescription="Next Period" />
+
+                <Button
+                    android:id="@+id/btn_view_year"
+                    style="@style/Widget.Cafe.Button.Secondary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:paddingHorizontal="@dimen/spacing_sm"
+                    android:layout_marginStart="@dimen/spacing_sm"
+                    android:text="Cả năm"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- Growth Indicator -->
+            <TextView
+                android:id="@+id/tv_growth"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Cafe.Body"
+                android:layout_marginBottom="@dimen/spacing_md"
+                android:gravity="center"
+                tools:text="▲ 12.5% so với tháng trước" />
+
+            <!-- Summary Cards -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/spacing_lg"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tổng doanh thu"
+                    android:textAppearance="@style/TextAppearance.Cafe.SectionLabel" />
+
+                <TextView
+                    android:id="@+id/tv_total_revenue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.Display"
+                    android:textColor="@color/accent"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    tools:text="15.000.000 ₫" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card"
+                    android:padding="@dimen/spacing_md"
+                    android:layout_marginEnd="@dimen/spacing_xs">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Số đơn hàng"
+                        android:textAppearance="@style/TextAppearance.Cafe.SectionLabel"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/tv_order_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.Cafe.Title"
+                        android:layout_marginTop="@dimen/spacing_xs"
+                        android:textSize="14sp"
+                        tools:text="120 đơn" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card"
+                    android:padding="@dimen/spacing_md"
+                    android:layout_marginHorizontal="@dimen/spacing_xs">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Trung bình/đơn"
+                        android:textAppearance="@style/TextAppearance.Cafe.SectionLabel"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/tv_avg_order"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.Cafe.Title"
+                        android:layout_marginTop="@dimen/spacing_xs"
+                        android:textSize="14sp"
+                        tools:text="125.000 ₫" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card"
+                    android:padding="@dimen/spacing_md"
+                    android:layout_marginStart="@dimen/spacing_xs">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tổng món bán"
+                        android:textAppearance="@style/TextAppearance.Cafe.SectionLabel"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/tv_total_items_sold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.Cafe.Title"
+                        android:layout_marginTop="@dimen/spacing_xs"
+                        android:textSize="14sp"
+                        tools:text="350 món" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Chart Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/spacing_lg"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <TextView
+                    android:id="@+id/tv_chart_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Doanh thu theo ngày"
+                    android:textAppearance="@style/TextAppearance.Cafe.SectionLabel"
+                    android:layout_marginBottom="@dimen/spacing_md" />
+
+                <com.github.mikephil.charting.charts.BarChart
+                    android:id="@+id/chart_daily_revenue"
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp" />
+            </LinearLayout>
+
+            <!-- Products Sold Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/spacing_lg"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Món ăn &amp; Đồ uống bán ra"
+                    android:textAppearance="@style/TextAppearance.Cafe.SectionLabel"
+                    android:layout_marginBottom="@dimen/spacing_md" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_products_sold"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false" />
+
+                <TextView
+                    android:id="@+id/tv_products_empty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Không có sản phẩm nào bán ra"
+                    android:textAppearance="@style/TextAppearance.Cafe.Body"
+                    android:textColor="@color/text_soft"
+                    android:gravity="center"
+                    android:padding="@dimen/spacing_md"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- Payment Method breakdown -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/spacing_lg">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Phương thức thanh toán"
+                    android:textAppearance="@style/TextAppearance.Cafe.SectionLabel"
+                    android:layout_marginBottom="@dimen/spacing_md" />
+
+                <!-- Cash Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingVertical="@dimen/spacing_sm">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_cash"
+                        android:layout_marginEnd="@dimen/spacing_md" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tiền mặt"
+                        android:textAppearance="@style/TextAppearance.Cafe.Body" />
+
+                    <TextView
+                        android:id="@+id/tv_method_cash_count"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                        android:textColor="@color/text_soft"
+                        android:layout_marginEnd="@dimen/spacing_md"
+                        tools:text="0 đơn" />
+
+                    <TextView
+                        android:id="@+id/tv_method_cash_revenue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.Cafe.BodyBold"
+                        tools:text="0 ₫" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/border"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:layout_marginBottom="@dimen/spacing_xs" />
+
+                <!-- Bank Transfer Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingVertical="@dimen/spacing_sm">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_bank_transfer"
+                        android:layout_marginEnd="@dimen/spacing_md" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Chuyển khoản"
+                        android:textAppearance="@style/TextAppearance.Cafe.Body" />
+
+                    <TextView
+                        android:id="@+id/tv_method_transfer_count"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                        android:textColor="@color/text_soft"
+                        android:layout_marginEnd="@dimen/spacing_md"
+                        tools:text="0 đơn" />
+
+                    <TextView
+                        android:id="@+id/tv_method_transfer_revenue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.Cafe.BodyBold"
+                        tools:text="0 ₫" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/border"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:layout_marginBottom="@dimen/spacing_xs" />
+
+                <!-- MoMo Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingVertical="@dimen/spacing_sm">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_momo"
+                        android:layout_marginEnd="@dimen/spacing_md" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ví MoMo"
+                        android:textAppearance="@style/TextAppearance.Cafe.Body" />
+
+                    <TextView
+                        android:id="@+id/tv_method_momo_count"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                        android:textColor="@color/text_soft"
+                        android:layout_marginEnd="@dimen/spacing_md"
+                        tools:text="0 đơn" />
+
+                    <TextView
+                        android:id="@+id/tv_method_momo_revenue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.Cafe.BodyBold"
+                        tools:text="0 ₫" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Loading overlay -->
+    <ProgressBar
+        android:id="@+id/progressLoading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone" />
+
+</RelativeLayout>

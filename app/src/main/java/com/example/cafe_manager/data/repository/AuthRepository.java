@@ -110,6 +110,30 @@ public class AuthRepository {
         });
     }
 
+    public void getActiveUsers(RepositoryCallback<List<UserEntity>> callback) {
+        userApiService.getAllUsers().enqueue(new Callback<List<UserResponse>>() {
+            @Override
+            public void onResponse(Call<List<UserResponse>> call, Response<List<UserResponse>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<UserEntity> activeUsers = new ArrayList<>();
+                    for (UserResponse r : response.body()) {
+                        if (r.isActive()) {
+                            activeUsers.add(mapResponseToEntity(r));
+                        }
+                    }
+                    appExecutors.mainThread().execute(() -> callback.onSuccess(activeUsers));
+                } else {
+                    appExecutors.mainThread().execute(() -> callback.onError(new Exception("Không thể tải danh sách nhân viên: " + response.code())));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<UserResponse>> call, Throwable t) {
+                appExecutors.mainThread().execute(() -> callback.onError(new Exception("Không có kết nối mạng", t)));
+            }
+        });
+    }
+
     public void login(String username, String password, RepositoryCallback<UserEntity> callback) {
         String trimmedUsername = username != null ? username.trim() : "";
         String trimmedPassword = password != null ? password.trim() : "";

@@ -6,6 +6,10 @@ public class PaymentResponse {
     private double discountAmount;
     private double finalAmount;
     private double changeAmount;
+    private Integer cashierUserId;
+    private String cashierFullName;
+    private String paymentMethod;
+    private Long paidAt;
 
     public int getPaymentId() {
         return paymentId;
@@ -45,5 +49,37 @@ public class PaymentResponse {
 
     public void setChangeAmount(double changeAmount) {
         this.changeAmount = changeAmount;
+    }
+
+    public Integer getCashierUserId() {
+        return cashierUserId;
+    }
+
+    public void setCashierUserId(Integer cashierUserId) {
+        this.cashierUserId = cashierUserId;
+    }
+
+    public String getCashierFullName() {
+        return cashierFullName;
+    }
+
+    public void setCashierFullName(String cashierFullName) {
+        this.cashierFullName = cashierFullName;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public Long getPaidAt() {
+        return paidAt;
+    }
+
+    public void setPaidAt(Long paidAt) {
+        this.paidAt = paidAt;
     }
 }

@@ -22,6 +22,9 @@ public interface AttendanceDao {
     @Query("SELECT * FROM attendance WHERE shift_id = :shiftId")
     LiveData<List<AttendanceEntity>> getByShift(int shiftId);
 
+    @Query("SELECT * FROM attendance WHERE shift_id = :shiftId")
+    List<AttendanceEntity> getByShiftSync(int shiftId);
+
     @Query("SELECT * FROM attendance WHERE user_id = :userId")
     LiveData<List<AttendanceEntity>> getByUser(int userId);
 

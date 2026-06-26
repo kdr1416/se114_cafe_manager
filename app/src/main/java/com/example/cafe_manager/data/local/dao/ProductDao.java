@@ -38,4 +38,7 @@ public interface ProductDao {
 
     @Query("SELECT COUNT(*) FROM products WHERE category_id = :categoryId")
     int getProductCountByCategory(int categoryId);
+
+    @Query("SELECT COUNT(*) FROM products WHERE is_active = 1")
+    int countAllActive();
 }

@@ -13,13 +13,19 @@ import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import java.util.Set;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafe_manager.R;
+import com.example.cafe_manager.util.WeekNavigationHelper;
 import com.example.cafe_manager.data.local.entity.ShiftAssignmentEntity;
 import com.example.cafe_manager.data.local.entity.ShiftEntity;
 import com.example.cafe_manager.data.local.entity.ShiftTemplateEntity;
@@ -29,6 +35,7 @@ import com.example.cafe_manager.util.PermissionUtils;
 import com.example.cafe_manager.util.RepositoryCallback;
 import com.example.cafe_manager.viewmodel.ShiftScheduleViewModel;
 import com.example.cafe_manager.ui.communication.ChatMessageActivity;
+import com.example.cafe_manager.ui.scheduling.SchedulingPreviewActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -42,11 +49,28 @@ public class ShiftScheduleActivity extends AppCompatActivity {
     private ShiftScheduleViewModel viewModel;
     private ShiftScheduleAdapter adapter;
     private TextView tvSelectedDate, tvEmpty;
+    private TextView tvWeekRange;
+    private ImageButton btnPrevWeek, btnNextWeek;
+    private long currentWeekStart;
+    private Button btnTogglePublishMode, btnConfirmPublish, btnCancelSelection;
+    private LinearLayout layoutPublishBar, layoutNormalMode;
+    private TextView tvSelectionCount;
+
+    private final List<LiveData<List<ShiftScheduleViewModel.ShiftDisplayItem>>> dayLiveDatas = new ArrayList<>();
+    private final MediatorLiveData<List<ShiftScheduleViewModel.ShiftDisplayItem>> weekShiftsMediator = new MediatorLiveData<>();
+    private final List<List<ShiftScheduleViewModel.ShiftDisplayItem>> weekDaysShifts = new ArrayList<>();
+    private final java.util.Locale localeVi = new java.util.Locale("vi", "VN");
     private final SimpleDateFormat sdf =
             new SimpleDateFormat("EEEE, dd/MM/yyyy", Locale.forLanguageTag("vi-VN"));
     
     // Thêm list này để tránh lỗi getValue() bị null do LiveData chưa load
     private List<ShiftTemplateEntity> currentTemplates = new ArrayList<>();
+
+    {
+        for (int i = 0; i < 7; i++) {
+            weekDaysShifts.add(new ArrayList<>());
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +80,7 @@ public class ShiftScheduleActivity extends AppCompatActivity {
         if (!PermissionUtils.requireRole(this, Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)) return;
 
         viewModel = new ViewModelProvider(this).get(ShiftScheduleViewModel.class);
+        currentWeekStart = WeekNavigationHelper.getCurrentWeekStart();
 
         // Top bar
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
@@ -63,10 +88,29 @@ public class ShiftScheduleActivity extends AppCompatActivity {
         ImageButton btnRight = findViewById(R.id.btn_right);
         btnRight.setVisibility(View.VISIBLE);
         btnRight.setImageResource(R.drawable.ic_plus);
-        btnRight.setOnClickListener(v -> showCreateShiftDialog());
+        btnRight.setOnClickListener(v -> showActionDialog());
 
         tvSelectedDate = findViewById(R.id.tv_selected_date);
         tvEmpty = findViewById(R.id.tv_empty);
+
+        // Week navigation setup
+        tvWeekRange = findViewById(R.id.tv_week_range);
+        btnPrevWeek = findViewById(R.id.btn_prev_week);
+        btnNextWeek = findViewById(R.id.btn_next_week);
+
+        tvWeekRange.setText(WeekNavigationHelper.formatWeekRange(currentWeekStart));
+        btnPrevWeek.setOnClickListener(v -> {
+            currentWeekStart = WeekNavigationHelper.addWeeks(currentWeekStart, -1);
+            tvWeekRange.setText(WeekNavigationHelper.formatWeekRange(currentWeekStart));
+            viewModel.setDate(currentWeekStart);
+            loadShiftsForWeek(currentWeekStart);
+        });
+        btnNextWeek.setOnClickListener(v -> {
+            currentWeekStart = WeekNavigationHelper.addWeeks(currentWeekStart, 1);
+            tvWeekRange.setText(WeekNavigationHelper.formatWeekRange(currentWeekStart));
+            viewModel.setDate(currentWeekStart);
+            loadShiftsForWeek(currentWeekStart);
+        });
 
         // Date selector click
         findViewById(R.id.layout_date_selector).setOnClickListener(v -> showDatePicker());
@@ -138,12 +182,15 @@ public class ShiftScheduleActivity extends AppCompatActivity {
         });
         rv.setAdapter(adapter);
 
-        // Observe shifts
-        viewModel.getShifts().observe(this, items -> {
-            adapter.setItems(items);
+        // Observe week shifts instead of daily shifts
+        weekShiftsMediator.observe(this, items -> {
+            List<ShiftScheduleViewModel.DisplayItem> withHeaders = insertDayHeaders(items);
+            adapter.submitList(withHeaders);
             boolean empty = items == null || items.isEmpty();
             tvEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
         });
+
+        loadShiftsForWeek(currentWeekStart);
 
         // QUAN TRỌNG: Observe templates để kích hoạt load dữ liệu từ DB (Sửa lỗi Spinner trống)
         viewModel.getTemplates().observe(this, templates -> {
@@ -194,6 +241,77 @@ public class ShiftScheduleActivity extends AppCompatActivity {
 
         // Set initial date label
         tvSelectedDate.setText(sdf.format(new Date(viewModel.getSelectedDate())));
+
+        // Wire batch publish controls
+        layoutNormalMode = findViewById(R.id.layout_normal_mode);
+        layoutPublishBar = findViewById(R.id.layout_publish_bar);
+        btnTogglePublishMode = findViewById(R.id.btn_toggle_publish_mode);
+        btnCancelSelection = findViewById(R.id.btn_cancel_selection);
+        btnConfirmPublish = findViewById(R.id.btn_confirm_publish);
+        tvSelectionCount = findViewById(R.id.tv_selection_count);
+
+        btnTogglePublishMode.setOnClickListener(v -> {
+            adapter.setSelectionMode(true);
+            layoutNormalMode.setVisibility(View.GONE);
+            layoutPublishBar.setVisibility(View.VISIBLE);
+            btnConfirmPublish.setEnabled(false);
+            tvSelectionCount.setText("Đã chọn 0 ca");
+        });
+
+        btnCancelSelection.setOnClickListener(v -> {
+            adapter.setSelectionMode(false);
+            layoutNormalMode.setVisibility(View.VISIBLE);
+            layoutPublishBar.setVisibility(View.GONE);
+            tvSelectionCount.setText("Đã chọn 0 ca");
+        });
+
+        adapter.setOnSelectionChangedListener(count -> {
+            tvSelectionCount.setText("Đã chọn " + count + " ca");
+            btnConfirmPublish.setEnabled(count > 0);
+        });
+
+        btnConfirmPublish.setOnClickListener(v -> {
+            Set<ShiftScheduleViewModel.ShiftDisplayItem> selected = adapter.getSelectedShifts();
+            if (selected.isEmpty()) return;
+
+            // 1. Client-side validation: minStaff check
+            for (ShiftScheduleViewModel.ShiftDisplayItem item : selected) {
+                if (item.assignedCount < item.minStaff) {
+                    new AlertDialog.Builder(this)
+                            .setTitle("Chưa đủ nhân sự")
+                            .setMessage("Ca \"" + item.shift.getShiftName() + "\" chưa đủ số lượng nhân sự tối thiểu (" + 
+                                    item.assignedCount + "/" + item.minStaff + "). Vui lòng phân công thêm trước khi phát hành.")
+                            .setPositiveButton("Đồng ý", null)
+                            .show();
+                    return;
+                }
+            }
+
+            // 2. Confirm publication
+            new AlertDialog.Builder(this)
+                    .setTitle("Phát hành ca")
+                    .setMessage("Phát hành " + selected.size() + " ca đã chọn?")
+                    .setPositiveButton("Phát hành", (d, w) -> {
+                        publishSelectedShifts(selected);
+                    })
+                    .setNegativeButton("Hủy", null)
+                    .show();
+        });
+    }
+
+    private void publishSelectedShifts(Set<ShiftScheduleViewModel.ShiftDisplayItem> selectedItems) {
+        int total = selectedItems.size();
+        Toast.makeText(this, "Đang xử lý phát hành " + total + " ca...", Toast.LENGTH_SHORT).show();
+        
+        for (ShiftScheduleViewModel.ShiftDisplayItem item : selectedItems) {
+            viewModel.publishShift(item.shift.getShiftId());
+        }
+
+        // Exit selection mode and refresh
+        adapter.setSelectionMode(false);
+        layoutNormalMode.setVisibility(View.VISIBLE);
+        layoutPublishBar.setVisibility(View.GONE);
+        viewModel.refresh();
     }
 
     private void showCopyScheduleDialog() {
@@ -248,6 +366,7 @@ public class ShiftScheduleActivity extends AppCompatActivity {
         super.onResume();
         // Refresh khi quay lại từ ShiftCloseActivity
         viewModel.setDate(viewModel.getSelectedDate());
+        loadShiftsForWeek(currentWeekStart);
     }
 
     private void showDatePicker() {
@@ -261,8 +380,54 @@ public class ShiftScheduleActivity extends AppCompatActivity {
             long date = c.getTimeInMillis();
             viewModel.setDate(date);
             tvSelectedDate.setText(sdf.format(new Date(date)));
+
+            // Đồng bộ thanh chuyển tuần
+            currentWeekStart = WeekNavigationHelper.getWeekStart(date);
+            tvWeekRange.setText(WeekNavigationHelper.formatWeekRange(currentWeekStart));
+            loadShiftsForWeek(currentWeekStart);
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH))
                 .show();
+    }
+
+    private void loadShiftsForWeek(long weekStart) {
+        // Hủy đăng ký các LiveData cũ
+        for (LiveData<?> ld : dayLiveDatas) {
+            weekShiftsMediator.removeSource(ld);
+        }
+        dayLiveDatas.clear();
+
+        for (int i = 0; i < 7; i++) {
+            weekDaysShifts.get(i).clear();
+        }
+
+        for (int i = 0; i < 7; i++) {
+            final int dayIndex = i;
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(weekStart);
+            cal.add(Calendar.DATE, dayIndex);
+            long dateEpoch = cal.getTimeInMillis();
+
+            LiveData<List<ShiftScheduleViewModel.ShiftDisplayItem>> dayLive = viewModel.loadShiftsForDate(dateEpoch);
+            dayLiveDatas.add(dayLive);
+
+            weekShiftsMediator.addSource(dayLive, dayShifts -> {
+                weekDaysShifts.set(dayIndex, dayShifts != null ? dayShifts : new ArrayList<>());
+
+                List<ShiftScheduleViewModel.ShiftDisplayItem> combined = new ArrayList<>();
+                for (List<ShiftScheduleViewModel.ShiftDisplayItem> list : weekDaysShifts) {
+                    combined.addAll(list);
+                }
+
+                // Sắp xếp ca theo ngày tăng dần, sau đó theo giờ bắt đầu tăng dần
+                java.util.Collections.sort(combined, (a, b) -> {
+                    int dateCmp = Long.compare(a.shift.getShiftDate(), b.shift.getShiftDate());
+                    if (dateCmp != 0) return dateCmp;
+                    return a.shift.getStartTime().compareTo(b.shift.getStartTime());
+                });
+
+                weekShiftsMediator.setValue(combined);
+            });
+        }
     }
 
     private void showCreateShiftDialog() {
@@ -414,5 +579,37 @@ public class ShiftScheduleActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("Hủy", null)
                 .show();
+    }
+
+    private void showActionDialog() {
+        String[] options = {"Tạo ca thủ công", "Tự động sắp xếp ca"};
+        new AlertDialog.Builder(this)
+                .setTitle("Tùy chọn lập lịch")
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        showCreateShiftDialog();
+                    } else if (which == 1) {
+                        Intent intent = new Intent(ShiftScheduleActivity.this, SchedulingPreviewActivity.class);
+                        startActivity(intent);
+                    }
+                })
+                .show();
+    }
+
+    private List<ShiftScheduleViewModel.DisplayItem> insertDayHeaders(List<ShiftScheduleViewModel.ShiftDisplayItem> sortedShifts) {
+        List<ShiftScheduleViewModel.DisplayItem> result = new ArrayList<>();
+        if (sortedShifts == null) return result;
+        long lastDate = -1;
+        SimpleDateFormat daySdf = new SimpleDateFormat("EEE, dd/MM", localeVi);
+        for (ShiftScheduleViewModel.ShiftDisplayItem item : sortedShifts) {
+            long shiftDate = item.shift.getShiftDate();
+            if (shiftDate != lastDate) {
+                lastDate = shiftDate;
+                String label = daySdf.format(new Date(shiftDate));
+                result.add(new ShiftScheduleViewModel.DayHeaderItem(label, shiftDate));
+            }
+            result.add(item);
+        }
+        return result;
     }
 }

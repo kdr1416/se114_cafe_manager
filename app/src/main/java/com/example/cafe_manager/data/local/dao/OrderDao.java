@@ -69,4 +69,9 @@ public interface OrderDao {
     /** Đếm đơn đã thanh toán trong ca X. */
     @Query("SELECT COUNT(*) FROM orders WHERE created_shift_id = :shiftId AND status = 'PAID'")
     int countPaidByShift(int shiftId);
+
+    @Query("SELECT COUNT(*) FROM orders WHERE created_by_user_id = :userId " +
+           "AND created_shift_id IN (SELECT shift_id FROM shifts WHERE shift_date BETWEEN :from AND :to) " +
+           "AND status != 'CANCELLED'")
+    int countOrdersByUserInRange(int userId, long from, long to);
 }

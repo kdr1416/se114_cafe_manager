@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/bg_primary">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/spacing_lg">
+
+        <!-- Row of 3 System Stat Cards (ADMIN exclusive) -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tổng quan hệ thống"
+            android:textAppearance="@style/TextAppearance.Cafe.SectionLabel"
+            android:layout_marginBottom="@dimen/spacing_sm" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="3"
+            android:layout_marginBottom="@dimen/spacing_lg">
+
+            <!-- Stat 1: Total Staff in System -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/spacing_md"
+                android:layout_marginEnd="4dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nhân sự"
+                    android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                    android:textColor="@color/text_soft" />
+
+                <TextView
+                    android:id="@+id/tv_stat_system_users"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.Subtitle"
+                    android:textColor="@color/accent"
+                    android:layout_marginTop="4dp"
+                    tools:text="15 NV" />
+            </LinearLayout>
+
+            <!-- Stat 2: Total Tables in System -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/spacing_md"
+                android:layout_marginHorizontal="2dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Số bàn"
+                    android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                    android:textColor="@color/text_soft" />
+
+                <TextView
+                    android:id="@+id/tv_stat_system_tables"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.Subtitle"
+                    android:textColor="@color/accent"
+                    android:layout_marginTop="4dp"
+                    tools:text="8 bàn" />
+            </LinearLayout>
+
+            <!-- Stat 3: Total Products in System -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/spacing_md"
+                android:layout_marginStart="4dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sản phẩm"
+                    android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                    android:textColor="@color/text_soft" />
+
+                <TextView
+                    android:id="@+id/tv_stat_system_products"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.Subtitle"
+                    android:textColor="@color/accent"
+                    android:layout_marginTop="4dp"
+                    tools:text="24 SP" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Today's Shifts Title -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Trạng thái ca hôm nay"
+            android:textAppearance="@style/TextAppearance.Cafe.SectionLabel"
+            android:layout_marginBottom="@dimen/spacing_sm" />
+
+        <!-- Today's Shifts RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_today_shifts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"
+            tools:listitem="@layout/item_today_shift" />
+
+        <TextView
+            android:id="@+id/tv_no_shifts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Hôm nay không có ca làm việc nào."
+            android:textAppearance="@style/TextAppearance.Cafe.Caption"
+            android:gravity="center"
+            android:paddingVertical="@dimen/spacing_xl"
+            android:visibility="gone" />
+
+        <!-- Staff Breakdown Card (ADMIN exclusive) -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tổng quan nhân sự"
+            android:textAppearance="@style/TextAppearance.Cafe.SectionLabel"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:layout_marginBottom="@dimen/spacing_sm" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:padding="@dimen/spacing_lg"
+            android:layout_marginBottom="@dimen/spacing_md">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="@dimen/spacing_sm">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="ADMIN"
+                    android:textAppearance="@style/TextAppearance.Cafe.Body" />
+
+                <TextView
+                    android:id="@+id/tv_count_admin"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.BodyBold"
+                    tools:text="1" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="@dimen/spacing_sm">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="MANAGER"
+                    android:textAppearance="@style/TextAppearance.Cafe.Body" />
+
+                <TextView
+                    android:id="@+id/tv_count_manager"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.BodyBold"
+                    tools:text="2" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="@dimen/spacing_sm">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="STAFF"
+                    android:textAppearance="@style/TextAppearance.Cafe.Body" />
+
+                <TextView
+                    android:id="@+id/tv_count_staff"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.BodyBold"
+                    tools:text="12" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/border"
+                android:layout_marginVertical="@dimen/spacing_sm" />
+
+            <TextView
+                android:id="@+id/tv_user_active_ratio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                android:textColor="@color/text_soft"
+                tools:text="Đang hoạt động: 15/18" />
+        </LinearLayout>
+
+        <!-- Business Report Title -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Báo cáo doanh thu"
+            android:textAppearance="@style/TextAppearance.Cafe.SectionLabel"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:layout_marginBottom="@dimen/spacing_sm" />
+
+        <!-- Period chips -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="@dimen/spacing_lg">
+
+            <TextView
+                android:id="@+id/chip_today"
+                style="@style/Widget.Cafe.Chip"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Hôm nay"
+                android:layout_marginEnd="@dimen/spacing_sm" />
+
+            <TextView
+                android:id="@+id/chip_week"
+                style="@style/Widget.Cafe.Chip"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Tuần"
+                android:layout_marginEnd="@dimen/spacing_sm" />
+
+            <TextView
+                android:id="@+id/chip_month"
+                style="@style/Widget.Cafe.Chip"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Tháng" />
+        </LinearLayout>
+
+        <!-- Revenue card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:padding="@dimen/spacing_xl">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Doanh thu"
+                android:textAppearance="@style/TextAppearance.Cafe.SectionLabel" />
+
+            <TextView
+                android:id="@+id/tv_revenue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Cafe.Display"
+                android:textColor="@color/accent"
+                android:layout_marginTop="@dimen/spacing_sm"
+                tools:text="1.500.000 ₫" />
+        </LinearLayout>
+
+        <!-- 2 stat cards -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="@dimen/spacing_md">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/spacing_lg"
+                android:layout_marginEnd="@dimen/spacing_md">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Số order"
+                    android:textAppearance="@style/TextAppearance.Cafe.Caption" />
+
+                <TextView
+                    android:id="@+id/tv_order_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.Subtitle"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    tools:text="12" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/spacing_lg">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Trung bình/order"
+                    android:textAppearance="@style/TextAppearance.Cafe.Caption" />
+
+                <TextView
+                    android:id="@+id/tv_avg_order"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.Subtitle"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    tools:text="125.000 ₫" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Revenue bar chart -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:padding="@dimen/spacing_lg"
+            android:layout_marginTop="@dimen/spacing_md">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Biểu đồ doanh thu"
+                android:textAppearance="@style/TextAppearance.Cafe.SectionLabel" />
+
+            <com.github.mikephil.charting.charts.BarChart
+                android:id="@+id/chart_revenue"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginTop="@dimen/spacing_sm" />
+
+            <TextView
+                android:id="@+id/tv_chart_empty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Chưa có dữ liệu."
+                android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                android:gravity="center"
+                android:paddingVertical="@dimen/spacing_xl"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Payment method pie chart -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:padding="@dimen/spacing_lg"
+            android:layout_marginTop="@dimen/spacing_md">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Phương thức thanh toán"
+                android:textAppearance="@style/TextAppearance.Cafe.SectionLabel" />
+
+            <com.github.mikephil.charting.charts.PieChart
+                android:id="@+id/chart_payment"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginTop="@dimen/spacing_sm" />
+
+            <LinearLayout
+                android:id="@+id/row_cash_stats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="@dimen/spacing_sm"
+                android:layout_marginTop="@dimen/spacing_sm">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="@string/payment_cash"
+                    android:textAppearance="@style/TextAppearance.Cafe.Body" />
+
+                <TextView
+                    android:id="@+id/tv_cash_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                    android:layout_marginEnd="@dimen/spacing_md"
+                    tools:text="8 order" />
+
+                <TextView
+                    android:id="@+id/tv_cash_revenue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.BodyBold"
+                    tools:text="900.000 ₫" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/row_banking_stats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="@dimen/spacing_sm">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="@string/payment_banking"
+                    android:textAppearance="@style/TextAppearance.Cafe.Body" />
+
+                <TextView
+                    android:id="@+id/tv_banking_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                    android:layout_marginEnd="@dimen/spacing_md"
+                    tools:text="3 order" />
+
+                <TextView
+                    android:id="@+id/tv_banking_revenue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.BodyBold"
+                    tools:text="450.000 ₫" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/row_momo_stats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="@dimen/spacing_sm">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="@string/payment_momo"
+                    android:textAppearance="@style/TextAppearance.Cafe.Body" />
+
+                <TextView
+                    android:id="@+id/tv_momo_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                    android:layout_marginEnd="@dimen/spacing_md"
+                    tools:text="1 order" />
+
+                <TextView
+                    android:id="@+id/tv_momo_revenue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Cafe.BodyBold"
+                    tools:text="150.000 ₫" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Top products -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:padding="@dimen/spacing_lg"
+            android:layout_marginTop="@dimen/spacing_md">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Top 5 món bán chạy"
+                android:textAppearance="@style/TextAppearance.Cafe.SectionLabel" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_top_products"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:layout_marginTop="@dimen/spacing_sm"
+                tools:listitem="@layout/item_top_product" />
+
+            <TextView
+                android:id="@+id/tv_top_empty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Chưa có dữ liệu."
+                android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                android:gravity="center"
+                android:paddingVertical="@dimen/spacing_lg"
+                android:visibility="gone" />
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

@@ -59,6 +59,9 @@ public interface ShiftApiService {
     @GET("api/v1/shifts/{id}/report")
     Call<ShiftReportResponse> getShiftReport(@Path("id") int id);
 
+    @GET("api/v1/shifts/daily-report")
+    Call<DailyShiftReportResponse> getDailyShiftReport(@Query("date") String date);
+
     @GET("api/v1/shifts/{id}/assignments")
     Call<List<ShiftAssignmentResponse>> getAssignments(@Path("id") int id);
 
@@ -68,4 +71,7 @@ public interface ShiftApiService {
 
     @PUT("api/v1/assignments/{assignmentId}/confirm")
     Call<Void> confirmAssignment(@Path("assignmentId") int assignmentId);
+
+    @GET("api/v1/shifts/assignments/me")
+    Call<List<ShiftAssignmentResponse>> getMyAssignments();
 }

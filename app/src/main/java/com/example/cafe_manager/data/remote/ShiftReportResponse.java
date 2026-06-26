@@ -25,8 +25,12 @@ public class ShiftReportResponse {
     private List<PaymentMethodStatsResponse> paymentMethodStats;
     private List<ProductSoldSummary> topProducts;
     private List<StaffAttendanceSummary> attendanceList;
+    private List<ShiftOrderResponse> orderHistory;
 
     public ShiftReportResponse() {}
+
+    public List<ShiftOrderResponse> getOrderHistory() { return orderHistory; }
+    public void setOrderHistory(List<ShiftOrderResponse> orderHistory) { this.orderHistory = orderHistory; }
 
     public int getShiftId() { return shiftId; }
     public void setShiftId(int shiftId) { this.shiftId = shiftId; }
@@ -157,5 +161,42 @@ public class ShiftReportResponse {
 
         public String getNotes() { return notes; }
         public void setNotes(String notes) { this.notes = notes; }
+    }
+
+    public static class ShiftOrderResponse {
+        private Integer orderId;
+        private String orderCode;
+        private String tableName;
+        private Double totalAmount;
+        private String status;
+        private String paymentMethod;
+        private Long paidAt;
+        private String cashierName;
+
+        public ShiftOrderResponse() {}
+
+        public Integer getOrderId() { return orderId; }
+        public void setOrderId(Integer orderId) { this.orderId = orderId; }
+
+        public String getOrderCode() { return orderCode; }
+        public void setOrderCode(String orderCode) { this.orderCode = orderCode; }
+
+        public String getTableName() { return tableName; }
+        public void setTableName(String tableName) { this.tableName = tableName; }
+
+        public Double getTotalAmount() { return totalAmount; }
+        public void setTotalAmount(Double totalAmount) { this.totalAmount = totalAmount; }
+
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
+
+        public String getPaymentMethod() { return paymentMethod; }
+        public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
+        public Long getPaidAt() { return paidAt; }
+        public void setPaidAt(Long paidAt) { this.paidAt = paidAt; }
+
+        public String getCashierName() { return cashierName; }
+        public void setCashierName(String cashierName) { this.cashierName = cashierName; }
     }
 }

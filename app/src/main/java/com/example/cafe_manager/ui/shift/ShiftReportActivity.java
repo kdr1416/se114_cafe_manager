@@ -1,5 +1,6 @@
 package com.example.cafe_manager.ui.shift;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -8,6 +9,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cafe_manager.R;
 import com.example.cafe_manager.data.local.entity.ShiftCashSessionEntity;
@@ -26,6 +29,9 @@ public class ShiftReportActivity extends AppCompatActivity {
     private TextView tvOpeningCash, tvExpectedCash, tvActualCash, tvCashDifference;
     private TextView tvUnpaidCount;
     private LinearLayout layoutUnpaid;
+    private RecyclerView rvOrderHistory;
+    private ShiftOrderHistoryAdapter orderHistoryAdapter;
+    private TextView tvNoOrders;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +57,19 @@ public class ShiftReportActivity extends AppCompatActivity {
         tvCashDifference = findViewById(R.id.tv_cash_difference);
         tvUnpaidCount = findViewById(R.id.tv_unpaid_count);
         layoutUnpaid = findViewById(R.id.layout_unpaid);
+        rvOrderHistory = findViewById(R.id.rv_order_history);
+        tvNoOrders = findViewById(R.id.tv_no_orders);
+
+        // Setup order history recyclerview
+        rvOrderHistory.setLayoutManager(new LinearLayoutManager(this));
+        orderHistoryAdapter = new ShiftOrderHistoryAdapter(order -> {
+            Intent intent = new Intent(ShiftReportActivity.this, com.example.cafe_manager.ui.payment.InvoiceActivity.class);
+            intent.putExtra(com.example.cafe_manager.ui.payment.InvoiceActivity.EXTRA_ORDER_ID, order.getOrderId());
+            intent.putExtra(com.example.cafe_manager.ui.payment.InvoiceActivity.EXTRA_TABLE_NAME, order.getTableName());
+            intent.putExtra("finish_only", true);
+            startActivity(intent);
+        });
+        rvOrderHistory.setAdapter(orderHistoryAdapter);
 
         // Load
         int shiftId = getIntent().getIntExtra(EXTRA_SHIFT_ID, -1);
@@ -107,6 +126,18 @@ public class ShiftReportActivity extends AppCompatActivity {
                 tvExpectedCash.setText("—");
                 tvActualCash.setText("—");
                 tvCashDifference.setText("—");
+            }
+        });
+
+        // Observe detailed report (for order history)
+        viewModel.getReportDetails().observe(this, report -> {
+            if (report != null && report.getOrderHistory() != null && !report.getOrderHistory().isEmpty()) {
+                orderHistoryAdapter.submitList(report.getOrderHistory());
+                rvOrderHistory.setVisibility(View.VISIBLE);
+                tvNoOrders.setVisibility(View.GONE);
+            } else {
+                rvOrderHistory.setVisibility(View.GONE);
+                tvNoOrders.setVisibility(View.VISIBLE);
             }
         });
 

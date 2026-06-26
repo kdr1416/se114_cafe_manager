@@ -9,6 +9,7 @@ import com.example.cafe_manager.data.remote.ApiClient;
 import com.example.cafe_manager.data.remote.CloseShiftRequest;
 import com.example.cafe_manager.data.remote.ShiftApiService;
 import com.example.cafe_manager.data.remote.ShiftReportResponse;
+import com.example.cafe_manager.data.remote.DailyShiftReportResponse;
 import com.example.cafe_manager.data.remote.ShiftResponse;
 import com.example.cafe_manager.model.PaymentMethodStatsRow;
 import com.example.cafe_manager.util.AppExecutors;
@@ -134,6 +135,42 @@ public class ShiftReportRepository {
             }
         });
         return liveData;
+    }
+
+    public void getShiftReportDetails(int shiftId, RepositoryCallback<ShiftReportResponse> callback) {
+        apiService.getShiftReport(shiftId).enqueue(new Callback<ShiftReportResponse>() {
+            @Override
+            public void onResponse(Call<ShiftReportResponse> call, Response<ShiftReportResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError(new Exception("Lỗi khi tải chi tiết báo cáo ca: " + response.code()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ShiftReportResponse> call, Throwable t) {
+                callback.onError(new Exception("Lỗi kết nối khi tải chi tiết báo cáo ca: " + t.getMessage(), t));
+            }
+        });
+    }
+
+    public void getDailyShiftReport(String date, RepositoryCallback<DailyShiftReportResponse> callback) {
+        apiService.getDailyShiftReport(date).enqueue(new Callback<DailyShiftReportResponse>() {
+            @Override
+            public void onResponse(Call<DailyShiftReportResponse> call, Response<DailyShiftReportResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError(new Exception("Lỗi khi tải báo cáo ngày: " + response.code()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<DailyShiftReportResponse> call, Throwable t) {
+                callback.onError(new Exception("Lỗi kết nối khi tải báo cáo ngày: " + t.getMessage(), t));
+            }
+        });
     }
 
     /** Lấy tổng doanh thu theo ca (background, không LiveData). */

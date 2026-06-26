@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="@dimen/spacing_lg">
+
+    <EditText
+        android:id="@+id/etReviewNote"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@drawable/bg_input"
+        android:gravity="top|start"
+        android:hint="Nhập nội dung phản hồi..."
+        android:inputType="textMultiLine"
+        android:padding="@dimen/spacing_md"
+        android:textSize="14sp"
+        android:textColor="@color/text_primary" />
+
+</LinearLayout>

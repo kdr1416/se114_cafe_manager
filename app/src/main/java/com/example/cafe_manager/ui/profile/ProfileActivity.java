@@ -17,6 +17,9 @@ import com.example.cafe_manager.data.local.entity.UserEntity;
 import com.example.cafe_manager.manager.CartManager;
 import com.example.cafe_manager.manager.SessionManager;
 import com.example.cafe_manager.ui.auth.LoginActivity;
+import com.example.cafe_manager.ui.availability.MyAvailabilityActivity;
+import com.example.cafe_manager.ui.leave.LeaveRequestActivity;
+import com.example.cafe_manager.ui.leave.LeaveApprovalActivity;
 import com.example.cafe_manager.viewmodel.ProfileViewModel;
 
 public class ProfileActivity extends AppCompatActivity {
@@ -62,9 +65,25 @@ public class ProfileActivity extends AppCompatActivity {
         tvRole = findViewById(R.id.tv_role);
         tvPhone = findViewById(R.id.tv_phone);
 
+        Button btnMyAvailability = findViewById(R.id.btn_my_availability);
+        Button btnLeaveApproval = findViewById(R.id.btn_leave_approval);
+        Button btnLeaveRequest = findViewById(R.id.btn_leave_request);
         Button btnChangePassword = findViewById(R.id.btn_change_password);
         Button btnLogout = findViewById(R.id.btn_logout);
 
+        SessionManager session = SessionManager.getInstance(this);
+        if (session.isAdmin() || session.isManager()) {
+            btnLeaveApproval.setVisibility(View.VISIBLE);
+        } else {
+            btnLeaveApproval.setVisibility(View.GONE);
+        }
+
+        btnLeaveApproval.setOnClickListener(v ->
+                startActivity(new Intent(this, LeaveApprovalActivity.class)));
+        btnMyAvailability.setOnClickListener(v ->
+                startActivity(new Intent(this, MyAvailabilityActivity.class)));
+        btnLeaveRequest.setOnClickListener(v ->
+                startActivity(new Intent(this, LeaveRequestActivity.class)));
         btnChangePassword.setOnClickListener(v ->
                 startActivity(new Intent(this, ChangePasswordActivity.class)));
         btnLogout.setOnClickListener(v -> showLogoutDialog());

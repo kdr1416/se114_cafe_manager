@@ -7,6 +7,8 @@ public class ShiftTemplateResponse {
     private String endTime;
     private int minStaff;
     private boolean isActive;
+    private Long effectiveFromDate;
+    private Long effectiveToDate;
     private Long createdAt;
 
     public ShiftTemplateResponse() {}
@@ -31,4 +33,10 @@ public class ShiftTemplateResponse {
 
     public Long getCreatedAt() { return createdAt; }
     public void setCreatedAt(Long createdAt) { this.createdAt = createdAt; }
+
+    public Long getEffectiveFromDate() { return effectiveFromDate; }
+    public void setEffectiveFromDate(Long effectiveFromDate) { this.effectiveFromDate = effectiveFromDate; }
+
+    public Long getEffectiveToDate() { return effectiveToDate; }
+    public void setEffectiveToDate(Long effectiveToDate) { this.effectiveToDate = effectiveToDate; }
 }

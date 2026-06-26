@@ -26,6 +26,7 @@ import com.example.cafe_manager.manager.SessionManager;
 import com.example.cafe_manager.ui.admin.AdminMenuActivity;
 import com.example.cafe_manager.ui.auth.LoginActivity;
 import com.example.cafe_manager.ui.dashboard.DashboardActivity;
+import com.example.cafe_manager.ui.dashboard.RevenueReportActivity;
 import com.example.cafe_manager.ui.history.HistoryActivity;
 import com.example.cafe_manager.ui.menu.MenuActivity;
 import com.example.cafe_manager.ui.orderslist.OrdersListActivity;
@@ -35,9 +36,13 @@ import com.example.cafe_manager.ui.user.UserManagementActivity;
 import com.example.cafe_manager.ui.menu.CategoryManagementActivity;
 import com.example.cafe_manager.ui.shift.ShiftCloseActivity;
 import com.example.cafe_manager.ui.shift.ShiftReportActivity;
+import com.example.cafe_manager.ui.shift.DailyShiftReportActivity;
 import com.example.cafe_manager.ui.shift.ShiftTemplateActivity;
 import com.example.cafe_manager.ui.shift.ShiftScheduleActivity;
 import com.example.cafe_manager.ui.shift.MyShiftActivity;
+import com.example.cafe_manager.ui.leave.LeaveRequestActivity;
+import com.example.cafe_manager.ui.leave.LeaveApprovalActivity;
+import com.example.cafe_manager.ui.attendance.AttendanceReportActivity;
 import com.example.cafe_manager.data.local.AppDatabase;
 import com.example.cafe_manager.data.local.entity.ShiftEntity;
 import com.example.cafe_manager.util.AppExecutors;
@@ -183,10 +188,13 @@ public class TableActivity extends AppCompatActivity {
         sheet.findViewById(R.id.row_categories).setVisibility(
                 PermissionUtils.canManageCategories(role) ? View.VISIBLE : View.GONE);
         boolean canManageShifts = PermissionUtils.canManageShifts(role);
-        sheet.findViewById(R.id.row_close_shift).setVisibility(canManageShifts ? View.VISIBLE : View.GONE);
         sheet.findViewById(R.id.row_shift_report).setVisibility(canManageShifts ? View.VISIBLE : View.GONE);
         sheet.findViewById(R.id.row_shift_template).setVisibility(canManageShifts ? View.VISIBLE : View.GONE);
         sheet.findViewById(R.id.row_shift_schedule).setVisibility(canManageShifts ? View.VISIBLE : View.GONE);
+        sheet.findViewById(R.id.row_leave_approval).setVisibility(
+                (Constants.ROLE_ADMIN.equals(role) || Constants.ROLE_MANAGER.equals(role)) ? View.VISIBLE : View.GONE);
+        sheet.findViewById(R.id.row_attendance_report).setVisibility(
+                (Constants.ROLE_ADMIN.equals(role) || Constants.ROLE_MANAGER.equals(role)) ? View.VISIBLE : View.GONE);
 
         // ----- Click handlers (IDs preserved, same navigation code) -----
         sheet.findViewById(R.id.row_profile).setOnClickListener(v -> {
@@ -198,6 +206,18 @@ public class TableActivity extends AppCompatActivity {
             dialog.dismiss();
             // case 13
             startActivity(new Intent(this, MyShiftActivity.class));
+        });
+        sheet.findViewById(R.id.row_my_availability).setOnClickListener(v -> {
+            dialog.dismiss();
+            startActivity(new Intent(this, com.example.cafe_manager.ui.availability.MyAvailabilityActivity.class));
+        });
+        sheet.findViewById(R.id.row_leave_request).setOnClickListener(v -> {
+            dialog.dismiss();
+            startActivity(new Intent(this, LeaveRequestActivity.class));
+        });
+        sheet.findViewById(R.id.row_leave_approval).setOnClickListener(v -> {
+            dialog.dismiss();
+            startActivity(new Intent(this, LeaveApprovalActivity.class));
         });
         sheet.findViewById(R.id.row_history).setOnClickListener(v -> {
             dialog.dismiss();
@@ -217,12 +237,16 @@ public class TableActivity extends AppCompatActivity {
         sheet.findViewById(R.id.row_dashboard).setOnClickListener(v -> {
             dialog.dismiss();
             // case 2
-            startActivity(new Intent(this, DashboardActivity.class));
+            startActivity(new Intent(this, RevenueReportActivity.class));
         });
         sheet.findViewById(R.id.row_users).setOnClickListener(v -> {
             dialog.dismiss();
             // case 5
             startActivity(new Intent(this, UserManagementActivity.class));
+        });
+        sheet.findViewById(R.id.row_attendance_report).setOnClickListener(v -> {
+            dialog.dismiss();
+            startActivity(new Intent(this, AttendanceReportActivity.class));
         });
         sheet.findViewById(R.id.row_tables).setOnClickListener(v -> {
             dialog.dismiss();
@@ -239,15 +263,10 @@ public class TableActivity extends AppCompatActivity {
             // case 8
             startActivity(new Intent(this, CategoryManagementActivity.class));
         });
-        sheet.findViewById(R.id.row_close_shift).setOnClickListener(v -> {
-            dialog.dismiss();
-            // case 9
-            launchShiftActivity(ShiftCloseActivity.class);
-        });
         sheet.findViewById(R.id.row_shift_report).setOnClickListener(v -> {
             dialog.dismiss();
             // case 10
-            launchShiftActivity(ShiftReportActivity.class);
+            startActivity(new Intent(this, DailyShiftReportActivity.class));
         });
         sheet.findViewById(R.id.row_shift_template).setOnClickListener(v -> {
             dialog.dismiss();

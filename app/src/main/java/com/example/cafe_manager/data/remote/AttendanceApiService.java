@@ -22,4 +22,10 @@ public interface AttendanceApiService {
 
     @GET("api/v1/attendances/shift/{shiftId}")
     Call<List<AttendanceResponse>> getAttendancesForShift(@Path("shiftId") int shiftId);
+
+    @GET("api/v1/attendances/report/team")
+    Call<List<TeamAttendanceSummary>> getTeamReport(@retrofit2.http.Query("year") int year, @retrofit2.http.Query("month") int month);
+
+    @GET("api/v1/attendances/report/details")
+    Call<UserAttendanceDetailResponse> getUserDetails(@retrofit2.http.Query("userId") int userId, @retrofit2.http.Query("year") int year, @retrofit2.http.Query("month") int month);
 }

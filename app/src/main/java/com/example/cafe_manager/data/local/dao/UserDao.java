@@ -49,4 +49,12 @@ public interface UserDao {
     @Query("SELECT * FROM users WHERE is_active = 1 ORDER BY full_name ASC")
     List<UserEntity> getActiveUsersSync();
 
+    @Query("SELECT COUNT(*) FROM users WHERE is_active = 1")
+    int countActiveUsers();
+
+    @Query("SELECT COUNT(*) FROM users")
+    int countAllUsers();
+
+    @Query("SELECT COUNT(*) FROM users WHERE role = :role AND is_active = 1")
+    int countByRole(String role);
 }

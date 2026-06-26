@@ -124,6 +124,7 @@ public class HistoryActivity extends AppCompatActivity {
         intent.putExtra(InvoiceActivity.EXTRA_ORDER_ID, data.getOrder().getOrderId());
         intent.putExtra(InvoiceActivity.EXTRA_TABLE_NAME,
                 "Bàn #" + data.getOrder().getTableId());
+        intent.putExtra("finish_only", true);
         startActivity(intent);
     }
 }

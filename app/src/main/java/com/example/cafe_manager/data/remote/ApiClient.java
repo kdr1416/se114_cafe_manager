@@ -21,6 +21,9 @@ public class ApiClient {
 
         // Cấu hình OkHttpClient đính kèm AuthInterceptor và LoggingInterceptor
         OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
                 .addInterceptor(new AuthInterceptor(context))
                 .addInterceptor(logging)
                 .build();

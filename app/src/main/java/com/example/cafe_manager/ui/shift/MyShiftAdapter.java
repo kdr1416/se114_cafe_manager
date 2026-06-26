@@ -23,10 +23,10 @@ import java.util.Locale;
 public class MyShiftAdapter extends RecyclerView.Adapter<MyShiftAdapter.ViewHolder> {
 
     public interface OnMyShiftActionListener {
-        void onConfirm(int assignmentId);
         void onCheckIn(int shiftId);
         void onCheckOut(int shiftId);
         void onChat(int shiftId);
+        void onLeaveRequest(ShiftEntity shift);
     }
 
     private List<MyShiftViewModel.MyShiftItem> items = new ArrayList<>();
@@ -83,14 +83,8 @@ public class MyShiftAdapter extends RecyclerView.Adapter<MyShiftAdapter.ViewHold
         h.tvShiftStatus.setText(statusLabel);
         h.tvShiftStatus.setTextColor(h.itemView.getContext().getColor(statusColor));
 
-        // Assignment status text
-        if (item.confirmed) {
-            h.tvConfirmStatus.setText("✅ Đã xác nhận");
-            h.tvConfirmStatus.setTextColor(h.itemView.getContext().getColor(R.color.success));
-        } else {
-            h.tvConfirmStatus.setText("⏳ Chờ xác nhận");
-            h.tvConfirmStatus.setTextColor(h.itemView.getContext().getColor(R.color.warning));
-        }
+        // Assignment status text (Always hide confirm status as it's not needed anymore)
+        h.tvConfirmStatus.setVisibility(View.GONE);
 
         // Attendance details text
         if (item.attendance != null && item.attendance.getCheckInAt() > 0) {
@@ -143,12 +137,8 @@ public class MyShiftAdapter extends RecyclerView.Adapter<MyShiftAdapter.ViewHold
         }
 
         // Dynamic action button based on state
-        if (!item.confirmed) {
-            h.btnAction.setVisibility(View.VISIBLE);
-            h.btnAction.setText("Xác nhận");
-            h.btnAction.setOnClickListener(v -> listener.onConfirm(item.assignmentId));
-        } else if (item.attendance == null || item.attendance.getCheckInAt() == 0) {
-            // Đã xác nhận ca, chưa check-in
+        if (item.attendance == null || item.attendance.getCheckInAt() == 0) {
+            // Chưa check-in
             if (Constants.SHIFT_PUBLISHED.equals(shift.getStatus()) || Constants.SHIFT_IN_PROGRESS.equals(shift.getStatus())) {
                 h.btnAction.setVisibility(View.VISIBLE);
                 h.btnAction.setText("Check-in");
@@ -172,6 +162,14 @@ public class MyShiftAdapter extends RecyclerView.Adapter<MyShiftAdapter.ViewHold
                           Constants.SHIFT_CLOSED.equals(shift.getStatus());
         h.btnChat.setVisibility(canChat ? View.VISIBLE : View.GONE);
         h.btnChat.setOnClickListener(v -> listener.onChat(shift.getShiftId()));
+
+        // Leave request action button
+        String shiftStatus = shift.getStatus();
+        boolean canRequestLeave = !Constants.SHIFT_IN_PROGRESS.equals(shiftStatus) &&
+                                  !Constants.SHIFT_CLOSED.equals(shiftStatus) &&
+                                  !Constants.SHIFT_CANCELLED.equals(shiftStatus);
+        h.btnLeave.setVisibility(canRequestLeave ? View.VISIBLE : View.GONE);
+        h.btnLeave.setOnClickListener(v -> listener.onLeaveRequest(shift));
     }
 
     private String formatTime(long timestamp) {
@@ -184,7 +182,7 @@ public class MyShiftAdapter extends RecyclerView.Adapter<MyShiftAdapter.ViewHold
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView tvNameDate, tvTime, tvShiftStatus, tvConfirmStatus, tvAttendanceStatus, tvAttendanceDetails;
-        public Button btnAction, btnChat;
+        public Button btnAction, btnChat, btnLeave;
 
         public ViewHolder(View v) {
             super(v);
@@ -196,6 +194,7 @@ public class MyShiftAdapter extends RecyclerView.Adapter<MyShiftAdapter.ViewHold
             tvAttendanceDetails = v.findViewById(R.id.tv_attendance_details);
             btnAction = v.findViewById(R.id.btn_action);
             btnChat = v.findViewById(R.id.btn_chat);
+            btnLeave = v.findViewById(R.id.btn_leave);
         }
     }
 }

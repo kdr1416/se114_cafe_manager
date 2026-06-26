@@ -78,6 +78,34 @@
                     tools:text="0901234567" />
             </LinearLayout>
 
+            <!-- Leave approval button -->
+            <Button
+                android:id="@+id/btn_leave_approval"
+                style="@style/Widget.Cafe.Button.Secondary"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/height_button"
+                android:text="Duyệt đơn xin nghỉ"
+                android:layout_marginTop="@dimen/spacing_lg"
+                android:visibility="gone" />
+
+            <!-- Leave request button -->
+            <Button
+                android:id="@+id/btn_leave_request"
+                style="@style/Widget.Cafe.Button.Secondary"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/height_button"
+                android:text="Đơn xin nghỉ"
+                android:layout_marginTop="@dimen/spacing_md" />
+
+            <!-- My Availability button -->
+            <Button
+                android:id="@+id/btn_my_availability"
+                style="@style/Widget.Cafe.Button.Secondary"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/height_button"
+                android:text="Lịch rảnh của tôi"
+                android:layout_marginTop="@dimen/spacing_md" />
+
             <!-- Change password button -->
             <Button
                 android:id="@+id/btn_change_password"
@@ -85,7 +113,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/height_button"
                 android:text="Đổi mật khẩu"
-                android:layout_marginTop="@dimen/spacing_lg" />
+                android:layout_marginTop="@dimen/spacing_md" />
 
             <!-- Logout button -->
             <Button

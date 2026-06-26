@@ -23,7 +23,7 @@ public class AppExecutors {
             synchronized (AppExecutors.class) {
                 if (instance == null) {
                     instance = new AppExecutors(
-                            Executors.newSingleThreadExecutor(),
+                            Executors.newFixedThreadPool(4),
                             new MainThreadExecutor()
                     );
                 }

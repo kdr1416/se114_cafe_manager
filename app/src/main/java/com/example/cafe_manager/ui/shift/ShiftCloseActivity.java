@@ -92,17 +92,7 @@ public class ShiftCloseActivity extends AppCompatActivity {
 
         // Button
         btnCloseShift.setOnClickListener(v -> {
-            String cashText = etActualCash.getText().toString().trim();
-            if (cashText.isEmpty()) {
-                etActualCash.setError("Vui lòng nhập số tiền thực tế");
-                return;
-            }
-            try {
-                double actualCash = Double.parseDouble(cashText);
-                viewModel.closeShift(actualCash);
-            } catch (NumberFormatException e) {
-                etActualCash.setError("Số tiền không hợp lệ");
-            }
+            viewModel.closeShift(0.0);
         });
     }
 }

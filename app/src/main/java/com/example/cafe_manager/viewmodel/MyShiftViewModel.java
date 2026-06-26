@@ -68,6 +68,42 @@ public class MyShiftViewModel extends AndroidViewModel {
     // ── Load ──
 
     public void loadMyShifts() {
+        shiftRepository.syncMyShiftsAndAssignments(new RepositoryCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                attendanceRepository.syncMyAttendances(new RepositoryCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void res) {
+                        loadLocalShifts();
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        android.util.Log.e("MyShiftViewModel", "Lỗi đồng bộ điểm danh: " + e.getMessage());
+                        loadLocalShifts();
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                android.util.Log.e("MyShiftViewModel", "Lỗi đồng bộ ca làm việc: " + e.getMessage());
+                attendanceRepository.syncMyAttendances(new RepositoryCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void res) {
+                        loadLocalShifts();
+                    }
+
+                    @Override
+                    public void onError(Exception e1) {
+                        loadLocalShifts();
+                    }
+                });
+            }
+        });
+    }
+
+    private void loadLocalShifts() {
         AppExecutors.getInstance().diskIO().execute(() -> {
             List<ShiftAssignmentEntity> assignments =
                     appDatabase.shiftAssignmentDao().getByUserSync(currentUserId);
@@ -93,20 +129,6 @@ public class MyShiftViewModel extends AndroidViewModel {
     }
 
     // ── Actions ──
-
-    public void confirmAssignment(int assignmentId) {
-        shiftRepository.confirmAssignment(assignmentId, new RepositoryCallback<Void>() {
-            @Override
-            public void onSuccess(Void result) {
-                messageLive.setValue("Đã xác nhận ca làm việc.");
-                loadMyShifts(); // Refresh
-            }
-            @Override
-            public void onError(Exception e) {
-                messageLive.setValue("Lỗi: " + e.getMessage());
-            }
-        });
-    }
 
     public void checkIn(int shiftId) {
         attendanceRepository.checkIn(shiftId, currentUserId, new RepositoryCallback<Void>() {

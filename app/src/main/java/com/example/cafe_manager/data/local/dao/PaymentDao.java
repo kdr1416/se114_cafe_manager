@@ -29,6 +29,10 @@ public interface PaymentDao {
             "WHERE paid_at BETWEEN :fromMs AND :toMs")
     LiveData<Double> getRevenueInRange(long fromMs, long toMs);
 
+    @Query("SELECT COALESCE(SUM(final_amount), 0) FROM payments " +
+            "WHERE paid_at BETWEEN :fromMs AND :toMs")
+    double getRevenueInRangeSync(long fromMs, long toMs);
+
     @Query("SELECT COUNT(*) FROM payments WHERE paid_at BETWEEN :fromMs AND :toMs")
     LiveData<Integer> countPaymentsInRange(long fromMs, long toMs);
 
@@ -74,4 +78,8 @@ public interface PaymentDao {
             "FROM payments WHERE paid_shift_id = :shiftId " +
             "GROUP BY payment_method")
     List<com.example.cafe_manager.model.PaymentMethodStatsRow> getPaymentMethodStatsByShift(int shiftId);
+
+    @Query("SELECT COALESCE(SUM(final_amount), 0) FROM payments WHERE cashier_user_id = :userId " +
+           "AND paid_shift_id IN (SELECT shift_id FROM shifts WHERE shift_date BETWEEN :from AND :to)")
+    double getRevenueByUserInRange(int userId, long from, long to);
 }

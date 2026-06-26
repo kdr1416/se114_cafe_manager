@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_primary">
+
+    <include
+        android:id="@+id/top_bar"
+        layout="@layout/component_top_bar" />
+
+    <!-- Form Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_card"
+        android:padding="@dimen/spacing_lg"
+        android:layout_margin="@dimen/spacing_lg">
+
+        <!-- Selected Shift Info (Optional, visible if prefilled from My Shifts) -->
+        <TextView
+            android:id="@+id/tvPrefilledShiftInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_md"
+            android:padding="@dimen/spacing_sm"
+            android:background="@drawable/bg_badge_accent"
+            android:textColor="@color/accent"
+            style="@style/TextAppearance.Cafe.Caption"
+            android:visibility="gone" />
+
+        <!-- Start DateTime Selector -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Thời gian bắt đầu"
+            style="@style/TextAppearance.Cafe.Caption"
+            android:textColor="@color/text_soft" />
+
+        <TextView
+            android:id="@+id/tvStartDateTime"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/height_input"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:layout_marginBottom="@dimen/spacing_md"
+            android:background="@drawable/bg_input"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="@dimen/spacing_md"
+            android:text="Chọn thời gian bắt đầu..."
+            style="@style/TextAppearance.Cafe.Body"
+            android:textColor="@color/text_soft"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- End DateTime Selector -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Thời gian kết thúc"
+            style="@style/TextAppearance.Cafe.Caption"
+            android:textColor="@color/text_soft" />
+
+        <TextView
+            android:id="@+id/tvEndDateTime"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/height_input"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:layout_marginBottom="@dimen/spacing_md"
+            android:background="@drawable/bg_input"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="@dimen/spacing_md"
+            android:text="Chọn thời gian kết thúc..."
+            style="@style/TextAppearance.Cafe.Body"
+            android:textColor="@color/text_soft"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- Reason Input -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lý do xin nghỉ"
+            style="@style/TextAppearance.Cafe.Caption"
+            android:textColor="@color/text_soft" />
+
+        <EditText
+            android:id="@+id/etReason"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minLines="3"
+            android:gravity="top|start"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:layout_marginBottom="@dimen/spacing_lg"
+            android:background="@drawable/bg_input"
+            android:padding="@dimen/spacing_md"
+            android:hint="Nhập lý do xin nghỉ..."
+            android:inputType="textMultiLine"
+            style="@style/TextAppearance.Cafe.Body"
+            android:textColor="@color/text_primary" />
+
+        <Button
+            android:id="@+id/btnSubmitLeave"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/height_button"
+            android:text="Gửi đơn xin nghỉ"
+            style="@style/Widget.Cafe.Button.Primary" />
+
+    </LinearLayout>
+
+    <!-- List Divider / Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Đơn của tôi"
+        style="@style/TextAppearance.Cafe.Subtitle"
+        android:textColor="@color/text_primary"
+        android:layout_marginStart="@dimen/spacing_lg"
+        android:layout_marginEnd="@dimen/spacing_lg"
+        android:layout_marginBottom="@dimen/spacing_sm" />
+
+    <!-- List Section -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerLeaveRequests"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingHorizontal="@dimen/spacing_lg"
+            android:paddingBottom="@dimen/spacing_lg"
+            android:clipToPadding="false" />
+
+        <ProgressBar
+            android:id="@+id/progressLoading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvEmptyState"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_margin="@dimen/spacing_xl"
+            android:text="Bạn chưa có đơn xin nghỉ nào"
+            style="@style/TextAppearance.Cafe.Body"
+            android:textColor="@color/text_mute"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+</LinearLayout>

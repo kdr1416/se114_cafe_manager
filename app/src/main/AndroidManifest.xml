@@ -63,6 +63,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".ui.dashboard.RevenueReportActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.user.UserManagementActivity"
             android:exported="false" />
 
@@ -87,6 +91,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".ui.attendance.AttendanceReportActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".MainActivity"
             android:exported="false" />
        
@@ -96,6 +104,10 @@
        
         <activity
             android:name=".ui.shift.ShiftReportActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".ui.shift.DailyShiftReportActivity"
             android:exported="false" />
         <!-- Đăng ký màn hình quản lý ca làm việc -->
         <activity android:name=".ui.shift.ShiftTemplateActivity" android:exported="false" />
@@ -111,6 +123,15 @@
             android:windowSoftInputMode="adjustResize"
             android:exported="false" />
         <activity android:name=".ui.communication.NotificationCenterActivity" android:exported="false" />
+        <activity android:name=".ui.availability.MyAvailabilityActivity" android:exported="false" />
+        <activity android:name=".ui.leave.LeaveRequestActivity" android:exported="false" />
+        <activity android:name=".ui.leave.LeaveApprovalActivity" android:exported="false" />
+
+        <!-- Tự động xếp ca -->
+        <activity
+            android:name=".ui.scheduling.SchedulingPreviewActivity"
+            android:screenOrientation="portrait"
+            android:exported="false" />
     </application>
 
 </manifest>

@@ -42,4 +42,7 @@ public interface TableDao {
 
     @Query("DELETE FROM tables")
     void deleteAll();
+
+    @Query("SELECT COUNT(*) FROM tables")
+    int countAll();
 }

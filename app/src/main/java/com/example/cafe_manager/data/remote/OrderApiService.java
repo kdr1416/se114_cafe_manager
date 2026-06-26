@@ -51,4 +51,10 @@ public interface OrderApiService {
 
     @PUT("api/v1/orders/{id}/cancel")
     Call<OrderEntity> cancelOrder(@Path("id") int orderId);
+
+    @GET("api/v1/orders/history")
+    Call<List<OrderDetailResponse>> getPaidOrdersHistory(
+            @Query("from") long fromMs,
+            @Query("to") long toMs
+    );
 }

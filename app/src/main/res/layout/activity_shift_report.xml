@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -191,7 +192,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginTop="@dimen/spacing_sm">
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:visibility="gone">
 
                     <TextView
                         android:layout_width="0dp"
@@ -212,12 +214,14 @@
                     android:layout_height="1dp"
                     android:background="@color/border"
                     android:layout_marginTop="@dimen/spacing_md"
-                    android:layout_marginBottom="@dimen/spacing_md" />
+                    android:layout_marginBottom="@dimen/spacing_md"
+                    android:visibility="gone" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:visibility="gone">
 
                     <TextView
                         android:layout_width="0dp"
@@ -251,6 +255,41 @@
                     android:layout_height="wrap_content"
                     style="@style/TextAppearance.Cafe.Body"
                     android:textColor="@color/warning" />
+            </LinearLayout>
+
+            <!-- Lịch sử đơn hàng -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/spacing_lg"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/TextAppearance.Cafe.SectionLabel"
+                    android:text="Lịch sử đơn hàng trong ca"
+                    android:layout_marginBottom="@dimen/spacing_md" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_order_history"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    tools:listitem="@layout/item_shift_order_history" />
+
+                <TextView
+                    android:id="@+id/tv_no_orders"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Chưa có đơn hàng nào phát sinh trong ca này."
+                    android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                    android:textColor="@color/text_soft"
+                    android:gravity="center"
+                    android:paddingVertical="@dimen/spacing_md"
+                    android:visibility="gone" />
             </LinearLayout>
 
         </LinearLayout>
