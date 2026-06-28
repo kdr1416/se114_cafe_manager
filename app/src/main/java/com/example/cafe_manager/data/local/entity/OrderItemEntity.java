@@ -41,6 +41,9 @@ public class OrderItemEntity {
     @ColumnInfo(name = "note")
     private String note;
 
+    @ColumnInfo(name = "served_quantity")
+    private int servedQuantity = 0;
+
     public OrderItemEntity() {
     }
 
@@ -117,5 +120,13 @@ public class OrderItemEntity {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public int getServedQuantity() {
+        return servedQuantity;
+    }
+
+    public void setServedQuantity(int servedQuantity) {
+        this.servedQuantity = servedQuantity;
     }
 }

@@ -99,20 +99,8 @@ public class InvoiceActivity extends AppCompatActivity {
         detailVm.getOrder().observe(this, order -> {
             if (order != null) {
                 tvInvoiceCode.setText("#" + order.getOrderCode());
-                if (order.getCreatedByUserId() > 0) {
-                    com.example.cafe_manager.util.AppExecutors.getInstance().diskIO().execute(() -> {
-                        com.example.cafe_manager.data.local.entity.UserEntity creator =
-                                com.example.cafe_manager.data.local.AppDatabase.getInstance(this).userDao().getById(order.getCreatedByUserId());
-                        if (creator != null) {
-                            com.example.cafe_manager.util.AppExecutors.getInstance().mainThread().execute(() -> {
-                                tvCreatedBy.setText(creator.getFullName());
-                            });
-                        } else {
-                            com.example.cafe_manager.util.AppExecutors.getInstance().mainThread().execute(() -> {
-                                tvCreatedBy.setText("Không rõ");
-                            });
-                        }
-                    });
+                if (order.getCreatedByFullName() != null && !order.getCreatedByFullName().isEmpty()) {
+                    tvCreatedBy.setText(order.getCreatedByFullName());
                 } else {
                     tvCreatedBy.setText("Không rõ");
                 }
@@ -135,20 +123,8 @@ public class InvoiceActivity extends AppCompatActivity {
                     payment.getPaymentMethod()));
             tvPaidAt.setText(DateTimeUtils.formatDateTime(payment.getPaidAt()));
 
-            if (payment.getCashierUserId() > 0) {
-                com.example.cafe_manager.util.AppExecutors.getInstance().diskIO().execute(() -> {
-                    com.example.cafe_manager.data.local.entity.UserEntity cashier =
-                            com.example.cafe_manager.data.local.AppDatabase.getInstance(this).userDao().getById(payment.getCashierUserId());
-                    if (cashier != null) {
-                        com.example.cafe_manager.util.AppExecutors.getInstance().mainThread().execute(() -> {
-                            tvCashier.setText(cashier.getFullName());
-                        });
-                    } else {
-                        com.example.cafe_manager.util.AppExecutors.getInstance().mainThread().execute(() -> {
-                            tvCashier.setText("Không rõ");
-                        });
-                    }
-                });
+            if (payment.getCashierFullName() != null && !payment.getCashierFullName().isEmpty()) {
+                tvCashier.setText(payment.getCashierFullName());
             } else {
                 tvCashier.setText("Không rõ");
             }

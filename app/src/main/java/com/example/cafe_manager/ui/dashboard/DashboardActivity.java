@@ -31,9 +31,8 @@ import com.example.cafe_manager.ui.table.TableManagementActivity;
 import com.example.cafe_manager.ui.user.UserManagementActivity;
 import com.example.cafe_manager.ui.attendance.AttendanceReportActivity;
 import com.example.cafe_manager.ui.availability.MyAvailabilityActivity;
-import com.example.cafe_manager.ui.communication.ChatRoomListActivity;
+import com.example.cafe_manager.ui.communication.MessengerActivity;
 import com.example.cafe_manager.ui.communication.NewsFeedActivity;
-import com.example.cafe_manager.ui.communication.NotificationCenterActivity;
 import com.example.cafe_manager.ui.history.HistoryActivity;
 import com.example.cafe_manager.ui.leave.LeaveApprovalActivity;
 import com.example.cafe_manager.ui.leave.LeaveRequestActivity;
@@ -46,6 +45,11 @@ import com.example.cafe_manager.ui.shift.DailyShiftReportActivity;
 import com.example.cafe_manager.ui.shift.ShiftScheduleActivity;
 import com.example.cafe_manager.ui.shift.ShiftTemplateActivity;
 import com.example.cafe_manager.ui.table.TableActivity;
+import com.example.cafe_manager.data.remote.ApiClient;
+import com.example.cafe_manager.data.remote.ChatApiService;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import com.example.cafe_manager.util.AppExecutors;
 import com.example.cafe_manager.util.Constants;
 import com.example.cafe_manager.util.CurrencyUtils;
@@ -137,6 +141,8 @@ public class DashboardActivity extends AppCompatActivity {
         if (viewModel != null) {
             viewModel.loadDashboardData();
         }
+        refreshUnreadBadge();
+        com.example.cafe_manager.data.repository.NewsRepository.getInstance(this).refreshPosts();
     }
 
     private void setupTopBar() {
@@ -156,7 +162,7 @@ public class DashboardActivity extends AppCompatActivity {
         if (containerBtnRight2 != null) containerBtnRight2.setVisibility(View.VISIBLE);
         if (btnRight2 != null) {
             btnRight2.setImageResource(R.drawable.ic_bell);
-            btnRight2.setOnClickListener(v -> startActivity(new Intent(this, NotificationCenterActivity.class)));
+            btnRight2.setOnClickListener(v -> startActivity(new Intent(this, NewsFeedActivity.class)));
         }
         
         // Bell Badge Count Observer
@@ -180,7 +186,7 @@ public class DashboardActivity extends AppCompatActivity {
         if (containerBtnRight3 != null) containerBtnRight3.setVisibility(View.VISIBLE);
         if (btnRight3 != null) {
             btnRight3.setImageResource(R.drawable.ic_chat);
-            btnRight3.setOnClickListener(v -> startActivity(new Intent(this, ChatRoomListActivity.class)));
+            btnRight3.setOnClickListener(v -> startActivity(new Intent(this, MessengerActivity.class)));
         }
 
         // Options Menu button (btn_right)
@@ -249,7 +255,7 @@ public class DashboardActivity extends AppCompatActivity {
         });
         sheet.findViewById(R.id.row_chat).setOnClickListener(v -> {
             dialog.dismiss();
-            startActivity(new Intent(this, ChatRoomListActivity.class));
+            startActivity(new Intent(this, MessengerActivity.class));
         });
         sheet.findViewById(R.id.row_dashboard).setOnClickListener(v -> {
             dialog.dismiss();
@@ -780,5 +786,35 @@ public class DashboardActivity extends AppCompatActivity {
         } else {
             return String.format(Locale.getDefault(), "%.0f", value);
         }
+    }
+
+    private void refreshUnreadBadge() {
+        View topBar = findViewById(R.id.top_bar);
+        if (topBar == null) return;
+        TextView chatBadge = topBar.findViewById(R.id.badge_right_3);
+        if (chatBadge == null) return;
+
+        ApiClient.getInstance(this)
+            .getService(ChatApiService.class)
+            .getUnreadCount()
+            .enqueue(new Callback<Integer>() {
+                @Override
+                public void onResponse(Call<Integer> call, Response<Integer> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        int count = response.body();
+                        if (count > 0) {
+                            chatBadge.setVisibility(View.VISIBLE);
+                            chatBadge.setText(count > 99 ? "99+" : String.valueOf(count));
+                        } else {
+                            chatBadge.setVisibility(View.GONE);
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Integer> call, Throwable t) {
+                    // Fail silently
+                }
+            });
     }
 }

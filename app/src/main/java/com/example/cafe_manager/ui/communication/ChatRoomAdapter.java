@@ -26,6 +26,7 @@ public class ChatRoomAdapter extends ListAdapter<ChatRoomEntity, ChatRoomAdapter
         void onRoomClick(ChatRoomEntity room);
     }
 
+    private final int currentUserId;
     private final OnRoomClickListener listener;
     private final Map<Integer, Integer> unreadCounts = new HashMap<>();
     private final Map<Integer, ChatMessageEntity> latestMessages = new HashMap<>();
@@ -33,8 +34,9 @@ public class ChatRoomAdapter extends ListAdapter<ChatRoomEntity, ChatRoomAdapter
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
     private final SimpleDateFormat dateDayFormat = new SimpleDateFormat("dd/MM", Locale.getDefault());
 
-    public ChatRoomAdapter(OnRoomClickListener listener) {
+    public ChatRoomAdapter(int currentUserId, OnRoomClickListener listener) {
         super(DIFF_CALLBACK);
+        this.currentUserId = currentUserId;
         this.listener = listener;
     }
 
@@ -52,6 +54,18 @@ public class ChatRoomAdapter extends ListAdapter<ChatRoomEntity, ChatRoomAdapter
             latestMessages.putAll(messages);
             notifyDataSetChanged();
         }
+    }
+
+    public void setLatestMessage(int roomId, ChatMessageEntity message) {
+        if (message != null) {
+            latestMessages.put(roomId, message);
+            notifyDataSetChanged();
+        }
+    }
+
+    public void setUnreadCount(int roomId, int count) {
+        unreadCounts.put(roomId, count);
+        notifyDataSetChanged();
     }
 
     public void setUserNames(Map<Integer, String> names) {
@@ -102,6 +116,8 @@ public class ChatRoomAdapter extends ListAdapter<ChatRoomEntity, ChatRoomAdapter
         private final TextView tvRoomTime;
         private final TextView tvRoomLastMessage;
         private final TextView tvRoomBadge;
+        private final TextView tvRoomTypeIcon;
+        private final TextView tvRoomTypeLabel;
 
         RoomVH(@NonNull View itemView) {
             super(itemView);
@@ -110,6 +126,8 @@ public class ChatRoomAdapter extends ListAdapter<ChatRoomEntity, ChatRoomAdapter
             tvRoomTime = itemView.findViewById(R.id.tv_room_time);
             tvRoomLastMessage = itemView.findViewById(R.id.tv_room_last_message);
             tvRoomBadge = itemView.findViewById(R.id.tv_room_badge);
+            tvRoomTypeIcon = itemView.findViewById(R.id.tv_room_type_icon);
+            tvRoomTypeLabel = itemView.findViewById(R.id.tv_room_type_label);
         }
 
         void bind(ChatRoomEntity room) {
@@ -127,12 +145,58 @@ public class ChatRoomAdapter extends ListAdapter<ChatRoomEntity, ChatRoomAdapter
                 tvRoomTime.setText(formatTime(time));
 
                 // Preview content
-                String senderName = userNames.get(lastMsg.getSenderId());
-                String senderStr = senderName != null ? senderName : "Nhân viên #" + lastMsg.getSenderId();
-                tvRoomLastMessage.setText(senderStr + ": " + lastMsg.getContent());
+                if (lastMsg.getSenderId() <= 0) {
+                    tvRoomLastMessage.setText(lastMsg.getContent());
+                } else {
+                    String senderStr;
+                    if (lastMsg.getSenderId() == currentUserId) {
+                        senderStr = "Bạn";
+                    } else {
+                        String senderName = lastMsg.getSenderName();
+                        if (senderName == null || senderName.isEmpty() || "Unknown".equals(senderName)) {
+                            senderName = userNames.get(lastMsg.getSenderId());
+                        }
+                        senderStr = senderName != null ? senderName : "Nhân viên #" + lastMsg.getSenderId();
+                    }
+                    tvRoomLastMessage.setText(senderStr + ": " + lastMsg.getContent());
+                }
             } else {
                 tvRoomTime.setText(formatTime(room.getUpdatedAt()));
                 tvRoomLastMessage.setText("Chưa có tin nhắn nào.");
+            }
+
+            // Room type icon and label
+            String roomType = room.getRoomType();
+            if (roomType == null) roomType = "";
+
+            if (tvRoomTypeIcon != null) {
+                switch (roomType.toUpperCase()) {
+                    case "SYSTEM":
+                        tvRoomTypeIcon.setText("🏢");
+                        if (tvRoomTypeLabel != null) {
+                            tvRoomTypeLabel.setText("Phòng hệ thống");
+                            tvRoomTypeLabel.setVisibility(View.VISIBLE);
+                        }
+                        break;
+                    case "SHIFT":
+                        tvRoomTypeIcon.setText("📅");
+                        if (tvRoomTypeLabel != null) {
+                            tvRoomTypeLabel.setText("Phòng ca làm");
+                            tvRoomTypeLabel.setVisibility(View.VISIBLE);
+                        }
+                        break;
+                    case "GENERAL":
+                        tvRoomTypeIcon.setText("💬");
+                        if (tvRoomTypeLabel != null) {
+                            tvRoomTypeLabel.setVisibility(View.GONE);
+                        }
+                        break;
+                    default:
+                        tvRoomTypeIcon.setText("💬");
+                        if (tvRoomTypeLabel != null) {
+                            tvRoomTypeLabel.setVisibility(View.GONE);
+                        }
+                }
             }
 
             // Unread Badge

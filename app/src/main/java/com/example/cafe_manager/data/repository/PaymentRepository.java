@@ -5,11 +5,13 @@ import android.widget.Toast;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import java.util.List;
 
 import com.example.cafe_manager.data.local.entity.PaymentEntity;
 import com.example.cafe_manager.data.remote.ApiClient;
 import com.example.cafe_manager.data.remote.PaymentApiService;
 import com.example.cafe_manager.data.remote.PaymentRequest;
+import com.example.cafe_manager.data.local.AppDatabase;
 import com.example.cafe_manager.data.remote.PaymentResponse;
 import com.example.cafe_manager.data.remote.NetworkException;
 import com.example.cafe_manager.util.AppExecutors;
@@ -78,7 +80,22 @@ public class PaymentRepository {
                 );
 
                 Response<PaymentResponse> response = paymentApiService.processPayment(request).execute();
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
+                    PaymentResponse res = response.body();
+                    PaymentEntity localPayment = new PaymentEntity(
+                            res.getOrderId() != null ? res.getOrderId() : orderId,
+                            res.getPaymentMethod(),
+                            res.getSubtotal(),
+                            res.getDiscountAmount(),
+                            res.getFinalAmount(),
+                            res.getPaidAt() != null ? res.getPaidAt() : System.currentTimeMillis(),
+                            "PAID"
+                    );
+                    localPayment.setPaymentId(res.getPaymentId());
+                    localPayment.setCashierUserId(res.getCashierUserId() != null ? res.getCashierUserId() : cashierUserId);
+                    localPayment.setPaidShiftId(paidShiftId);
+                    AppDatabase.getInstance(context).paymentDao().insert(localPayment);
+
                     appExecutors.mainThread().execute(() -> {
                         TableRepository.getInstance(context).refreshAllTables();
                         callback.onSuccess(true);
@@ -98,18 +115,32 @@ public class PaymentRepository {
 
     public LiveData<PaymentEntity> getPaymentByOrder(int orderId) {
         MutableLiveData<PaymentEntity> liveData = new MutableLiveData<>();
-        paymentApiService.getPaymentByOrderId(orderId).enqueue(new Callback<PaymentEntity>() {
+        paymentApiService.getPaymentByOrderId(orderId).enqueue(new Callback<PaymentResponse>() {
             @Override
-            public void onResponse(Call<PaymentEntity> call, Response<PaymentEntity> response) {
+            public void onResponse(Call<PaymentResponse> call, Response<PaymentResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    liveData.postValue(response.body());
+                    PaymentResponse res = response.body();
+                    PaymentEntity entity = new PaymentEntity(
+                            res.getOrderId() != null ? res.getOrderId() : orderId,
+                            res.getPaymentMethod(),
+                            res.getSubtotal(),
+                            res.getDiscountAmount(),
+                            res.getFinalAmount(),
+                            res.getPaidAt() != null ? res.getPaidAt() : 0L,
+                            "PAID"
+                    );
+                    entity.setPaymentId(res.getPaymentId());
+                    entity.setCashierUserId(res.getCashierUserId() != null ? res.getCashierUserId() : 0);
+                    entity.setPaidShiftId(res.getPaidShiftId() != null ? res.getPaidShiftId() : 0);
+                    entity.setCashierFullName(res.getCashierFullName());
+                    liveData.postValue(entity);
                 } else {
                     liveData.postValue(null);
                 }
             }
 
             @Override
-            public void onFailure(Call<PaymentEntity> call, Throwable t) {
+            public void onFailure(Call<PaymentResponse> call, Throwable t) {
                 liveData.postValue(null);
             }
         });
@@ -202,6 +233,44 @@ public class PaymentRepository {
             }
         });
         return liveData;
+    }
+
+    public void syncPaymentsInRange(long start, long end, RepositoryCallback<Void> callback) {
+        appExecutors.diskIO().execute(() -> {
+            try {
+                Response<List<PaymentResponse>> response = paymentApiService.getPaymentsInRange(start, end).execute();
+                if (response.isSuccessful() && response.body() != null) {
+                    java.util.List<PaymentEntity> entities = new java.util.ArrayList<>();
+                    for (PaymentResponse r : response.body()) {
+                        PaymentEntity e = new PaymentEntity(
+                                r.getOrderId() != null ? r.getOrderId() : 0,
+                                r.getPaymentMethod(),
+                                r.getSubtotal(),
+                                r.getDiscountAmount(),
+                                r.getFinalAmount(),
+                                r.getPaidAt() != null ? r.getPaidAt() : 0L,
+                                "PAID"
+                        );
+                        e.setPaymentId(r.getPaymentId());
+                        e.setCashierUserId(r.getCashierUserId() != null ? r.getCashierUserId() : 0);
+                        e.setPaidShiftId(r.getPaidShiftId() != null ? r.getPaidShiftId() : 0);
+                        entities.add(e);
+                    }
+                    AppDatabase.getInstance(context).paymentDao().insertAll(entities);
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onSuccess(null));
+                    }
+                } else {
+                    if (callback != null) {
+                        appExecutors.mainThread().execute(() -> callback.onError(new Exception("Sync failed: " + response.code())));
+                    }
+                }
+            } catch (Exception e) {
+                if (callback != null) {
+                    appExecutors.mainThread().execute(() -> callback.onError(e));
+                }
+            }
+        });
     }
 
     private Exception parseError(Response<?> response) {

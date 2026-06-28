@@ -119,6 +119,11 @@
         <activity android:name=".ui.communication.NewsDetailActivity" android:exported="false" />
         <activity android:name=".ui.communication.NewsPostFormActivity" android:exported="false" />
         <activity android:name=".ui.communication.ChatRoomListActivity" android:exported="false" />
+        <activity
+            android:name=".ui.communication.MessengerActivity"
+            android:screenOrientation="unspecified"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
         <activity android:name=".ui.communication.ChatMessageActivity"
             android:windowSoftInputMode="adjustResize"
             android:exported="false" />

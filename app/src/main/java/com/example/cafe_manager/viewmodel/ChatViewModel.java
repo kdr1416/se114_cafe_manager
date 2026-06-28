@@ -10,12 +10,16 @@ import androidx.lifecycle.MutableLiveData;
 import com.example.cafe_manager.data.local.entity.ChatMessageEntity;
 import com.example.cafe_manager.data.local.entity.ChatRoomEntity;
 import com.example.cafe_manager.data.repository.ChatRepository;
+import com.example.cafe_manager.util.RepositoryCallback;
 
 import java.util.List;
 
 public class ChatViewModel extends AndroidViewModel {
     private final ChatRepository repo;
     private final MutableLiveData<String> message = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> isLoadingMore = new MutableLiveData<>(false);
+    private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
 
     public ChatViewModel(@NonNull Application app) {
         super(app);
@@ -32,6 +36,61 @@ public class ChatViewModel extends AndroidViewModel {
 
     public LiveData<List<ChatMessageEntity>> getMessages(int roomId, int limit) {
         return repo.getMessages(roomId, limit);
+    }
+
+    public void loadMessages(int roomId) {
+        isLoading.setValue(true);
+        repo.loadMessages(roomId, 0, 50, new RepositoryCallback<>() {
+            @Override
+            public void onSuccess(List<ChatMessageEntity> result) {
+                isLoading.setValue(false);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                isLoading.setValue(false);
+                errorMessage.setValue(e.getMessage());
+            }
+        });
+    }
+
+    public void loadMoreMessages(int roomId) {
+        if (Boolean.TRUE.equals(isLoadingMore.getValue())) return; // prevent duplicate calls
+        isLoadingMore.setValue(true);
+        int nextPage = repo.getCurrentPage(roomId) + 1;
+        repo.loadMessages(roomId, nextPage, 50, new RepositoryCallback<>() {
+            @Override
+            public void onSuccess(List<ChatMessageEntity> result) {
+                isLoadingMore.setValue(false);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                isLoadingMore.setValue(false);
+                // silently fail — don't show error for load more
+            }
+        });
+    }
+
+    public void switchRoom(int oldRoomId, int newRoomId) {
+        if (oldRoomId != -1 && oldRoomId != newRoomId) {
+            unsubscribeFromRoom(oldRoomId);
+        }
+        repo.resetPageForRoom(newRoomId);
+        subscribeToRoom(newRoomId);
+        loadMessages(newRoomId);
+    }
+
+    public LiveData<Boolean> getIsLoading() { return isLoading; }
+    public LiveData<Boolean> getIsLoadingMore() { return isLoadingMore; }
+    public LiveData<String> getErrorMessage() { return errorMessage; }
+
+    public int getCurrentPage(int roomId) {
+        return repo.getCurrentPage(roomId);
+    }
+
+    public LiveData<List<ChatMessageEntity>> getMessagesForRoom(int roomId) {
+        return repo.getMessagesLiveData(roomId);
     }
 
     public void createRoom(String roomName, String roomType, Integer shiftId, String targetRole, int createdBy, Runnable onSuccess, Runnable onError) {

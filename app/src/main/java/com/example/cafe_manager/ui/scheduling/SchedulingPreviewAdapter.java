@@ -16,10 +16,14 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class SchedulingPreviewAdapter extends RecyclerView.Adapter<SchedulingPreviewAdapter.ViewHolder> {
 
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+    {
+        dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+    }
     private List<ShiftSuggestion> suggestions = new java.util.ArrayList<>();
 
     public void setItems(List<ShiftSuggestion> items) {

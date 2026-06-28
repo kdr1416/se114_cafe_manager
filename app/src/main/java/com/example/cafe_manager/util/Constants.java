@@ -10,6 +10,7 @@ public final class Constants {
 
     public static final String ORDER_OPEN = "OPEN";
     public static final String ORDER_CONFIRMED = "CONFIRMED";
+    public static final String ORDER_SERVED = "SERVED";
     public static final String ORDER_PAID = "PAID";
     public static final String ORDER_CANCELLED = "CANCELLED";
 

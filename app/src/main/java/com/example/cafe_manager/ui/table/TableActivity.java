@@ -62,6 +62,7 @@ public class TableActivity extends AppCompatActivity {
     private AreaAdapter areaAdapter;
     private TextView tvActiveCount;
     private TextView tvEmptyCount;
+    private int lastUnreadCount = 0;
 
     private Handler pollingHandler;
     private Runnable pollingRunnable;
@@ -100,6 +101,7 @@ public class TableActivity extends AppCompatActivity {
             viewModel.refreshTables();
             viewModel.refreshAreas();
         }
+        refreshUnreadBadge();
     }
 
     @Override
@@ -108,6 +110,8 @@ public class TableActivity extends AppCompatActivity {
         if (pollingHandler != null && pollingRunnable != null) {
             pollingHandler.post(pollingRunnable);
         }
+        refreshUnreadBadge();
+        com.example.cafe_manager.data.repository.NewsRepository.getInstance(this).refreshPosts();
     }
 
     @Override
@@ -125,6 +129,7 @@ public class TableActivity extends AppCompatActivity {
         View btnBack = topBar.findViewById(R.id.btn_back);
         ImageButton btnRight = topBar.findViewById(R.id.btn_right);
         ImageButton btnRight2 = topBar.findViewById(R.id.btn_right_2);
+        ImageButton btnRight3 = topBar.findViewById(R.id.btn_right_3);
 
         // Greeting với tên user (nếu có session)
         title.setText(R.string.title_tables);
@@ -145,8 +150,19 @@ public class TableActivity extends AppCompatActivity {
         }
         if (btnRight2 != null) {
             btnRight2.setImageResource(R.drawable.ic_bell);
-            btnRight2.setOnClickListener(v -> startActivity(new Intent(this, com.example.cafe_manager.ui.communication.NotificationCenterActivity.class)));
+            btnRight2.setOnClickListener(v -> startActivity(new Intent(this, com.example.cafe_manager.ui.communication.NewsFeedActivity.class)));
         }
+
+        // Right icon 3 → Chat
+        View containerBtnRight3 = topBar.findViewById(R.id.container_btn_right_3);
+        if (containerBtnRight3 != null) {
+            containerBtnRight3.setVisibility(View.VISIBLE);
+        }
+        if (btnRight3 != null) {
+            btnRight3.setImageResource(R.drawable.ic_chat);
+            btnRight3.setOnClickListener(v -> startActivity(new Intent(this, com.example.cafe_manager.ui.communication.MessengerActivity.class)));
+        }
+
         TextView bellBadge = topBar.findViewById(R.id.badge_right_2);
         if (bellBadge != null) {
             com.example.cafe_manager.viewmodel.NewsViewModel newsViewModel = new ViewModelProvider(this).get(com.example.cafe_manager.viewmodel.NewsViewModel.class);
@@ -165,6 +181,37 @@ public class TableActivity extends AppCompatActivity {
         btnRight.setVisibility(View.VISIBLE);
         btnRight.setImageResource(R.drawable.ic_menu_book);
         btnRight.setOnClickListener(this::showOptionsMenu);
+    }
+
+    private void refreshUnreadBadge() {
+        View topBar = findViewById(R.id.top_bar);
+        if (topBar == null) return;
+        TextView chatBadge = topBar.findViewById(R.id.badge_right_3);
+        if (chatBadge == null) return;
+
+        com.example.cafe_manager.data.remote.ApiClient.getInstance(this)
+            .getService(com.example.cafe_manager.data.remote.ChatApiService.class)
+            .getUnreadCount()
+            .enqueue(new retrofit2.Callback<Integer>() {
+                @Override
+                public void onResponse(retrofit2.Call<Integer> call, retrofit2.Response<Integer> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        int count = response.body();
+                        lastUnreadCount = count;
+                        if (count > 0) {
+                            chatBadge.setVisibility(View.VISIBLE);
+                            chatBadge.setText(count > 99 ? "99+" : String.valueOf(count));
+                        } else {
+                            chatBadge.setVisibility(View.GONE);
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(retrofit2.Call<Integer> call, Throwable t) {
+                    // Fail silently
+                }
+            });
     }
 
     private void showOptionsMenu(View anchor) {
@@ -232,7 +279,7 @@ public class TableActivity extends AppCompatActivity {
         sheet.findViewById(R.id.row_chat).setOnClickListener(v -> {
             dialog.dismiss();
             // case 15
-            startActivity(new Intent(this, com.example.cafe_manager.ui.communication.ChatRoomListActivity.class));
+            startActivity(new Intent(this, com.example.cafe_manager.ui.communication.MessengerActivity.class));
         });
         sheet.findViewById(R.id.row_dashboard).setOnClickListener(v -> {
             dialog.dismiss();

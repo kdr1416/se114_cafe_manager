@@ -30,8 +30,7 @@ public class ChatRoomListActivity extends AppCompatActivity {
     private AppDatabase db;
     private int currentUserId;
 
-    private final Map<Integer, Integer> unreadCountsMap = new HashMap<>();
-    private final Map<Integer, ChatMessageEntity> latestMessagesMap = new HashMap<>();
+
     private final Map<Integer, String> userNamesMap = new HashMap<>();
 
     @Override
@@ -63,7 +62,7 @@ public class ChatRoomListActivity extends AppCompatActivity {
         RecyclerView rvRooms = findViewById(R.id.rv_chat_rooms);
         rvRooms.setLayoutManager(new LinearLayoutManager(this));
 
-        adapter = new ChatRoomAdapter(room -> {
+        adapter = new ChatRoomAdapter(currentUserId, room -> {
             Intent intent = new Intent(this, ChatMessageActivity.class);
             intent.putExtra("room_id", room.getRoomId());
             intent.putExtra("room_name", room.getRoomName());
@@ -94,15 +93,13 @@ public class ChatRoomListActivity extends AppCompatActivity {
 
                     // Observe unread count
                     viewModel.getUnreadCountForRoom(roomId, currentUserId).observe(this, count -> {
-                        unreadCountsMap.put(roomId, count != null ? count : 0);
-                        adapter.setUnreadCounts(unreadCountsMap);
+                        adapter.setUnreadCount(roomId, count != null ? count : 0);
                     });
 
                     // Observe latest message
                     viewModel.getLatestMessage(roomId).observe(this, lastMsg -> {
                         if (lastMsg != null) {
-                            latestMessagesMap.put(roomId, lastMsg);
-                            adapter.setLatestMessages(latestMessagesMap);
+                            adapter.setLatestMessage(roomId, lastMsg);
                         }
                     });
                 }

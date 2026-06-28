@@ -33,6 +33,12 @@ public interface OrderApiService {
             @Body OrderItemRequest request
     );
 
+    @POST("api/v1/orders/{id}/items/bulk")
+    Call<OrderDetailResponse> addItemsBulk(
+            @Path("id") int orderId,
+            @Body List<OrderItemRequest> requests
+    );
+
     @PUT("api/v1/orders/{id}/items/{itemId}")
     Call<OrderDetailResponse> updateItem(
             @Path("id") int orderId,
@@ -48,6 +54,9 @@ public interface OrderApiService {
 
     @PUT("api/v1/orders/{id}/confirm")
     Call<OrderEntity> confirmOrder(@Path("id") int orderId);
+
+    @PUT("api/v1/orders/{id}/serve")
+    Call<OrderEntity> serveOrder(@Path("id") int orderId);
 
     @PUT("api/v1/orders/{id}/cancel")
     Call<OrderEntity> cancelOrder(@Path("id") int orderId);

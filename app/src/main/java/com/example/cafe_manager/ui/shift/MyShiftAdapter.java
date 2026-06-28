@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class MyShiftAdapter extends RecyclerView.Adapter<MyShiftAdapter.ViewHolder> {
 
@@ -33,6 +34,9 @@ public class MyShiftAdapter extends RecyclerView.Adapter<MyShiftAdapter.ViewHold
     private OnMyShiftActionListener listener;
     private final SimpleDateFormat sdf =
             new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+    {
+        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+    }
 
     public MyShiftAdapter(OnMyShiftActionListener listener) {
         this.listener = listener;

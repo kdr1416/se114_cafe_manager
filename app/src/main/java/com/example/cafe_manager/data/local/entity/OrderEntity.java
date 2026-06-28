@@ -126,4 +126,10 @@ public class OrderEntity {
 
     public int getCreatedShiftId() { return createdShiftId; }
     public void setCreatedShiftId(int createdShiftId) { this.createdShiftId = createdShiftId; }
+
+    @androidx.room.Ignore
+    private String createdByFullName;
+
+    public String getCreatedByFullName() { return createdByFullName; }
+    public void setCreatedByFullName(String createdByFullName) { this.createdByFullName = createdByFullName; }
 }

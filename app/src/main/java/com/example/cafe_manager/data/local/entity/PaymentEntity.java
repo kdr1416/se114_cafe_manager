@@ -7,10 +7,6 @@ import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "payments",
-foreignKeys = @ForeignKey(
-        entity = OrderEntity.class,
-        childColumns = "order_id",
-        parentColumns = "order_id"),
         indices = {@Index("order_id")}
 )
 public class PaymentEntity {
@@ -127,4 +123,10 @@ public class PaymentEntity {
 
     public int getPaidShiftId() { return paidShiftId; }
     public void setPaidShiftId(int paidShiftId) { this.paidShiftId = paidShiftId; }
+
+    @androidx.room.Ignore
+    private String cashierFullName;
+
+    public String getCashierFullName() { return cashierFullName; }
+    public void setCashierFullName(String cashierFullName) { this.cashierFullName = cashierFullName; }
 }

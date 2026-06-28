@@ -33,17 +33,24 @@ public class OrdersListAdapter
         void onAddMore(OrderWithItems order);
     }
 
+    public interface OnServeListener {
+        void onServe(OrderWithItems order);
+    }
+
     private final OnCollectListener collectListener;
     private final OnCancelListener cancelListener;
     private final OnAddMoreListener addMoreListener;
+    private final OnServeListener serveListener;
 
     public OrdersListAdapter(OnCollectListener collectListener,
                              OnCancelListener cancelListener,
-                             OnAddMoreListener addMoreListener) {
+                             OnAddMoreListener addMoreListener,
+                             OnServeListener serveListener) {
         super(DIFF);
         this.collectListener = collectListener;
         this.cancelListener = cancelListener;
         this.addMoreListener = addMoreListener;
+        this.serveListener = serveListener;
     }
 
     @NonNull
@@ -56,7 +63,7 @@ public class OrdersListAdapter
 
     @Override
     public void onBindViewHolder(@NonNull OrderRowVH holder, int position) {
-        holder.bind(getItem(position), collectListener, cancelListener, addMoreListener);
+        holder.bind(getItem(position), collectListener, cancelListener, addMoreListener, serveListener);
     }
 
     static class OrderRowVH extends RecyclerView.ViewHolder {
@@ -67,6 +74,8 @@ public class OrdersListAdapter
         private final TextView tvTotal;
         private final Button btnPayment;
         private final Button btnCancel;
+        private final Button btnServe;
+        private final View viewStatusIndicator;
 
         OrderRowVH(View itemView) {
             super(itemView);
@@ -77,12 +86,15 @@ public class OrdersListAdapter
             tvTotal = itemView.findViewById(R.id.tv_total);
             btnPayment = itemView.findViewById(R.id.btn_payment);
             btnCancel = itemView.findViewById(R.id.btn_cancel);
+            btnServe = itemView.findViewById(R.id.btn_serve);
+            viewStatusIndicator = itemView.findViewById(R.id.view_status_indicator);
         }
 
         void bind(final OrderWithItems data,
                   final OnCollectListener collectListener,
                   final OnCancelListener cancelListener,
-                  final OnAddMoreListener addMoreListener) {
+                  final OnAddMoreListener addMoreListener,
+                  final OnServeListener serveListener) {
             String tableName = data.getTableName();
             if (tableName != null && !tableName.isEmpty()) {
                 tvTableName.setText(tableName);
@@ -93,7 +105,26 @@ public class OrdersListAdapter
             String time = DateTimeUtils.formatDateTime(data.getOrder().getCreatedAt());
             tvOrderCode.setText(time + " · #" + data.getOrder().getOrderCode());
 
-            tvStatusBadge.setText(StatusUtils.getDisplayName(data.getOrder().getStatus()));
+            String status = data.getOrder().getStatus();
+            tvStatusBadge.setText(StatusUtils.getDisplayName(status));
+
+            if (com.example.cafe_manager.util.Constants.ORDER_SERVED.equals(status)) {
+                tvStatusBadge.setBackgroundResource(R.drawable.bg_badge_success);
+                tvStatusBadge.setTextColor(itemView.getContext().getColor(R.color.success));
+                viewStatusIndicator.setBackgroundColor(itemView.getContext().getColor(R.color.success));
+                btnServe.setVisibility(View.GONE);
+                // Make payment button Primary
+                btnPayment.setBackgroundResource(R.drawable.bg_button_primary);
+                btnPayment.setTextColor(itemView.getContext().getColor(R.color.text_on_accent));
+            } else {
+                tvStatusBadge.setBackgroundResource(R.drawable.bg_badge_warning);
+                tvStatusBadge.setTextColor(itemView.getContext().getColor(R.color.warning));
+                viewStatusIndicator.setBackgroundColor(itemView.getContext().getColor(R.color.warning));
+                btnServe.setVisibility(View.VISIBLE);
+                // Make payment button Secondary
+                btnPayment.setBackgroundResource(R.drawable.bg_button_secondary);
+                btnPayment.setTextColor(itemView.getContext().getColor(R.color.text_primary));
+            }
 
             tvItems.setText(OrdersListViewModel.buildItemsSummary(data.getItems()));
 
@@ -111,6 +142,10 @@ public class OrdersListAdapter
 
             btnCancel.setOnClickListener(v -> {
                 if (cancelListener != null) cancelListener.onCancel(data);
+            });
+
+            btnServe.setOnClickListener(v -> {
+                if (serveListener != null) serveListener.onServe(data);
             });
         }
     }

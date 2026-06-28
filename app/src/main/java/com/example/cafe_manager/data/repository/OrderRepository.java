@@ -69,32 +69,24 @@ public class OrderRepository {
 
         appExecutors.diskIO().execute(() -> {
             try {
-                // 1. Tạo hóa đơn trống trên backend
-                Response<OrderEntity> createResp = orderApiService.createOrder(new OrderRequest(tableId, note)).execute();
+                // 1. Convert CartItems to OrderItemRequests
+                List<OrderItemRequest> itemRequests = new ArrayList<>();
+                for (CartItem cartItem : cartItems) {
+                    itemRequests.add(new OrderItemRequest(
+                            cartItem.getProductId(),
+                            cartItem.getQuantity(),
+                            cartItem.getNote()
+                    ));
+                }
+
+                // 2. Send single bulk OrderRequest to backend
+                OrderRequest request = new OrderRequest(tableId, note, itemRequests);
+                Response<OrderEntity> createResp = orderApiService.createOrder(request).execute();
                 if (!createResp.isSuccessful() || createResp.body() == null) {
                     throw parseError(createResp);
                 }
                 OrderEntity order = createResp.body();
                 int orderId = order.getOrderId();
-
-                // 2. Thêm từng món ăn vào hóa đơn đồng bộ
-                for (CartItem cartItem : cartItems) {
-                    OrderItemRequest itemReq = new OrderItemRequest(
-                            cartItem.getProductId(),
-                            cartItem.getQuantity(),
-                            cartItem.getNote()
-                    );
-                    Response<OrderDetailResponse> addResp = orderApiService.addItem(orderId, itemReq).execute();
-                    if (!addResp.isSuccessful()) {
-                        throw parseError(addResp);
-                    }
-                }
-
-                // 3. Xác nhận hóa đơn
-                Response<OrderEntity> confirmResp = orderApiService.confirmOrder(orderId).execute();
-                if (!confirmResp.isSuccessful()) {
-                    throw parseError(confirmResp);
-                }
 
                 appExecutors.mainThread().execute(() -> {
                     TableRepository.getInstance(context).refreshAllTables();
@@ -153,7 +145,8 @@ public class OrderRepository {
             @Override
             public void onResponse(Call<OrderDetailResponse> call, Response<OrderDetailResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    liveData.postValue(response.body().getOrder());
+                    OrderEntity order = response.body().getOrder();
+                    liveData.postValue(order);
                 } else {
                     liveData.postValue(null);
                 }
@@ -314,16 +307,17 @@ public class OrderRepository {
     ) {
         appExecutors.diskIO().execute(() -> {
             try {
+                List<OrderItemRequest> itemRequests = new ArrayList<>();
                 for (CartItem cartItem : cartItems) {
-                    OrderItemRequest itemReq = new OrderItemRequest(
+                    itemRequests.add(new OrderItemRequest(
                             cartItem.getProductId(),
                             cartItem.getQuantity(),
                             cartItem.getNote()
-                    );
-                    Response<OrderDetailResponse> addResp = orderApiService.addItem(orderId, itemReq).execute();
-                    if (!addResp.isSuccessful()) {
-                        throw parseError(addResp);
-                    }
+                    ));
+                }
+                Response<OrderDetailResponse> addResp = orderApiService.addItemsBulk(orderId, itemRequests).execute();
+                if (!addResp.isSuccessful()) {
+                    throw parseError(addResp);
                 }
                 appExecutors.mainThread().execute(() ->
                         callback.onSuccess((long) orderId)
@@ -347,6 +341,31 @@ public class OrderRepository {
                 if (response.isSuccessful()) {
                     appExecutors.mainThread().execute(() -> {
                         TableRepository.getInstance(context).refreshAllTables();
+                        callback.onSuccess(true);
+                    });
+                } else {
+                    appExecutors.mainThread().execute(() -> callback.onError(parseError(response)));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<OrderEntity> call, Throwable t) {
+                appExecutors.mainThread().execute(() ->
+                        callback.onError(new NetworkException("Không có kết nối mạng", t))
+                );
+            }
+        });
+    }
+
+    public void serveOrder(
+            int orderId,
+            RepositoryCallback<Boolean> callback
+    ) {
+        orderApiService.serveOrder(orderId).enqueue(new Callback<OrderEntity>() {
+            @Override
+            public void onResponse(Call<OrderEntity> call, Response<OrderEntity> response) {
+                if (response.isSuccessful()) {
+                    appExecutors.mainThread().execute(() -> {
                         callback.onSuccess(true);
                     });
                 } else {

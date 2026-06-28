@@ -2,6 +2,7 @@ package com.example.cafe_manager.data.remote;
 
 import com.example.cafe_manager.data.local.entity.PaymentEntity;
 
+import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -16,8 +17,14 @@ public interface PaymentApiService {
     @POST("api/v1/payments")
     Call<PaymentResponse> processPayment(@Body PaymentRequest request);
 
+    @GET("api/v1/payments")
+    Call<List<PaymentResponse>> getPaymentsInRange(
+            @Query("startDate") long startDate,
+            @Query("endDate") long endDate
+    );
+
     @GET("api/v1/payments/{orderId}")
-    Call<PaymentEntity> getPaymentByOrderId(@Path("orderId") int orderId);
+    Call<PaymentResponse> getPaymentByOrderId(@Path("orderId") int orderId);
 
     @GET("api/v1/payments/revenue")
     Call<Double> getRevenueInRange(

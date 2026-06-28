@@ -41,6 +41,8 @@ public class ChatMessageActivity extends AppCompatActivity {
 
     private boolean isFirstLoad = true;
     private boolean isNearBottom = true;
+    private boolean isLoadingMoreMessages = false;
+    private static final int LOAD_MORE_THRESHOLD = 3;
     private final Map<Integer, String> userNamesMap = new HashMap<>();
 
     @Override
@@ -103,15 +105,52 @@ public class ChatMessageActivity extends AppCompatActivity {
         rvChatMessages.setLayoutManager(new LinearLayoutManager(this));
         adapter = new ChatMessageAdapter(currentUserId);
         rvChatMessages.setAdapter(adapter);
+        rvChatMessages.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                if (dy >= 0) return; // only trigger when scrolling UP
+                LinearLayoutManager lm = (LinearLayoutManager) recyclerView.getLayoutManager();
+                if (lm == null) return;
+                int firstVisible = lm.findFirstVisibleItemPosition();
+                if (firstVisible <= LOAD_MORE_THRESHOLD && !isLoadingMoreMessages) {
+                    isLoadingMoreMessages = true;
+                    viewModel.loadMoreMessages(roomId);
+                }
+            }
+        });
     }
 
     private void setupViewModel() {
         viewModel = new ViewModelProvider(this).get(ChatViewModel.class);
 
-        // Observe messages in room (last 200 messages)
-        viewModel.getMessages(roomId, 200).observe(this, messages -> {
+        viewModel.loadMessages(roomId);
+
+        viewModel.getIsLoadingMore().observe(this, loading -> {
+            if (loading != null && !loading) {
+                isLoadingMoreMessages = false;
+            }
+        });
+
+        viewModel.getMessagesForRoom(roomId).observe(this, messages -> {
             if (messages != null) {
-                adapter.submitList(messages);
+                int firstVisibleVal = -1;
+                RecyclerView.LayoutManager lm = rvChatMessages.getLayoutManager();
+                if (lm instanceof LinearLayoutManager) {
+                    firstVisibleVal = ((LinearLayoutManager) lm).findFirstVisibleItemPosition();
+                }
+                final int firstVisible = firstVisibleVal;
+                final int prevCount = adapter.getItemCount();
+
+                adapter.submitList(messages, () -> {
+                    int newCount = adapter.getItemCount();
+                    int offset = newCount - prevCount;
+                    if (offset > 0 && firstVisible > 0) {
+                        RecyclerView.LayoutManager lm2 = rvChatMessages.getLayoutManager();
+                        if (lm2 instanceof LinearLayoutManager) {
+                            ((LinearLayoutManager) lm2).scrollToPositionWithOffset(firstVisible + offset, 0);
+                        }
+                    }
+                });
 
                 // Show empty state if no messages
                 boolean isEmpty = messages.isEmpty();
@@ -124,9 +163,9 @@ public class ChatMessageActivity extends AppCompatActivity {
 
                     // Smart scroll: only scroll if user is near bottom (within 100px)
                     rvChatMessages.post(() -> {
-                        RecyclerView.LayoutManager lm = rvChatMessages.getLayoutManager();
-                        if (lm instanceof LinearLayoutManager) {
-                            LinearLayoutManager llm = (LinearLayoutManager) lm;
+                        RecyclerView.LayoutManager postLm = rvChatMessages.getLayoutManager();
+                        if (postLm instanceof LinearLayoutManager) {
+                            LinearLayoutManager llm = (LinearLayoutManager) postLm;
                             int lastVisible = llm.findLastCompletelyVisibleItemPosition();
                             int totalCount = adapter.getItemCount();
 
@@ -200,7 +239,7 @@ public class ChatMessageActivity extends AppCompatActivity {
         String token = SessionManager.getInstance(this).getToken();
         if (token != null) {
             viewModel.connectWebSocket(token);
-            viewModel.subscribeToRoom(roomId);
+            viewModel.switchRoom(-1, roomId);
         }
     }
 

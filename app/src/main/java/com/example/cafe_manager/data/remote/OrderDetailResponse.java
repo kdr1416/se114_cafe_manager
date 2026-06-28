@@ -8,8 +8,6 @@ import java.util.List;
 public class OrderDetailResponse {
     private OrderEntity order;
     private List<OrderItemEntity> items;
-    private String createdByFullName;
-
     public OrderEntity getOrder() {
         return order;
     }
@@ -24,13 +22,5 @@ public class OrderDetailResponse {
 
     public void setItems(List<OrderItemEntity> items) {
         this.items = items;
-    }
-
-    public String getCreatedByFullName() {
-        return createdByFullName;
-    }
-
-    public void setCreatedByFullName(String createdByFullName) {
-        this.createdByFullName = createdByFullName;
     }
 }

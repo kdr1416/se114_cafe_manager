@@ -14,8 +14,11 @@ import java.util.List;
 @Dao
 public interface PaymentDao {
 
-    @Insert
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
     void insert(PaymentEntity payment);
+
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
+    void insertAll(List<PaymentEntity> payments);
 
     @Query("SELECT * FROM payments WHERE order_id = :orderId LIMIT 1")
     PaymentEntity getByOrderId(int orderId);

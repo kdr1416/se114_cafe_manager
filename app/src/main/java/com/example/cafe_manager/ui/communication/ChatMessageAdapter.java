@@ -125,7 +125,10 @@ public class ChatMessageAdapter extends ListAdapter<ChatMessageEntity, RecyclerV
         }
 
         void bind(ChatMessageEntity msg) {
-            String name = userNames.get(msg.getSenderId());
+            String name = msg.getSenderName();
+            if (name == null || name.isEmpty() || "Unknown".equals(name)) {
+                name = userNames.get(msg.getSenderId());
+            }
             tvSender.setText(name != null ? name : "Nhân viên #" + msg.getSenderId());
             tvBody.setText(msg.getContent());
             tvTime.setText(timeFormat.format(new Date(msg.getCreatedAt())));

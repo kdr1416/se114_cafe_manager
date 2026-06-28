@@ -12,6 +12,7 @@ import com.example.cafe_manager.data.remote.AttendanceApiService;
 import com.example.cafe_manager.data.remote.AttendanceResponse;
 import com.example.cafe_manager.data.remote.CheckInRequest;
 import com.example.cafe_manager.data.remote.CheckOutRequest;
+import com.example.cafe_manager.data.remote.UserAttendanceDetailResponse;
 import com.example.cafe_manager.util.AppExecutors;
 import com.example.cafe_manager.util.RepositoryCallback;
 
@@ -187,6 +188,22 @@ public class AttendanceRepository {
             // ignore
         }
         return new Exception(defaultMsg);
+    }
+
+    public void getUserDetails(int userId, int year, int month, RepositoryCallback<UserAttendanceDetailResponse> callback) {
+        exec.diskIO().execute(() -> {
+            try {
+                retrofit2.Response<UserAttendanceDetailResponse> response = apiService.getUserDetails(userId, year, month).execute();
+                if (response.isSuccessful() && response.body() != null) {
+                    exec.mainThread().execute(() -> callback.onSuccess(response.body()));
+                } else {
+                    Exception err = parseError(response, "Lấy báo cáo chi tiết thất bại");
+                    exec.mainThread().execute(() -> callback.onError(err));
+                }
+            } catch (Exception e) {
+                exec.mainThread().execute(() -> callback.onError(e));
+            }
+        });
     }
 
     private AttendanceEntity mapResponseToEntity(AttendanceResponse r) {

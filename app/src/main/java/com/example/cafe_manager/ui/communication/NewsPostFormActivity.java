@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class NewsPostFormActivity extends AppCompatActivity {
 
@@ -36,6 +37,9 @@ public class NewsPostFormActivity extends AppCompatActivity {
     private NewsViewModel viewModel;
     private AppDatabase db;
     private final SimpleDateFormat shiftDateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+    {
+        shiftDateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+    }
 
     private EditText etTitle;
     private EditText etContent;

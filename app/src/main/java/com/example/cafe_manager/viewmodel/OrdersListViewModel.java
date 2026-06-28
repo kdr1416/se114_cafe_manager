@@ -62,7 +62,12 @@ public class OrdersListViewModel extends AndroidViewModel {
             OrderItemEntity it = items.get(i);
             sb.append(it.getQuantity())
                     .append(" ")
-                    .append(it.getProductNameSnapshot());
+                    .append(it.getProductNameSnapshot())
+                    .append(" (Đã lên: ")
+                    .append(it.getServedQuantity())
+                    .append("/")
+                    .append(it.getQuantity())
+                    .append(")");
         }
 
         int remaining = items.size() - show;

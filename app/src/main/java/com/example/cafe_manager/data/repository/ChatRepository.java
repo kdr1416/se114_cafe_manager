@@ -18,10 +18,15 @@ import com.example.cafe_manager.data.remote.PageResponse;
 import com.example.cafe_manager.data.websocket.ChatWebSocketClient;
 import com.example.cafe_manager.util.AppExecutors;
 
+import com.example.cafe_manager.util.RepositoryCallback;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -38,9 +43,10 @@ public class ChatRepository {
 
     // Shared static caches to maintain consistency across all instances
     private static final MutableLiveData<List<ChatRoomEntity>> activeRoomsCache = new MutableLiveData<>(new ArrayList<>());
-    private static final Map<Integer, MutableLiveData<List<ChatMessageEntity>>> messageCache = new HashMap<>();
+    private static final Map<Integer, MutableLiveData<List<ChatMessageEntity>>> messageCacheByRoom = new HashMap<>();
     private static final Map<Integer, MutableLiveData<Integer>> unreadCountCache = new HashMap<>();
     private static final Map<Integer, MutableLiveData<ChatMessageEntity>> latestMessageCache = new HashMap<>();
+    private final Map<Integer, Integer> currentPageByRoom = new ConcurrentHashMap<>();
 
     private ChatWebSocketClient.OnMessageListener wsMessageListener;
 
@@ -86,6 +92,24 @@ public class ChatRepository {
         };
     }
 
+    private MutableLiveData<List<ChatMessageEntity>> getOrCreateMessageLiveData(int roomId) {
+        synchronized (messageCacheByRoom) {
+            return messageCacheByRoom.computeIfAbsent(roomId, k -> new MutableLiveData<>(new ArrayList<>()));
+        }
+    }
+
+    public void resetPageForRoom(int roomId) {
+        currentPageByRoom.put(roomId, 0);
+    }
+
+    public int getCurrentPage(int roomId) {
+        return currentPageByRoom.getOrDefault(roomId, 0);
+    }
+
+    public LiveData<List<ChatMessageEntity>> getMessagesLiveData(int roomId) {
+        return getOrCreateMessageLiveData(roomId);
+    }
+
     private void handleWebSocketMessage(ChatMessageResponse remoteMsg) {
         int roomId = remoteMsg.getRoomId();
         int senderId = remoteMsg.getSenderId();
@@ -94,26 +118,35 @@ public class ChatRepository {
         localMsg.setMessageId(remoteMsg.getMessageId());
         localMsg.setRoomId(roomId);
         localMsg.setSenderId(senderId);
+        localMsg.setSenderName(remoteMsg.getSenderName());
         localMsg.setContent(remoteMsg.getContent());
         localMsg.setCreatedAt(remoteMsg.getCreatedAt());
         localMsg.setIsDeleted(remoteMsg.getIsDeleted() != null ? remoteMsg.getIsDeleted() : false);
 
         // Update message cache
-        MutableLiveData<List<ChatMessageEntity>> messagesLive = messageCache.get(roomId);
-        if (messagesLive == null) {
-            messagesLive = new MutableLiveData<>(new ArrayList<>());
-            messageCache.put(roomId, messagesLive);
-        }
+        MutableLiveData<List<ChatMessageEntity>> messagesLive = getOrCreateMessageLiveData(roomId);
         List<ChatMessageEntity> current = messagesLive.getValue();
         if (current == null) current = new ArrayList<>();
-        List<ChatMessageEntity> updated = new ArrayList<>(current);
+        List<ChatMessageEntity> updated = new ArrayList<>();
         
-        // Prevent duplicate messages in case WebSocket frame is received twice or already loaded
+        // Prevent duplicate messages, and remove corresponding optimistic/temporary messages
         boolean exists = false;
-        for (ChatMessageEntity msg : updated) {
-            if (localMsg.getMessageId() == msg.getMessageId()) {
-                exists = true;
-                break;
+        for (ChatMessageEntity msg : current) {
+            if (msg.getMessageId() <= 0) {
+                // If it is our optimistic message, remove it since we are adding the real one
+                if (msg.getSenderId() == senderId && msg.getContent().equals(localMsg.getContent())) {
+                    continue;
+                }
+                // Cleanup stale optimistic messages older than 10 seconds
+                if (System.currentTimeMillis() - msg.getCreatedAt() > 10000) {
+                    continue;
+                }
+                updated.add(msg);
+            } else {
+                if (msg.getMessageId() == localMsg.getMessageId()) {
+                    exists = true;
+                }
+                updated.add(msg);
             }
         }
         
@@ -181,57 +214,112 @@ public class ChatRepository {
     // ── Message operations ──
 
     public LiveData<List<ChatMessageEntity>> getMessages(int roomId, int limit) {
-        MutableLiveData<List<ChatMessageEntity>> liveData;
-        synchronized (messageCache) {
-            liveData = messageCache.get(roomId);
-            if (liveData == null) {
-                liveData = new MutableLiveData<>(new ArrayList<>());
-                messageCache.put(roomId, liveData);
-            }
-        }
-        loadMessagesFromApi(roomId, limit);
-        return liveData;
+        loadMessages(roomId, 0, limit, null);
+        return getOrCreateMessageLiveData(roomId);
     }
 
-    private void loadMessagesFromApi(int roomId, int limit) {
-        // Fetch first page of messages
-        apiService.getMessages(roomId, 0, limit).enqueue(new Callback<PageResponse<ChatMessageResponse>>() {
-            @Override
-            public void onResponse(Call<PageResponse<ChatMessageResponse>> call, Response<PageResponse<ChatMessageResponse>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    List<ChatMessageResponse> list = response.body().getContent();
-                    List<ChatMessageEntity> entities = new ArrayList<>();
-                    if (list != null) {
-                        for (ChatMessageResponse r : list) {
-                            ChatMessageEntity e = new ChatMessageEntity();
-                            e.setMessageId(r.getMessageId());
-                            e.setRoomId(r.getRoomId());
-                            e.setSenderId(r.getSenderId());
-                            e.setContent(r.getContent());
-                            e.setCreatedAt(r.getCreatedAt());
-                            e.setIsDeleted(r.getIsDeleted() != null ? r.getIsDeleted() : false);
-                            entities.add(e);
-                        }
-                    }
-                    // Sort ascending (oldest first)
-                    entities.sort((a, b) -> Long.compare(a.getCreatedAt(), b.getCreatedAt()));
-                    // Retrofit callbacks run on main thread by default
-                    MutableLiveData<List<ChatMessageEntity>> liveData = messageCache.get(roomId);
-                    if (liveData != null) {
-                        liveData.setValue(entities);
-                    }
-                }
+    private List<ChatMessageEntity> mapToEntities(List<ChatMessageResponse> list) {
+        List<ChatMessageEntity> entities = new ArrayList<>();
+        if (list != null) {
+            for (ChatMessageResponse r : list) {
+                ChatMessageEntity e = new ChatMessageEntity();
+                e.setMessageId(r.getMessageId());
+                e.setRoomId(r.getRoomId());
+                e.setSenderId(r.getSenderId());
+                e.setSenderName(r.getSenderName());
+                e.setContent(r.getContent());
+                e.setCreatedAt(r.getCreatedAt());
+                e.setIsDeleted(r.getIsDeleted() != null ? r.getIsDeleted() : false);
+                entities.add(e);
             }
+        }
+        entities.sort((a, b) -> Long.compare(a.getCreatedAt(), b.getCreatedAt()));
+        return entities;
+    }
 
-            @Override
-            public void onFailure(Call<PageResponse<ChatMessageResponse>> call, Throwable t) {
-                Log.e(TAG, "Failed to load messages for room " + roomId, t);
+    public void loadMessages(int roomId, int page, int size, RepositoryCallback<List<ChatMessageEntity>> callback) {
+        exec.diskIO().execute(() -> {
+            try {
+                Response<PageResponse<ChatMessageResponse>> response =
+                    apiService.getMessages(roomId, page, size).execute();
+                if (response.isSuccessful() && response.body() != null) {
+                    List<ChatMessageEntity> newMessages = mapToEntities(response.body().getContent());
+
+                    if (page == 0) {
+                        // Initial load — replace entire list
+                        exec.mainThread().execute(() -> {
+                            getOrCreateMessageLiveData(roomId).setValue(newMessages);
+                            currentPageByRoom.put(roomId, 0);
+                            if (callback != null) callback.onSuccess(newMessages);
+                        });
+                    } else {
+                        // Load more — PREPEND old messages to front of existing list
+                        exec.mainThread().execute(() -> {
+                            MutableLiveData<List<ChatMessageEntity>> liveData = getOrCreateMessageLiveData(roomId);
+                            List<ChatMessageEntity> current = liveData.getValue();
+                            List<ChatMessageEntity> merged = new ArrayList<>();
+                            merged.addAll(newMessages);  // older messages first
+                            if (current != null) {
+                                // Deduplicate: only add current items not already in newMessages
+                                Set<Integer> newIds = newMessages.stream()
+                                    .map(ChatMessageEntity::getMessageId)
+                                    .collect(Collectors.toSet());
+                                for (ChatMessageEntity m : current) {
+                                    if (!newIds.contains(m.getMessageId())) {
+                                        merged.add(m);
+                                    }
+                                }
+                            }
+                            liveData.setValue(merged);
+                            currentPageByRoom.put(roomId, page);
+                            if (callback != null) callback.onSuccess(merged);
+                        });
+                    }
+                } else {
+                    exec.mainThread().execute(() -> {
+                        if (callback != null) callback.onError(new Exception("Load failed: " + response.code()));
+                    });
+                }
+            } catch (Exception e) {
+                exec.mainThread().execute(() -> {
+                    if (callback != null) callback.onError(e);
+                });
             }
         });
     }
 
     public void sendMessage(int roomId, int senderId, String content, Runnable onSuccess, Runnable onError) {
         if (webSocketClient.isConnected()) {
+            // Create optimistic local message
+            ChatMessageEntity optimisticMsg = new ChatMessageEntity();
+            // Assign a temporary unique negative ID
+            optimisticMsg.setMessageId(-1 - (int)(System.currentTimeMillis() % 10000));
+            optimisticMsg.setRoomId(roomId);
+            optimisticMsg.setSenderId(senderId);
+            String currentFullName = com.example.cafe_manager.manager.SessionManager.getInstance(appContext).getFullName();
+            optimisticMsg.setSenderName(currentFullName != null && !currentFullName.isEmpty() ? currentFullName : "Bạn");
+            optimisticMsg.setContent(content);
+            optimisticMsg.setCreatedAt(System.currentTimeMillis());
+            optimisticMsg.setIsDeleted(false);
+
+            // Insert optimistic message immediately
+            MutableLiveData<List<ChatMessageEntity>> messagesLive = getOrCreateMessageLiveData(roomId);
+            List<ChatMessageEntity> current = messagesLive.getValue();
+            if (current == null) current = new ArrayList<>();
+            List<ChatMessageEntity> updated = new ArrayList<>(current);
+            updated.add(optimisticMsg);
+            updated.sort((a, b) -> Long.compare(a.getCreatedAt(), b.getCreatedAt()));
+            messagesLive.setValue(updated);
+
+            // Also update latest message cache immediately
+            MutableLiveData<ChatMessageEntity> latestLive = latestMessageCache.get(roomId);
+            if (latestLive == null) {
+                latestLive = new MutableLiveData<>();
+                latestMessageCache.put(roomId, latestLive);
+            }
+            latestLive.setValue(optimisticMsg);
+
+            // Send via WebSocket
             webSocketClient.sendMessage(roomId, content);
             if (onSuccess != null) {
                 exec.mainThread().execute(onSuccess);

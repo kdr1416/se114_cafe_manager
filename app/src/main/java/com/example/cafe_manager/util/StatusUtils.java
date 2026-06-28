@@ -16,6 +16,7 @@ public final class StatusUtils {
     public static boolean isValidOrderStatus(String status) {
         return Constants.ORDER_OPEN.equals(status)
                 || Constants.ORDER_CONFIRMED.equals(status)
+                || Constants.ORDER_SERVED.equals(status)
                 || Constants.ORDER_PAID.equals(status)
                 || Constants.ORDER_CANCELLED.equals(status);
     }
@@ -53,6 +54,8 @@ public final class StatusUtils {
                 return "Đang mở";
             case Constants.ORDER_CONFIRMED:
                 return "Đang phục vụ";
+            case Constants.ORDER_SERVED:
+                return "Đã lên món";
             case Constants.ORDER_PAID:
                 return "Đã thanh toán";
             case Constants.ORDER_CANCELLED:

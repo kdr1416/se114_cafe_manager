@@ -196,7 +196,10 @@ public class NewsRepository {
     public void markPostRead(int postId, int userId) {
         exec.diskIO().execute(() -> {
             try {
-                apiService.markRead(postId).execute();
+                retrofit2.Response<Void> response = apiService.markRead(postId).execute();
+                if (response.isSuccessful()) {
+                    refreshPosts();
+                }
             } catch (Exception e) {
                 // Log error
             }
@@ -216,7 +219,7 @@ public class NewsRepository {
     }
 
     // Refresh cache from server
-    private void refreshPosts() {
+    public void refreshPosts() {
         exec.diskIO().execute(() -> {
             try {
                 retrofit2.Response<List<NewsPostResponse>> response = apiService.getAllPosts().execute();

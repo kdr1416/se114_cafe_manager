@@ -43,6 +43,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class ShiftScheduleActivity extends AppCompatActivity {
 
@@ -67,6 +68,7 @@ public class ShiftScheduleActivity extends AppCompatActivity {
     private List<ShiftTemplateEntity> currentTemplates = new ArrayList<>();
 
     {
+        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         for (int i = 0; i < 7; i++) {
             weekDaysShifts.add(new ArrayList<>());
         }
@@ -167,6 +169,7 @@ public class ShiftScheduleActivity extends AppCompatActivity {
                         intent.putExtra("room_id", roomId);
                         
                         SimpleDateFormat sdfDate = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                        sdfDate.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
                         String dateStr = sdfDate.format(new Date(shift.getShiftDate()));
                         String roomName = shift.getShiftName() + " - " + dateStr + " (" + shift.getStartTime() + "-" + shift.getEndTime() + ")";
                         intent.putExtra("room_name", roomName);
@@ -601,6 +604,7 @@ public class ShiftScheduleActivity extends AppCompatActivity {
         if (sortedShifts == null) return result;
         long lastDate = -1;
         SimpleDateFormat daySdf = new SimpleDateFormat("EEE, dd/MM", localeVi);
+        daySdf.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         for (ShiftScheduleViewModel.ShiftDisplayItem item : sortedShifts) {
             long shiftDate = item.shift.getShiftDate();
             if (shiftDate != lastDate) {

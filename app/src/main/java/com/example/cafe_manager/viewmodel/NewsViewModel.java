@@ -128,6 +128,10 @@ public class NewsViewModel extends AndroidViewModel {
         );
     }
 
+    public void refresh() {
+        repo.refreshPosts();
+    }
+
     public void markRead(int postId, int userId) {
         repo.markPostRead(postId, userId);
     }

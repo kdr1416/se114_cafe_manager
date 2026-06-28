@@ -13,11 +13,15 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class AttendanceRecordAdapter extends RecyclerView.Adapter<AttendanceRecordAdapter.ViewHolder> {
 
     private List<AttendanceRecord> items = new ArrayList<>();
     private final SimpleDateFormat sdfDate = new SimpleDateFormat("EEEE, dd/MM/yyyy", new Locale("vi", "VN"));
+    {
+        sdfDate.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+    }
     private final SimpleDateFormat sdfTime = new SimpleDateFormat("HH:mm", Locale.getDefault());
 
     public AttendanceRecordAdapter() {}

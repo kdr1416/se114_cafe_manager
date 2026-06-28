@@ -16,6 +16,7 @@ import com.example.cafe_manager.data.local.entity.ShiftAssignmentEntity;
 import com.example.cafe_manager.data.local.entity.ShiftEntity;
 import com.example.cafe_manager.data.repository.AttendanceRepository;
 import com.example.cafe_manager.data.repository.ShiftRepository;
+import com.example.cafe_manager.data.remote.UserAttendanceDetailResponse;
 import com.example.cafe_manager.manager.SessionManager;
 import com.example.cafe_manager.model.DailyRevenueRow;
 import com.example.cafe_manager.model.PaymentMethodStatsRow;
@@ -28,6 +29,7 @@ import com.example.cafe_manager.util.RepositoryCallback;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.TimeZone;
 import java.util.List;
 
 public class DashboardViewModel extends AndroidViewModel {
@@ -158,6 +160,7 @@ public class DashboardViewModel extends AndroidViewModel {
         DateRange.Period current = periodLive.getValue();
         if (current == p) return;
         periodLive.setValue(p);
+        loadDashboardData();
     }
 
     public void clearError() {
@@ -166,17 +169,85 @@ public class DashboardViewModel extends AndroidViewModel {
 
     // ── Business Actions & Load ──
 
+    private long lastSyncTime = 0;
+    private static final long SYNC_DEBOUNCE_MS = 3000; // 3 seconds
+
     public void loadDashboardData() {
         loadingLive.setValue(true);
-        if (Constants.ROLE_STAFF.equals(currentRole)) {
-            // STAFF -> Sync my shifts + assignments, then load local data
+        
+        // Step 1: Load local data IMMEDIATELY — show UI right away
+        loadLocalData();
+
+        // Step 2: Sync from API in background (non-blocking)
+        if (!Constants.ROLE_STAFF.equalsIgnoreCase(currentRole)) {
+            long now = System.currentTimeMillis();
+            if (now - lastSyncTime < SYNC_DEBOUNCE_MS) {
+                loadingLive.setValue(false);
+                return; // skip if synced recently
+            }
+            lastSyncTime = now;
+
+            long[] range = DateRange.compute(periodLive.getValue());
+            com.example.cafe_manager.data.repository.PaymentRepository.getInstance(getApplication())
+                .syncPaymentsInRange(range[0], range[1], new RepositoryCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void result) {
+                        ShiftRepository.getInstance(getApplication()).syncMyShiftsAndAssignments(new RepositoryCallback<Void>() {
+                            @Override
+                            public void onSuccess(Void res) {
+                                loadLocalData();
+                            }
+
+                            @Override
+                            public void onError(Exception e) {
+                                loadLocalData();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        android.util.Log.w("Dashboard", "Sync failed, showing cached data: " + e.getMessage());
+                        ShiftRepository.getInstance(getApplication()).syncMyShiftsAndAssignments(new RepositoryCallback<Void>() {
+                            @Override
+                            public void onSuccess(Void res) {
+                                loadLocalData();
+                            }
+
+                            @Override
+                            public void onError(Exception ex) {
+                                loadLocalData();
+                            }
+                        });
+                    }
+                });
+        } else {
+            // STAFF -> Sync my shifts + assignments
             ShiftRepository.getInstance(getApplication()).syncMyShiftsAndAssignments(new RepositoryCallback<Void>() {
                 @Override
                 public void onSuccess(Void result) {
                     AttendanceRepository.getInstance(getApplication()).syncMyAttendances(new RepositoryCallback<Void>() {
                         @Override
                         public void onSuccess(Void res) {
-                            loadLocalData();
+                            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+                            int year = cal.get(Calendar.YEAR);
+                            int month = cal.get(Calendar.MONTH) + 1;
+                            AttendanceRepository.getInstance(getApplication()).getUserDetails(
+                                    currentUserId, year, month, new RepositoryCallback<UserAttendanceDetailResponse>() {
+                                        @Override
+                                        public void onSuccess(UserAttendanceDetailResponse details) {
+                                            if (details != null) {
+                                                staffMonthlyOrdersLive.postValue(details.getOrdersCreated() != null ? details.getOrdersCreated() : 0);
+                                                staffMonthlyRevenueLive.postValue(details.getRevenueProcessed() != null ? details.getRevenueProcessed() : 0.0);
+                                            }
+                                            loadLocalData();
+                                        }
+
+                                        @Override
+                                        public void onError(Exception e) {
+                                            loadLocalData();
+                                        }
+                                    });
                         }
 
                         @Override
@@ -184,21 +255,6 @@ public class DashboardViewModel extends AndroidViewModel {
                             loadLocalData();
                         }
                     });
-                }
-
-                @Override
-                public void onError(Exception e) {
-                    errorLive.postValue("Lỗi đồng bộ ca làm: " + e.getMessage());
-                    loadLocalData();
-                }
-            });
-        } else {
-            // MANAGER/ADMIN -> Sync all shifts & assignments
-            ShiftRepository.getInstance(getApplication()).refreshShiftsFromApi(new RepositoryCallback<Void>() {
-                @Override
-                public void onSuccess(Void result) {
-                    // Let's load local data
-                    loadLocalData();
                 }
 
                 @Override
@@ -250,13 +306,12 @@ public class DashboardViewModel extends AndroidViewModel {
                     }
                     staffMonthlyHoursLive.postValue(totalHours);
 
-                    int totalOrders = appDatabase.orderDao()
-                            .countOrdersByUserInRange(currentUserId, monthRange[0], monthRange[1]);
-                    staffMonthlyOrdersLive.postValue(totalOrders);
-
-                    double totalRevenue = appDatabase.paymentDao()
-                            .getRevenueByUserInRange(currentUserId, monthRange[0], monthRange[1]);
-                    staffMonthlyRevenueLive.postValue(totalRevenue);
+                    if (staffMonthlyOrdersLive.getValue() == null) {
+                        staffMonthlyOrdersLive.postValue(0);
+                    }
+                    if (staffMonthlyRevenueLive.getValue() == null) {
+                        staffMonthlyRevenueLive.postValue(0.0);
+                    }
 
                 } else {
                     // MANAGER / ADMIN Today's Shifts
@@ -307,6 +362,9 @@ public class DashboardViewModel extends AndroidViewModel {
                         adminActiveUsersLive.postValue(activeUsers);
                     }
                 }
+                AppExecutors.getInstance().mainThread().execute(() -> {
+                    periodLive.setValue(periodLive.getValue());
+                });
             } catch (Exception e) {
                 errorLive.postValue("Lỗi truy vấn cơ sở dữ liệu: " + e.getMessage());
             } finally {
@@ -352,7 +410,7 @@ public class DashboardViewModel extends AndroidViewModel {
     // ── Helpers ──
 
     private long getStartOfDayMillis(long timeMs) {
-        Calendar cal = Calendar.getInstance();
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         cal.setTimeInMillis(timeMs);
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
@@ -362,7 +420,7 @@ public class DashboardViewModel extends AndroidViewModel {
     }
 
     private long getEndOfDayMillis(long timeMs) {
-        Calendar cal = Calendar.getInstance();
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         cal.setTimeInMillis(timeMs);
         cal.set(Calendar.HOUR_OF_DAY, 23);
         cal.set(Calendar.MINUTE, 59);
@@ -372,7 +430,7 @@ public class DashboardViewModel extends AndroidViewModel {
     }
 
     private long[] getMonthRange(long timeMs) {
-        Calendar cal = Calendar.getInstance();
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         cal.setTimeInMillis(timeMs);
         cal.set(Calendar.DAY_OF_MONTH, 1);
         cal.set(Calendar.HOUR_OF_DAY, 0);

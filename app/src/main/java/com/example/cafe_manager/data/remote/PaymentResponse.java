@@ -2,6 +2,7 @@ package com.example.cafe_manager.data.remote;
 
 public class PaymentResponse {
     private int paymentId;
+    private Integer orderId;
     private double subtotal;
     private double discountAmount;
     private double finalAmount;
@@ -10,6 +11,7 @@ public class PaymentResponse {
     private String cashierFullName;
     private String paymentMethod;
     private Long paidAt;
+    private Integer paidShiftId;
 
     public int getPaymentId() {
         return paymentId;
@@ -81,5 +83,21 @@ public class PaymentResponse {
 
     public void setPaidAt(Long paidAt) {
         this.paidAt = paidAt;
+    }
+
+    public Integer getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(Integer orderId) {
+        this.orderId = orderId;
+    }
+
+    public Integer getPaidShiftId() {
+        return paidShiftId;
+    }
+
+    public void setPaidShiftId(Integer paidShiftId) {
+        this.paidShiftId = paidShiftId;
     }
 }

@@ -151,9 +151,41 @@ public class OrdersListActivity extends AppCompatActivity {
         adapter = new OrdersListAdapter(
                 this::onCollectClicked,
                 this::onCancelClicked,
-                this::onAddMoreClicked
+                this::onAddMoreClicked,
+                this::onServeClicked
         );
         rvOrders.setAdapter(adapter);
+    }
+
+    private void onServeClicked(OrderWithItems data) {
+        new AlertDialog.Builder(this)
+                .setTitle("Xác nhận lên món?")
+                .setMessage("Đánh dấu tất cả món ăn trong " + (data.getTableName() != null ? data.getTableName() : "bàn") + " đã được lên phục vụ?")
+                .setPositiveButton("Xác nhận", (dialog, which) -> confirmServeOrder(data))
+                .setNegativeButton("Thoát", null)
+                .show();
+    }
+
+    private void confirmServeOrder(OrderWithItems data) {
+        orderRepository.serveOrder(
+                data.getOrder().getOrderId(),
+                new RepositoryCallback<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean result) {
+                        Toast.makeText(OrdersListActivity.this,
+                                "Đã xác nhận lên món", Toast.LENGTH_SHORT).show();
+                        refreshData();
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Toast.makeText(OrdersListActivity.this,
+                                "Xác nhận lên món thất bại: "
+                                        + (e != null ? e.getMessage() : ""),
+                                Toast.LENGTH_LONG).show();
+                    }
+                }
+        );
     }
 
     private void setupViewModel() {

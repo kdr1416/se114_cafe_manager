@@ -48,7 +48,18 @@ public class ChatMessageEntity {
     @ColumnInfo(name = "is_deleted")
     private boolean isDeleted = false;
 
+    @androidx.room.Ignore
+    private String senderName;
+
     public ChatMessageEntity() {}
+
+    public String getSenderName() {
+        return senderName;
+    }
+
+    public void setSenderName(String senderName) {
+        this.senderName = senderName;
+    }
 
     public int getMessageId() {
         return messageId;

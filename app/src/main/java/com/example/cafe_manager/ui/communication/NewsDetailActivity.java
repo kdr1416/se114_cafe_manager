@@ -26,6 +26,7 @@ import com.example.cafe_manager.viewmodel.NewsViewModel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class NewsDetailActivity extends AppCompatActivity {
 
@@ -34,6 +35,9 @@ public class NewsDetailActivity extends AppCompatActivity {
     private AppDatabase db;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
     private final SimpleDateFormat shiftDateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+    {
+        shiftDateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+    }
 
     private TextView tvDetailPriority;
     private TextView tvDetailType;
