@@ -48,6 +48,9 @@ public class ShiftService {
     @Autowired
     private ShiftReportService shiftReportService;
 
+    @Autowired
+    private ShiftTemplateRepository shiftTemplateRepository;
+
     private ShiftResponse mapToResponse(ShiftEntity shift) {
         return new ShiftResponse(
                 shift.getShiftId(),
@@ -359,9 +362,22 @@ public class ShiftService {
     @Transactional(readOnly = true)
     public List<ShiftAssignmentResponse> getAssignmentsForShift(int shiftId) {
         List<ShiftAssignmentEntity> assignments = shiftAssignmentRepository.findByShiftId(shiftId);
+        if (assignments.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        // Lấy danh sách ID người dùng duy nhất để truy vấn gộp
+        List<Integer> userIds = assignments.stream()
+                .map(ShiftAssignmentEntity::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        java.util.Map<Integer, UserEntity> userMap = userRepository.findAllByUserIdIn(userIds).stream()
+                .collect(Collectors.toMap(UserEntity::getUserId, u -> u));
+
         return assignments.stream()
                 .map(a -> {
-                    UserEntity user = userRepository.findById(a.getUserId()).orElse(null);
+                    UserEntity user = userMap.get(a.getUserId());
                     return new ShiftAssignmentResponse(
                             a.getAssignmentId(),
                             a.getShiftId(),
@@ -430,5 +446,115 @@ public class ShiftService {
                         a.getCreatedAt()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ShiftWithAssignmentsResponse> getShiftsForWeek(Long weekStart) {
+        if (weekStart == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thiếu tham số weekStart.");
+        }
+        
+        long weekEnd = weekStart + 7 * 24 * 60 * 60 * 1000L;
+        List<ShiftEntity> shifts = shiftRepository.findShiftsInRange(weekStart, weekEnd);
+        if (shifts.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        List<Integer> shiftIds = shifts.stream()
+                .map(ShiftEntity::getShiftId)
+                .collect(Collectors.toList());
+
+        // 1. Load all templates to map minStaff
+        java.util.Map<Integer, Integer> minStaffMap = shiftTemplateRepository.findAll().stream()
+                .filter(t -> t.getTemplateId() != null)
+                .collect(Collectors.toMap(ShiftTemplateEntity::getTemplateId, ShiftTemplateEntity::getMinStaff, (a, b) -> a));
+
+        // 2. Load all assignments in one query
+        List<ShiftAssignmentEntity> assignments = shiftAssignmentRepository.findByShiftIdIn(shiftIds);
+
+        java.util.Map<Integer, List<ShiftAssignmentEntity>> assignmentsByShift = assignments.stream()
+                .collect(Collectors.groupingBy(ShiftAssignmentEntity::getShiftId));
+
+        // 3. Load all users needed
+        List<Integer> userIds = assignments.stream()
+                .map(ShiftAssignmentEntity::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        java.util.Map<Integer, UserEntity> userMap = java.util.Collections.emptyMap();
+        if (!userIds.isEmpty()) {
+            userMap = userRepository.findAllByUserIdIn(userIds).stream()
+                    .collect(Collectors.toMap(UserEntity::getUserId, u -> u));
+        }
+
+        final java.util.Map<Integer, UserEntity> finalUserMap = userMap;
+
+        // 4. Build response list
+        return shifts.stream()
+                .map(shift -> {
+                    List<ShiftAssignmentEntity> shiftAssigns = assignmentsByShift.getOrDefault(shift.getShiftId(), java.util.Collections.emptyList());
+                    
+                    List<ShiftWithAssignmentsResponse.AssignedStaffDto> staffDtos = shiftAssigns.stream()
+                            .map(a -> {
+                                UserEntity user = finalUserMap.get(a.getUserId());
+                                return new ShiftWithAssignmentsResponse.AssignedStaffDto(
+                                        a.getUserId(),
+                                        user != null ? user.getFullName() : "",
+                                        a.getRole(),
+                                        a.getConfirmed()
+                                );
+                            })
+                            .collect(Collectors.toList());
+
+                    int minStaff = 0;
+                    if (shift.getTemplateId() != null) {
+                        minStaff = minStaffMap.getOrDefault(shift.getTemplateId(), 0);
+                    }
+
+                    return new ShiftWithAssignmentsResponse(
+                            shift.getShiftId(),
+                            shift.getShiftName(),
+                            shift.getShiftDate(),
+                            shift.getStartTime(),
+                            shift.getEndTime(),
+                            shift.getStatus(),
+                            shift.getTemplateId(),
+                            minStaff,
+                            staffDtos.size(),
+                            staffDtos
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public List<ShiftResponse> createShiftsBulk(List<ShiftRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        List<ShiftEntity> entities = requests.stream()
+                .map(request -> {
+                    ShiftEntity shift = new ShiftEntity();
+                    shift.setTemplateId(request.getTemplateId());
+                    shift.setShiftName(request.getShiftName().trim());
+                    shift.setShiftDate(request.getShiftDate());
+                    shift.setStartTime(request.getStartTime().trim());
+                    shift.setEndTime(request.getEndTime().trim());
+                    shift.setStatus("DRAFT");
+                    shift.setCreatedAt(System.currentTimeMillis());
+                    return shift;
+                })
+                .collect(Collectors.toList());
+
+        List<ShiftEntity> saved = shiftRepository.saveAll(entities);
+        return saved.stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void removeAssignmentById(Integer assignmentId) {
+        ShiftAssignmentEntity assignment = shiftAssignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy phân công với ID: " + assignmentId));
+        shiftAssignmentRepository.delete(assignment);
     }
 }

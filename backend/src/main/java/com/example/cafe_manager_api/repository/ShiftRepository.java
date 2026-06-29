@@ -27,7 +27,7 @@ public interface ShiftRepository extends JpaRepository<ShiftEntity, Integer> {
         @Param("endDate") Long endDate
     );
 
-    @Query("SELECT s FROM ShiftEntity s WHERE s.shiftDate >= :startDate AND s.shiftDate <= :endDate")
+    @Query("SELECT s FROM ShiftEntity s WHERE s.shiftDate >= :startDate AND s.shiftDate <= :endDate ORDER BY s.shiftDate ASC, s.startTime ASC")
     List<ShiftEntity> findShiftsInRange(
         @Param("startDate") Long startDate,
         @Param("endDate") Long endDate

@@ -5,6 +5,7 @@ import com.example.cafe_manager_api.dto.ShiftResponse;
 import com.example.cafe_manager_api.dto.ShiftReportResponse;
 import com.example.cafe_manager_api.dto.DailyShiftReportResponse;
 import com.example.cafe_manager_api.dto.ShiftAssignmentResponse;
+import com.example.cafe_manager_api.dto.ShiftWithAssignmentsResponse;
 import com.example.cafe_manager_api.service.ShiftService;
 import com.example.cafe_manager_api.service.ShiftReportService;
 import jakarta.validation.Valid;
@@ -37,6 +38,13 @@ public class ShiftController {
         return ResponseEntity.ok(responses);
     }
 
+    @GetMapping("/week")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<List<ShiftWithAssignmentsResponse>> getShiftsForWeek(@RequestParam Long weekStart) {
+        List<ShiftWithAssignmentsResponse> response = shiftService.getShiftsForWeek(weekStart);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{id:\\d+}")
     public ResponseEntity<ShiftResponse> getShiftById(@PathVariable Integer id) {
         ShiftResponse response = shiftService.getShiftById(id);
@@ -48,6 +56,13 @@ public class ShiftController {
     public ResponseEntity<ShiftResponse> createShift(@Valid @RequestBody ShiftRequest request) {
         ShiftResponse response = shiftService.createShift(request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/bulk")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<List<ShiftResponse>> createShiftsBulk(@RequestBody List<ShiftRequest> requests) {
+        List<ShiftResponse> responses = shiftService.createShiftsBulk(requests);
+        return ResponseEntity.ok(responses);
     }
 
     @PutMapping("/{id}/publish")
@@ -174,6 +189,13 @@ public class ShiftController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Chưa xác thực.");
         }
         shiftService.confirmAssignment(assignmentId, principal.getName());
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/assignments/{assignmentId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<Void> removeAssignmentById(@PathVariable Integer assignmentId) {
+        shiftService.removeAssignmentById(assignmentId);
         return ResponseEntity.ok().build();
     }
 

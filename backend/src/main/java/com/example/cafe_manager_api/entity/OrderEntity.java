@@ -10,7 +10,11 @@ import jakarta.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "orders")
+@Table(name = "orders", indexes = {
+    @Index(name = "idx_order_shift", columnList = "created_shift_id"),
+    @Index(name = "idx_order_status", columnList = "status"),
+    @Index(name = "idx_order_paid_at", columnList = "paid_at")
+})
 public class OrderEntity {
 
     @Id

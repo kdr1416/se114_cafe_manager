@@ -10,7 +10,15 @@ import jakarta.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "shifts")
+@Table(
+    name = "shifts",
+    indexes = {
+        @Index(name = "idx_shift_date", columnList = "shift_date"),
+        @Index(name = "idx_shift_status", columnList = "status"),
+        @Index(name = "idx_shift_date_status", columnList = "shift_date, status"),
+        @Index(name = "idx_shift_template", columnList = "template_id")
+    }
+)
 public class ShiftEntity {
 
     @Id

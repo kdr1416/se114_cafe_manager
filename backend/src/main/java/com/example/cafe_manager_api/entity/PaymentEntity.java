@@ -10,7 +10,11 @@ import jakarta.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "payments")
+@Table(name = "payments", indexes = {
+    @Index(name = "idx_payment_shift", columnList = "paid_shift_id"),
+    @Index(name = "idx_payment_status", columnList = "status"),
+    @Index(name = "idx_payment_paid_at", columnList = "paid_at")
+})
 public class PaymentEntity {
 
     @Id

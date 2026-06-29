@@ -12,6 +12,7 @@ public interface ShiftAssignmentRepository extends JpaRepository<ShiftAssignment
     List<ShiftAssignmentEntity> findByShiftId(Integer shiftId);
     List<ShiftAssignmentEntity> findByUserId(Integer userId);
     java.util.Optional<ShiftAssignmentEntity> findByShiftIdAndUserId(Integer shiftId, Integer userId);
+    List<ShiftAssignmentEntity> findByShiftIdIn(List<Integer> shiftIds);
 
     @Query("SELECT COUNT(a) > 0 FROM ShiftAssignmentEntity a " +
            "JOIN ShiftEntity s ON s.shiftId = a.shiftId " +

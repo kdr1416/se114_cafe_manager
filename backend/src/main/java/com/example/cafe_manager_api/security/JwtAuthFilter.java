@@ -37,15 +37,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 Integer userId = tokenProvider.getUserIdFromToken(jwt);
                 UserEntity user = userRepository.findById(userId).orElse(null);
 
-                if (user != null && Boolean.TRUE.equals(user.getIsActive())) {
-                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + user.getRole());
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            user.getUsername(), null, Collections.singletonList(authority)
-                    );
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                if (user == null || !Boolean.TRUE.equals(user.getIsActive())) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"code\":\"ACCOUNT_LOCKED\",\"message\":\"Tài khoản của bạn đã bị khóa hoặc không tồn tại.\"}");
+                    return;
                 }
+
+                SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + user.getRole());
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        user.getUsername(), null, Collections.singletonList(authority)
+                );
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception ex) {
             logger.error("Could not set user authentication in security context", ex);
