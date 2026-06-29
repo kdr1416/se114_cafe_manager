@@ -235,43 +235,6 @@ public class PaymentRepository {
         return liveData;
     }
 
-    public void syncPaymentsInRange(long start, long end, RepositoryCallback<Void> callback) {
-        appExecutors.diskIO().execute(() -> {
-            try {
-                Response<List<PaymentResponse>> response = paymentApiService.getPaymentsInRange(start, end).execute();
-                if (response.isSuccessful() && response.body() != null) {
-                    java.util.List<PaymentEntity> entities = new java.util.ArrayList<>();
-                    for (PaymentResponse r : response.body()) {
-                        PaymentEntity e = new PaymentEntity(
-                                r.getOrderId() != null ? r.getOrderId() : 0,
-                                r.getPaymentMethod(),
-                                r.getSubtotal(),
-                                r.getDiscountAmount(),
-                                r.getFinalAmount(),
-                                r.getPaidAt() != null ? r.getPaidAt() : 0L,
-                                "PAID"
-                        );
-                        e.setPaymentId(r.getPaymentId());
-                        e.setCashierUserId(r.getCashierUserId() != null ? r.getCashierUserId() : 0);
-                        e.setPaidShiftId(r.getPaidShiftId() != null ? r.getPaidShiftId() : 0);
-                        entities.add(e);
-                    }
-                    AppDatabase.getInstance(context).paymentDao().insertAll(entities);
-                    if (callback != null) {
-                        appExecutors.mainThread().execute(() -> callback.onSuccess(null));
-                    }
-                } else {
-                    if (callback != null) {
-                        appExecutors.mainThread().execute(() -> callback.onError(new Exception("Sync failed: " + response.code())));
-                    }
-                }
-            } catch (Exception e) {
-                if (callback != null) {
-                    appExecutors.mainThread().execute(() -> callback.onError(e));
-                }
-            }
-        });
-    }
 
     private Exception parseError(Response<?> response) {
         if (response == null) return new NetworkException("Không có kết nối mạng");

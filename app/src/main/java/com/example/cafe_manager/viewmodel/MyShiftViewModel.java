@@ -17,6 +17,7 @@ import com.example.cafe_manager.data.repository.ChatRepository;
 import com.example.cafe_manager.manager.SessionManager;
 import com.example.cafe_manager.util.AppExecutors;
 import com.example.cafe_manager.util.RepositoryCallback;
+import com.example.cafe_manager.util.Constants;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -111,7 +112,9 @@ public class MyShiftViewModel extends AndroidViewModel {
 
             for (ShiftAssignmentEntity a : assignments) {
                 ShiftEntity shift = appDatabase.shiftDao().getById(a.getShiftId());
-                if (shift != null && !shift.getStatus().equals("CANCELLED")) {
+                if (shift != null && (shift.getStatus().equals(Constants.SHIFT_PUBLISHED)
+                        || shift.getStatus().equals(Constants.SHIFT_IN_PROGRESS)
+                        || shift.getStatus().equals(Constants.SHIFT_CLOSED))) {
                     AttendanceEntity attendance = appDatabase.attendanceDao().getByShiftAndUser(a.getShiftId(), currentUserId);
                     items.add(new MyShiftItem(shift, a.isConfirmed(), a.getAssignmentId(), attendance));
                 }

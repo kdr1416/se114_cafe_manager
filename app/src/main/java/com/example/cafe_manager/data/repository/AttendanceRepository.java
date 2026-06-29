@@ -13,6 +13,8 @@ import com.example.cafe_manager.data.remote.AttendanceResponse;
 import com.example.cafe_manager.data.remote.CheckInRequest;
 import com.example.cafe_manager.data.remote.CheckOutRequest;
 import com.example.cafe_manager.data.remote.UserAttendanceDetailResponse;
+import com.example.cafe_manager.data.local.entity.ShiftEntity;
+import com.example.cafe_manager.util.Constants;
 import com.example.cafe_manager.util.AppExecutors;
 import com.example.cafe_manager.util.RepositoryCallback;
 
@@ -77,10 +79,16 @@ public class AttendanceRepository {
         // latitude/longitude not provided in current flow, send null
         exec.diskIO().execute(() -> {
             try {
+                AppDatabase db = AppDatabase.getInstance(appContext);
+                ShiftEntity shift = db.shiftDao().getById(shiftId);
+                if (shift != null && (Constants.SHIFT_DRAFT.equals(shift.getStatus())
+                        || Constants.SHIFT_CANCELLED.equals(shift.getStatus()))) {
+                    exec.mainThread().execute(() -> callback.onError(new Exception("Không thể chấm công cho ca tạm hoặc ca đã hủy")));
+                    return;
+                }
                 retrofit2.Response<AttendanceResponse> response = apiService.checkIn(request).execute();
                 if (response.isSuccessful() && response.body() != null) {
                     AttendanceResponse r = response.body();
-                    AppDatabase db = AppDatabase.getInstance(appContext);
                     AttendanceEntity entity = mapResponseToEntity(r);
                     AttendanceEntity existing = db.attendanceDao().getByShiftAndUser(entity.getShiftId(), entity.getUserId());
                     if (existing == null) {
@@ -108,10 +116,16 @@ public class AttendanceRepository {
         // notes not provided in current flow, send null
         exec.diskIO().execute(() -> {
             try {
+                AppDatabase db = AppDatabase.getInstance(appContext);
+                ShiftEntity shift = db.shiftDao().getById(shiftId);
+                if (shift != null && (Constants.SHIFT_DRAFT.equals(shift.getStatus())
+                        || Constants.SHIFT_CANCELLED.equals(shift.getStatus()))) {
+                    exec.mainThread().execute(() -> callback.onError(new Exception("Không thể chấm công cho ca tạm hoặc ca đã hủy")));
+                    return;
+                }
                 retrofit2.Response<AttendanceResponse> response = apiService.checkOut(request).execute();
                 if (response.isSuccessful() && response.body() != null) {
                     AttendanceResponse r = response.body();
-                    AppDatabase db = AppDatabase.getInstance(appContext);
                     AttendanceEntity entity = mapResponseToEntity(r);
                     AttendanceEntity existing = db.attendanceDao().getByShiftAndUser(entity.getShiftId(), entity.getUserId());
                     if (existing == null) {

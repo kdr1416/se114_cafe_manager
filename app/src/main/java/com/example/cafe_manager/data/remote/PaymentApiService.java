@@ -17,11 +17,6 @@ public interface PaymentApiService {
     @POST("api/v1/payments")
     Call<PaymentResponse> processPayment(@Body PaymentRequest request);
 
-    @GET("api/v1/payments")
-    Call<List<PaymentResponse>> getPaymentsInRange(
-            @Query("startDate") long startDate,
-            @Query("endDate") long endDate
-    );
 
     @GET("api/v1/payments/{orderId}")
     Call<PaymentResponse> getPaymentByOrderId(@Path("orderId") int orderId);

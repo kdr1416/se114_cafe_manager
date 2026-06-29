@@ -27,10 +27,14 @@ import com.example.cafe_manager.util.Constants;
 import com.example.cafe_manager.util.DateRange;
 import com.example.cafe_manager.util.RepositoryCallback;
 
+import com.example.cafe_manager.data.repository.RevenueRepository;
+import com.example.cafe_manager.data.remote.RevenueReportResponse;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.List;
+import java.util.Map;
 
 public class DashboardViewModel extends AndroidViewModel {
 
@@ -46,11 +50,12 @@ public class DashboardViewModel extends AndroidViewModel {
             new MutableLiveData<>(DateRange.Period.TODAY);
 
     // Existing revenue report LiveData
-    private final LiveData<Double> revenueLive;
-    private final LiveData<Integer> orderCountLive;
-    private final LiveData<List<TopProductRow>> topProductsLive;
-    private final LiveData<List<PaymentMethodStatsRow>> paymentMethodLive;
-    private final LiveData<List<DailyRevenueRow>> dailyRevenueLive;
+    private final MutableLiveData<Double> revenueLive = new MutableLiveData<>(0.0);
+    private final MutableLiveData<Integer> orderCountLive = new MutableLiveData<>(0);
+    private final MutableLiveData<List<TopProductRow>> topProductsLive = new MutableLiveData<>(new java.util.ArrayList<>());
+    private final MutableLiveData<List<PaymentMethodStatsRow>> paymentMethodLive = new MutableLiveData<>(new java.util.ArrayList<>());
+    private final MutableLiveData<List<DailyRevenueRow>> dailyRevenueLive = new MutableLiveData<>(new java.util.ArrayList<>());
+    private final MutableLiveData<Boolean> isRevenueLoading = new MutableLiveData<>(false);
 
     // Unified/New LiveData for Personalized Dashboard
     private final MutableLiveData<List<TodayShiftItem>> todayShiftsLive = new MutableLiveData<>();
@@ -95,32 +100,6 @@ public class DashboardViewModel extends AndroidViewModel {
         }
         greetingLive.setValue("Xin chào, " + fullName);
 
-        // Switch maps for Period selection (original report logic)
-        this.revenueLive = Transformations.switchMap(periodLive, period -> {
-            long[] r = DateRange.compute(period);
-            return paymentDao.getRevenueInRange(r[0], r[1]);
-        });
-
-        this.orderCountLive = Transformations.switchMap(periodLive, period -> {
-            long[] r = DateRange.compute(period);
-            return paymentDao.countPaymentsInRange(r[0], r[1]);
-        });
-
-        this.topProductsLive = Transformations.switchMap(periodLive, period -> {
-            long[] r = DateRange.compute(period);
-            return orderItemDao.getTopProducts(
-                    Constants.ORDER_PAID, r[0], r[1], TOP_LIMIT);
-        });
-
-        this.paymentMethodLive = Transformations.switchMap(periodLive, period -> {
-            long[] r = DateRange.compute(period);
-            return paymentDao.getPaymentMethodStats(r[0], r[1]);
-        });
-
-        this.dailyRevenueLive = Transformations.switchMap(periodLive, period -> {
-            long[] r = DateRange.compute(period);
-            return paymentDao.getDailyRevenue(r[0], r[1]);
-        });
     }
 
     // ── Getters ──
@@ -130,6 +109,12 @@ public class DashboardViewModel extends AndroidViewModel {
     public LiveData<List<TopProductRow>> getTopProducts() { return topProductsLive; }
     public LiveData<List<PaymentMethodStatsRow>> getPaymentMethodStats() { return paymentMethodLive; }
     public LiveData<List<DailyRevenueRow>> getDailyRevenue() { return dailyRevenueLive; }
+
+    public LiveData<Double> getRevenueLive() { return revenueLive; }
+    public LiveData<Integer> getOrderCountLive() { return orderCountLive; }
+    public LiveData<List<PaymentMethodStatsRow>> getPaymentMethodLive() { return paymentMethodLive; }
+    public LiveData<List<DailyRevenueRow>> getDailyRevenueLive() { return dailyRevenueLive; }
+    public LiveData<Boolean> getIsRevenueLoading() { return isRevenueLoading; }
 
     public LiveData<List<TodayShiftItem>> getTodayShifts() { return todayShiftsLive; }
     public LiveData<String> getGreeting() { return greetingLive; }
@@ -180,47 +165,19 @@ public class DashboardViewModel extends AndroidViewModel {
 
         // Step 2: Sync from API in background (non-blocking)
         if (!Constants.ROLE_STAFF.equalsIgnoreCase(currentRole)) {
-            long now = System.currentTimeMillis();
-            if (now - lastSyncTime < SYNC_DEBOUNCE_MS) {
-                loadingLive.setValue(false);
-                return; // skip if synced recently
-            }
-            lastSyncTime = now;
+            ShiftRepository.getInstance(getApplication()).syncMyShiftsAndAssignments(new RepositoryCallback<Void>() {
+                @Override
+                public void onSuccess(Void res) {
+                    loadLocalData();
+                    fetchRevenueReport();
+                }
 
-            long[] range = DateRange.compute(periodLive.getValue());
-            com.example.cafe_manager.data.repository.PaymentRepository.getInstance(getApplication())
-                .syncPaymentsInRange(range[0], range[1], new RepositoryCallback<Void>() {
-                    @Override
-                    public void onSuccess(Void result) {
-                        ShiftRepository.getInstance(getApplication()).syncMyShiftsAndAssignments(new RepositoryCallback<Void>() {
-                            @Override
-                            public void onSuccess(Void res) {
-                                loadLocalData();
-                            }
-
-                            @Override
-                            public void onError(Exception e) {
-                                loadLocalData();
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onError(Exception e) {
-                        android.util.Log.w("Dashboard", "Sync failed, showing cached data: " + e.getMessage());
-                        ShiftRepository.getInstance(getApplication()).syncMyShiftsAndAssignments(new RepositoryCallback<Void>() {
-                            @Override
-                            public void onSuccess(Void res) {
-                                loadLocalData();
-                            }
-
-                            @Override
-                            public void onError(Exception ex) {
-                                loadLocalData();
-                            }
-                        });
-                    }
-                });
+                @Override
+                public void onError(Exception e) {
+                    loadLocalData();
+                    fetchRevenueReport();
+                }
+            });
         } else {
             // STAFF -> Sync my shifts + assignments
             ShiftRepository.getInstance(getApplication()).syncMyShiftsAndAssignments(new RepositoryCallback<Void>() {
@@ -234,25 +191,28 @@ public class DashboardViewModel extends AndroidViewModel {
                             int month = cal.get(Calendar.MONTH) + 1;
                             AttendanceRepository.getInstance(getApplication()).getUserDetails(
                                     currentUserId, year, month, new RepositoryCallback<UserAttendanceDetailResponse>() {
-                                        @Override
-                                        public void onSuccess(UserAttendanceDetailResponse details) {
-                                            if (details != null) {
-                                                staffMonthlyOrdersLive.postValue(details.getOrdersCreated() != null ? details.getOrdersCreated() : 0);
-                                                staffMonthlyRevenueLive.postValue(details.getRevenueProcessed() != null ? details.getRevenueProcessed() : 0.0);
-                                            }
-                                            loadLocalData();
-                                        }
+                                         @Override
+                                         public void onSuccess(UserAttendanceDetailResponse details) {
+                                             if (details != null) {
+                                                 staffMonthlyOrdersLive.postValue(details.getOrdersCreated() != null ? details.getOrdersCreated() : 0);
+                                                 staffMonthlyRevenueLive.postValue(details.getRevenueProcessed() != null ? details.getRevenueProcessed() : 0.0);
+                                             }
+                                             loadLocalData();
+                                             loadingLive.postValue(false);
+                                         }
 
-                                        @Override
-                                        public void onError(Exception e) {
-                                            loadLocalData();
-                                        }
+                                         @Override
+                                         public void onError(Exception e) {
+                                             loadLocalData();
+                                             loadingLive.postValue(false);
+                                         }
                                     });
                         }
 
                         @Override
                         public void onError(Exception e) {
                             loadLocalData();
+                            loadingLive.postValue(false);
                         }
                     });
                 }
@@ -261,9 +221,205 @@ public class DashboardViewModel extends AndroidViewModel {
                 public void onError(Exception e) {
                     errorLive.postValue("Lỗi đồng bộ ca làm: " + e.getMessage());
                     loadLocalData();
+                    loadingLive.postValue(false);
                 }
             });
         }
+    }
+
+    private void fetchRevenueReport() {
+        isRevenueLoading.postValue(true);
+
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+        int currentYear = cal.get(Calendar.YEAR);
+        int currentMonth = cal.get(Calendar.MONTH) + 1; // 1-based
+
+        DateRange.Period period = periodLive.getValue();
+        if (period == null) {
+            period = DateRange.Period.TODAY;
+        }
+
+        if (period == DateRange.Period.ALL) {
+            RevenueRepository.getInstance(getApplication())
+                .getYearlySummary(currentYear, new RepositoryCallback<RevenueReportResponse>() {
+                    @Override
+                    public void onSuccess(RevenueReportResponse report) {
+                        processYearlySummary(report);
+                        isRevenueLoading.postValue(false);
+                        loadingLive.postValue(false);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        errorLive.postValue("Lỗi lấy báo cáo năm: " + e.getMessage());
+                        isRevenueLoading.postValue(false);
+                        loadingLive.postValue(false);
+                    }
+                });
+        } else {
+            RevenueRepository.getInstance(getApplication())
+                .getMonthlyRevenue(currentYear, currentMonth, new RepositoryCallback<RevenueReportResponse>() {
+                    @Override
+                    public void onSuccess(RevenueReportResponse report) {
+                        processMonthlyRevenue(report, periodLive.getValue());
+                        isRevenueLoading.postValue(false);
+                        loadingLive.postValue(false);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        errorLive.postValue("Lỗi lấy báo cáo doanh thu: " + e.getMessage());
+                        isRevenueLoading.postValue(false);
+                        loadingLive.postValue(false);
+                    }
+                });
+        }
+    }
+
+    private void processMonthlyRevenue(RevenueReportResponse report, DateRange.Period period) {
+        if (report == null) return;
+
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+        int todayDay = cal.get(Calendar.DAY_OF_MONTH);
+
+        double todayRevenue = 0.0;
+        if (report.getRevenueByDay() != null) {
+            for (RevenueReportResponse.DailyRevenue r : report.getRevenueByDay()) {
+                if (r.getDay() == todayDay) {
+                    todayRevenue = r.getRevenue() != null ? r.getRevenue() : 0.0;
+                    break;
+                }
+            }
+        }
+        managerTodayRevenueLive.postValue(todayRevenue);
+
+        long now = System.currentTimeMillis();
+        long startOfWeekMillis = 0L;
+
+        Calendar calBound = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+        calBound.setTimeInMillis(now);
+        calBound.set(Calendar.HOUR_OF_DAY, 0);
+        calBound.set(Calendar.MINUTE, 0);
+        calBound.set(Calendar.SECOND, 0);
+        calBound.set(Calendar.MILLISECOND, 0);
+
+        calBound.set(Calendar.DAY_OF_WEEK, calBound.getFirstDayOfWeek());
+        startOfWeekMillis = calBound.getTimeInMillis();
+
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US);
+        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+
+        double totalRev = 0.0;
+        int totalOrders = 0;
+        List<DailyRevenueRow> chartRows = new ArrayList<>();
+
+        if (report.getRevenueByDay() != null) {
+            for (RevenueReportResponse.DailyRevenue r : report.getRevenueByDay()) {
+                long dateMillis = 0;
+                try {
+                    java.util.Date d = sdf.parse(r.getDate());
+                    if (d != null) {
+                        dateMillis = d.getTime();
+                    }
+                } catch (Exception ignored) {}
+
+                boolean include = false;
+                if (period == DateRange.Period.TODAY) {
+                    include = (r.getDay() == todayDay);
+                } else if (period == DateRange.Period.WEEK) {
+                    include = (dateMillis >= startOfWeekMillis && dateMillis <= now);
+                } else if (period == DateRange.Period.MONTH) {
+                    include = true;
+                }
+
+                if (include) {
+                    double rev = r.getRevenue() != null ? r.getRevenue() : 0.0;
+                    int orders = r.getOrderCount() != null ? r.getOrderCount() : 0;
+                    totalRev += rev;
+                    totalOrders += orders;
+
+                    DailyRevenueRow row = new DailyRevenueRow();
+                    row.dayLabel = String.valueOf(r.getDay());
+                    row.dailyRevenue = rev;
+                    chartRows.add(row);
+                }
+            }
+        }
+
+        revenueLive.postValue(totalRev);
+        orderCountLive.postValue(totalOrders);
+        dailyRevenueLive.postValue(chartRows);
+
+        List<TopProductRow> topRows = new ArrayList<>();
+        if (report.getItemsSold() != null) {
+            for (RevenueReportResponse.ProductSoldResponse item : report.getItemsSold()) {
+                TopProductRow row = new TopProductRow();
+                row.productName = item.getProductName();
+                row.totalQuantity = item.getQuantity() != null ? item.getQuantity() : 0;
+                row.totalRevenue = item.getRevenue() != null ? item.getRevenue() : 0.0;
+                topRows.add(row);
+            }
+        }
+        topProductsLive.postValue(topRows);
+
+        List<PaymentMethodStatsRow> methodRows = new ArrayList<>();
+        if (report.getRevenueByMethod() != null) {
+            for (Map.Entry<String, Double> entry : report.getRevenueByMethod().entrySet()) {
+                PaymentMethodStatsRow row = new PaymentMethodStatsRow();
+                row.paymentMethod = entry.getKey();
+                row.totalRevenue = entry.getValue() != null ? entry.getValue() : 0.0;
+                Integer count = report.getOrderCountByMethod() != null ? report.getOrderCountByMethod().get(entry.getKey()) : 0;
+                row.orderCount = count != null ? count : 0;
+                methodRows.add(row);
+            }
+        }
+        paymentMethodLive.postValue(methodRows);
+    }
+
+    private void processYearlySummary(RevenueReportResponse report) {
+        if (report == null) return;
+
+        double totalRev = report.getTotalRevenue() != null ? report.getTotalRevenue() : 0.0;
+        int totalOrders = report.getOrderCount() != null ? report.getOrderCount() : 0;
+
+        revenueLive.postValue(totalRev);
+        orderCountLive.postValue(totalOrders);
+
+        List<DailyRevenueRow> chartRows = new ArrayList<>();
+        if (report.getRevenueByMonth() != null) {
+            for (RevenueReportResponse.MonthlyRevenue m : report.getRevenueByMonth()) {
+                DailyRevenueRow row = new DailyRevenueRow();
+                row.dayLabel = "Th " + m.getMonth();
+                row.dailyRevenue = m.getRevenue() != null ? m.getRevenue() : 0.0;
+                chartRows.add(row);
+            }
+        }
+        dailyRevenueLive.postValue(chartRows);
+
+        List<TopProductRow> topRows = new ArrayList<>();
+        if (report.getItemsSold() != null) {
+            for (RevenueReportResponse.ProductSoldResponse item : report.getItemsSold()) {
+                TopProductRow row = new TopProductRow();
+                row.productName = item.getProductName();
+                row.totalQuantity = item.getQuantity() != null ? item.getQuantity() : 0;
+                row.totalRevenue = item.getRevenue() != null ? item.getRevenue() : 0.0;
+                topRows.add(row);
+            }
+        }
+        topProductsLive.postValue(topRows);
+
+        List<PaymentMethodStatsRow> methodRows = new ArrayList<>();
+        if (report.getRevenueByMethod() != null) {
+            for (Map.Entry<String, Double> entry : report.getRevenueByMethod().entrySet()) {
+                PaymentMethodStatsRow row = new PaymentMethodStatsRow();
+                row.paymentMethod = entry.getKey();
+                row.totalRevenue = entry.getValue() != null ? entry.getValue() : 0.0;
+                Integer count = report.getOrderCountByMethod() != null ? report.getOrderCountByMethod().get(entry.getKey()) : 0;
+                row.orderCount = count != null ? count : 0;
+                methodRows.add(row);
+            }
+        }
+        paymentMethodLive.postValue(methodRows);
     }
 
     private void loadLocalData() {
@@ -280,7 +436,9 @@ public class DashboardViewModel extends AndroidViewModel {
                     List<TodayShiftItem> shiftsList = new ArrayList<>();
                     for (ShiftAssignmentEntity a : assignments) {
                         ShiftEntity shift = appDatabase.shiftDao().getById(a.getShiftId());
-                        if (shift != null && !shift.getStatus().equals("CANCELLED")) {
+                        if (shift != null && (shift.getStatus().equals(Constants.SHIFT_PUBLISHED)
+                                || shift.getStatus().equals(Constants.SHIFT_IN_PROGRESS)
+                                || shift.getStatus().equals(Constants.SHIFT_CLOSED))) {
                             AttendanceEntity attendance = appDatabase.attendanceDao()
                                     .getByShiftAndUser(a.getShiftId(), currentUserId);
                             shiftsList.add(new TodayShiftItem(shift, 0, attendance, a.isConfirmed(), a.getAssignmentId()));
@@ -290,20 +448,24 @@ public class DashboardViewModel extends AndroidViewModel {
 
                     // 2. Monthly stats range
                     long[] monthRange = getMonthRange(now);
-                    int totalShifts = appDatabase.shiftAssignmentDao()
-                            .countAssignmentsInRange(currentUserId, monthRange[0], monthRange[1]);
-                    staffMonthlyShiftsLive.postValue(totalShifts);
-
                     List<ShiftAssignmentEntity> monthAssigns = appDatabase.shiftAssignmentDao()
                             .getAssignmentsInRange(currentUserId, monthRange[0], monthRange[1]);
+                    int totalShifts = 0;
                     double totalHours = 0.0;
                     for (ShiftAssignmentEntity a : monthAssigns) {
-                        AttendanceEntity att = appDatabase.attendanceDao()
-                                .getByShiftAndUser(a.getShiftId(), currentUserId);
-                        if (att != null && att.getCheckInAt() > 0 && att.getCheckOutAt() > 0) {
-                            totalHours += (att.getCheckOutAt() - att.getCheckInAt()) / 3600000.0;
+                        ShiftEntity shift = appDatabase.shiftDao().getById(a.getShiftId());
+                        if (shift != null && (shift.getStatus().equals(Constants.SHIFT_PUBLISHED)
+                                || shift.getStatus().equals(Constants.SHIFT_IN_PROGRESS)
+                                || shift.getStatus().equals(Constants.SHIFT_CLOSED))) {
+                            totalShifts++;
+                            AttendanceEntity att = appDatabase.attendanceDao()
+                                    .getByShiftAndUser(a.getShiftId(), currentUserId);
+                            if (att != null && att.getCheckInAt() > 0 && att.getCheckOutAt() > 0) {
+                                totalHours += (att.getCheckOutAt() - att.getCheckInAt()) / 3600000.0;
+                            }
                         }
                     }
+                    staffMonthlyShiftsLive.postValue(totalShifts);
                     staffMonthlyHoursLive.postValue(totalHours);
 
                     if (staffMonthlyOrdersLive.getValue() == null) {
@@ -320,7 +482,9 @@ public class DashboardViewModel extends AndroidViewModel {
                     List<TodayShiftItem> shiftsList = new ArrayList<>();
                     int activeStaff = 0;
                     for (ShiftEntity s : shifts) {
-                        if (!s.getStatus().equals("CANCELLED")) {
+                        if (s.getStatus().equals(Constants.SHIFT_PUBLISHED)
+                                || s.getStatus().equals(Constants.SHIFT_IN_PROGRESS)
+                                || s.getStatus().equals(Constants.SHIFT_CLOSED)) {
                             int count = appDatabase.shiftAssignmentDao().countByShift(s.getShiftId());
                             shiftsList.add(new TodayShiftItem(s, count, null, false, 0));
 
