@@ -1,0 +1,172 @@
+package com.example.cafe_manager.ui.admin;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.cafe_manager.R;
+import com.example.cafe_manager.data.local.entity.CategoryEntity;
+import com.example.cafe_manager.data.local.entity.ProductEntity;
+import com.example.cafe_manager.manager.SessionManager;
+import com.example.cafe_manager.util.CurrencyUtils;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class AdminProductAdapter
+        extends ListAdapter<ProductEntity, AdminProductAdapter.ProductRowVH> {
+
+    public interface OnActionListener {
+        void onToggleVisibility(ProductEntity product);
+        void onEdit(ProductEntity product);
+    }
+
+    private final OnActionListener listener;
+    private final Map<Integer, String> categoryNameMap = new HashMap<>();
+
+    public AdminProductAdapter(OnActionListener listener) {
+        super(DIFF);
+        this.listener = listener;
+    }
+
+    /** Cập nhật mapping categoryId → categoryName, gọi mỗi khi categories load xong. */
+    public void setCategoryMap(List<CategoryEntity> categories) {
+        categoryNameMap.clear();
+        if (categories != null) {
+            for (CategoryEntity c : categories) {
+                categoryNameMap.put(c.getCategoryId(), c.getCategoryName());
+            }
+        }
+        notifyDataSetChanged();
+    }
+
+    @NonNull
+    @Override
+    public ProductRowVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_admin_product, parent, false);
+        return new ProductRowVH(view, categoryNameMap);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ProductRowVH holder, int position) {
+        holder.bind(getItem(position), listener);
+    }
+
+    static class ProductRowVH extends RecyclerView.ViewHolder {
+        private final android.widget.ImageView ivThumb;
+        private final TextView tvName;
+        private final TextView tvMeta;
+        private final TextView tvStatusBadge;
+        private final ImageButton btnVisible;
+        private final ImageButton btnEdit;
+        private final Map<Integer, String> categoryNameMap;
+
+        ProductRowVH(View itemView, Map<Integer, String> categoryNameMap) {
+            super(itemView);
+            this.categoryNameMap = categoryNameMap;
+            ivThumb = itemView.findViewById(R.id.iv_thumb);
+            tvName = itemView.findViewById(R.id.tv_name);
+            tvMeta = itemView.findViewById(R.id.tv_meta);
+            tvStatusBadge = itemView.findViewById(R.id.tv_status_badge);
+            btnVisible = itemView.findViewById(R.id.btn_visible);
+            btnEdit = itemView.findViewById(R.id.btn_edit);
+        }
+
+        void bind(final ProductEntity product, final OnActionListener listener) {
+            tvName.setText(product.getProductName());
+
+            String categoryName = categoryNameMap.get(product.getCategoryId());
+            if (categoryName == null) categoryName = "—";
+
+            tvMeta.setText(categoryName + " · "
+                    + CurrencyUtils.formatVnd(product.getPrice()));
+
+            int defaultIcon = R.drawable.ic_coffee;
+            if (categoryName != null) {
+                String nameLower = categoryName.toLowerCase();
+                if (nameLower.contains("trà") || nameLower.contains("tea")) {
+                    defaultIcon = R.drawable.ic_tea;
+                } else if (nameLower.contains("bánh") || nameLower.contains("cake") || nameLower.contains("ngọt")) {
+                    defaultIcon = R.drawable.ic_cake;
+                } else if (nameLower.contains("sinh tố") || nameLower.contains("smoothie")) {
+                    defaultIcon = R.drawable.ic_smoothie;
+                }
+            }
+
+            if (product.getImageUrl() != null && !product.getImageUrl().trim().isEmpty()) {
+                ivThumb.setImageTintList(null);
+                ivThumb.clearColorFilter();
+                ivThumb.setPadding(0, 0, 0, 0);
+                com.bumptech.glide.Glide.with(itemView.getContext())
+                        .load(product.getImageUrl().trim())
+                        .placeholder(defaultIcon)
+                        .error(defaultIcon)
+                        .into(ivThumb);
+            } else {
+                ivThumb.setImageTintList(android.content.res.ColorStateList.valueOf(
+                        itemView.getContext().getColor(R.color.accent)
+                ));
+                int padding = itemView.getContext().getResources().getDimensionPixelSize(R.dimen.spacing_md);
+                ivThumb.setPadding(padding, padding, padding, padding);
+                ivThumb.setImageResource(defaultIcon);
+            }
+
+            boolean active = product.isActive();
+            tvStatusBadge.setText(active
+                    ? R.string.status_active
+                    : R.string.status_inactive);
+            tvStatusBadge.setBackgroundResource(active
+                    ? R.drawable.bg_badge_success
+                    : R.drawable.bg_badge_accent);
+            tvStatusBadge.setTextColor(itemView.getContext().getColor(
+                    active ? R.color.success : R.color.accent));
+
+            btnVisible.setImageResource(active
+                    ? R.drawable.ic_eye
+                    : R.drawable.ic_eye_off);
+
+            itemView.setAlpha(active ? 1.0f : 0.7f);
+
+            btnVisible.setOnClickListener(v -> {
+                if (listener != null) listener.onToggleVisibility(product);
+            });
+
+            boolean isStaff = SessionManager.getInstance(itemView.getContext()).isStaff();
+            if (isStaff) {
+                btnEdit.setVisibility(View.GONE);
+            } else {
+                btnEdit.setVisibility(View.VISIBLE);
+                btnEdit.setOnClickListener(v -> {
+                    if (listener != null) listener.onEdit(product);
+                });
+            }
+        }
+    }
+
+    private static final DiffUtil.ItemCallback<ProductEntity> DIFF =
+            new DiffUtil.ItemCallback<ProductEntity>() {
+                @Override
+                public boolean areItemsTheSame(
+                        @NonNull ProductEntity o, @NonNull ProductEntity n) {
+                    return o.getProductId() == n.getProductId();
+                }
+
+                @Override
+                public boolean areContentsTheSame(
+                        @NonNull ProductEntity o, @NonNull ProductEntity n) {
+                    return o.getProductName().equals(n.getProductName())
+                            && o.getPrice() == n.getPrice()
+                            && o.isActive() == n.isActive()
+                            && o.getCategoryId() == n.getCategoryId();
+                }
+            };
+}
