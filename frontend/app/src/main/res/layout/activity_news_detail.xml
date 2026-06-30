@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_primary">
+
+    <include
+        android:id="@+id/top_bar"
+        layout="@layout/component_top_bar" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_lg">
+
+            <!-- Card for content -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_lg">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <!-- Badges -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true">
+
+                        <TextView
+                            android:id="@+id/tv_detail_priority"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/Widget.Cafe.Badge"
+                            android:background="@drawable/bg_badge_accent"
+                            android:textColor="@color/accent_dark"
+                            android:text="NORMAL"
+                            android:layout_marginEnd="@dimen/spacing_sm" />
+
+                        <TextView
+                            android:id="@+id/tv_detail_type"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/Widget.Cafe.Badge"
+                            android:background="@drawable/bg_badge_success"
+                            android:textColor="@color/success"
+                            android:text="GENERAL" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tv_detail_pinned"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:text="📌 Được ghim"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_soft"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+                </RelativeLayout>
+
+                <!-- Title -->
+                <TextView
+                    android:id="@+id/tv_detail_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/TextAppearance.Cafe.Title"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:text="Tiêu đề thông báo chi tiết" />
+
+                <!-- Metadata -->
+                <TextView
+                    android:id="@+id/tv_detail_meta"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/TextAppearance.Cafe.Caption"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:text="Đăng bởi: Quản trị viên • 21/06/2026 12:00" />
+
+                <ImageView
+                    android:id="@+id/iv_detail_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone"
+                    android:contentDescription="News Detail Image" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/border"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:layout_marginBottom="@dimen/spacing_md" />
+
+                <!-- Content body -->
+                <TextView
+                    android:id="@+id/tv_detail_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/TextAppearance.Cafe.Body"
+                    android:textColor="@color/text_primary"
+                    android:lineSpacingMultiplier="1.2"
+                    android:text="Nội dung chi tiết của thông báo..." />
+            </LinearLayout>
+
+            <!-- Target info card -->
+            <LinearLayout
+                android:id="@+id/layout_target_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card_soft"
+                android:orientation="vertical"
+                android:layout_marginTop="@dimen/spacing_md"
+                android:padding="@dimen/spacing_md">
+
+                <TextView
+                    android:id="@+id/tv_detail_target"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/TextAppearance.Cafe.Caption"
+                    android:text="Đối tượng: Tất cả nhân viên" />
+            </LinearLayout>
+
+            <!-- Admin/Manager Action buttons -->
+            <LinearLayout
+                android:id="@+id/layout_admin_actions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/spacing_xl"
+                android:visibility="gone">
+
+                <Button
+                    android:id="@+id/btn_detail_edit"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/height_button"
+                    android:layout_weight="1"
+                    style="@style/Widget.Cafe.Button.Secondary"
+                    android:layout_marginEnd="@dimen/spacing_sm"
+                    android:text="Chỉnh sửa" />
+
+                <Button
+                    android:id="@+id/btn_detail_delete"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/height_button"
+                    android:layout_weight="1"
+                    style="@style/Widget.Cafe.Button.Primary"
+                    android:backgroundTint="@color/error"
+                    android:text="Xóa thông báo" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

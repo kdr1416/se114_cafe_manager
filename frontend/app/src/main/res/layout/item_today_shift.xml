@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card"
+    android:padding="@dimen/spacing_lg"
+    android:layout_marginBottom="@dimen/spacing_md">
+
+    <!-- Row 1: Shift Title & Status badge -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tv_shift_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_toStartOf="@+id/tv_shift_status"
+            android:layout_marginEnd="@dimen/spacing_sm"
+            style="@style/TextAppearance.Cafe.Subtitle"
+            android:textColor="@color/text_primary"
+            android:text="Ca Sáng" />
+
+        <TextView
+            android:id="@+id/tv_shift_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            style="@style/TextAppearance.Cafe.Caption"
+            android:textStyle="bold"
+            android:text="PUBLISHED" />
+    </RelativeLayout>
+
+    <!-- Row 2: Time & Staff Count/Check status -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp">
+
+        <TextView
+            android:id="@+id/tv_shift_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            style="@style/TextAppearance.Cafe.Caption"
+            android:textColor="@color/text_soft"
+            android:text="07:00 - 12:00" />
+
+        <TextView
+            android:id="@+id/tv_staff_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            style="@style/TextAppearance.Cafe.Caption"
+            android:textColor="@color/accent"
+            android:text="👥 3 nhân viên"
+            android:visibility="gone" />
+    </RelativeLayout>
+
+    <!-- Attendance Details Box (Check-in/Check-out details for STAFF) -->
+    <TextView
+        android:id="@+id/tv_attendance_details"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:padding="8dp"
+        android:background="@drawable/bg_media"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:textColor="@color/text_primary"
+        android:visibility="gone" />
+
+    <!-- Action button for STAFF check-in/out -->
+    <Button
+        android:id="@+id/btn_action"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/height_button_sm"
+        android:layout_marginTop="12dp"
+        style="@style/Widget.Cafe.Button.Primary"
+        android:text="Check-in"
+        android:minHeight="0dp"
+        android:minWidth="0dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:textSize="12sp"
+        android:visibility="gone" />
+</LinearLayout>

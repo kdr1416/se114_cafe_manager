@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card"
+    android:padding="@dimen/spacing_lg"
+    android:layout_marginBottom="@dimen/spacing_md">
+
+    <!-- Row 1: Staff Name + Status Badge -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvStaffName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            style="@style/TextAppearance.Cafe.BodyBold"
+            android:textColor="@color/text_primary"
+            tools:text="Nguyễn Văn A" />
+
+        <TextView
+            android:id="@+id/tvStatusBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/spacing_sm"
+            android:paddingEnd="@dimen/spacing_sm"
+            android:paddingTop="@dimen/spacing_xs"
+            android:paddingBottom="@dimen/spacing_xs"
+            android:background="@drawable/bg_badge_warning"
+            android:textColor="@color/warning"
+            style="@style/TextAppearance.Cafe.Caption"
+            tools:text="Chờ duyệt" />
+    </LinearLayout>
+
+    <!-- Row 2: Created Date -->
+    <TextView
+        android:id="@+id/tvCreatedAt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_xs"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:textColor="@color/text_soft"
+        tools:text="Ngày gửi: 14/07/2026 20:30" />
+
+    <!-- Row 3: Time Range -->
+    <TextView
+        android:id="@+id/tvTimeRange"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        style="@style/TextAppearance.Cafe.Subtitle"
+        android:textColor="@color/text_primary"
+        tools:text="15/07/2026 08:00 - 15/07/2026 17:00" />
+
+    <!-- Row 4: Reason -->
+    <TextView
+        android:id="@+id/tvReason"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_xs"
+        style="@style/TextAppearance.Cafe.Body"
+        android:textColor="@color/text_primary"
+        tools:text="Lý do: Việc gia đình" />
+
+    <!-- Row 5: Affected Assignment Count (Hidden by default) -->
+    <TextView
+        android:id="@+id/tvAffectedCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_xs"
+        android:paddingStart="@dimen/spacing_sm"
+        android:paddingEnd="@dimen/spacing_sm"
+        android:paddingTop="@dimen/spacing_xs"
+        android:paddingBottom="@dimen/spacing_xs"
+        android:background="@drawable/bg_badge_accent"
+        android:textColor="@color/accent"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:visibility="gone"
+        tools:visibility="visible"
+        tools:text="Số ca trùng bị ảnh hưởng: 2" />
+
+    <!-- Row 6: Review Note (If reviewed) -->
+    <TextView
+        android:id="@+id/tvReviewNote"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:padding="@dimen/spacing_sm"
+        android:background="@drawable/bg_media"
+        style="@style/TextAppearance.Cafe.Body"
+        android:textColor="@color/text_soft"
+        android:visibility="gone"
+        tools:text="Phản hồi: Đồng ý cho nghỉ" />
+
+    <!-- Row 7: Reviewed Time & Reviewer Name (If reviewed) -->
+    <TextView
+        android:id="@+id/tvReviewedAt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_xs"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:textColor="@color/text_soft"
+        android:visibility="gone"
+        tools:text="Duyệt bởi Admin lúc 14/07/2026 21:00" />
+
+    <!-- Row 8: Action Buttons (Only visible for PENDING status) -->
+    <LinearLayout
+        android:id="@+id/layoutActions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="@dimen/spacing_md"
+        android:weightSum="2"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <Button
+            android:id="@+id/btnReject"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="@dimen/spacing_sm"
+            android:text="Từ chối"
+            android:padding="0dp"
+            style="@style/Widget.Cafe.Button.Secondary"
+            android:textSize="12sp"
+            android:textColor="@color/accent" />
+
+        <Button
+            android:id="@+id/btnApprove"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:layout_marginStart="@dimen/spacing_sm"
+            android:text="Duyệt"
+            android:padding="0dp"
+            style="@style/Widget.Cafe.Button.Primary"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,39 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Local Claude workspace artifacts
+/.claude/
+
+# Local planning / handoff docs not needed in git
+/CONTEXT_HANDOFF.md
+/context se114 project/
+.vs/
+
+# Cline & AI Context Configuration
+.clinerules
+.cline/
+*.clinerules
+/.clineignore
+
+# Các file nháp hoặc log ngữ cảnh cục bộ
+*.ai.md
+.caveman/
+
+#Trellis
+.trellis/
+.agents/
+.codex/
+/AGENTS.md

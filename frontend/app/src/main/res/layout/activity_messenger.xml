@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_primary">
+
+    <include layout="@layout/component_top_bar" android:id="@+id/top_bar" />
+
+    <!-- Search bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="@dimen/spacing_md"
+        android:background="@color/surface">
+
+        <EditText
+            android:id="@+id/et_search"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/height_input"
+            android:hint="Tìm kiếm..."
+            android:background="@drawable/bg_input"
+            android:paddingHorizontal="@dimen/spacing_md"
+            android:inputType="text"
+            android:maxLines="1"
+            style="@style/TextAppearance.Cafe.Body" />
+    </LinearLayout>
+
+    <!-- Tab row: Phòng chat | Danh bạ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/surface"
+        android:paddingHorizontal="@dimen/spacing_md"
+        android:paddingBottom="@dimen/spacing_sm">
+
+        <Button
+            android:id="@+id/btn_tab_rooms"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/height_button"
+            android:layout_weight="1"
+            android:layout_marginEnd="@dimen/spacing_xs"
+            android:text="Phòng chat"
+            style="@style/Widget.Cafe.Button.Primary" />
+
+        <Button
+            android:id="@+id/btn_tab_contacts"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/height_button"
+            android:layout_weight="1"
+            android:layout_marginStart="@dimen/spacing_xs"
+            android:text="Danh bạ"
+            style="@style/Widget.Cafe.Button.Secondary" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- Room list -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_rooms"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="visible" />
+
+        <!-- Contacts list -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_contacts"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <!-- Empty indicator -->
+        <TextView
+            android:id="@+id/tv_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Không tìm thấy kết quả"
+            android:gravity="center"
+            android:layout_gravity="center"
+            style="@style/TextAppearance.Cafe.Body"
+            android:textColor="@color/text_soft"
+            android:visibility="gone" />
+
+        <!-- Progress bar -->
+        <ProgressBar
+            android:id="@+id/progressLoading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+    </FrameLayout>
+</LinearLayout>

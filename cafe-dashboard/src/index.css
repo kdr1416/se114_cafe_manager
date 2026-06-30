@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Additional base styles */
+body {
+  background-color: #F5F0EB; /* Matching theme.extend.colors.background */
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}

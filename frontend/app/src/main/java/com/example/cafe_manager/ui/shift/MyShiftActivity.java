@@ -1,0 +1,108 @@
+package com.example.cafe_manager.ui.shift;
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.cafe_manager.R;
+import com.example.cafe_manager.viewmodel.MyShiftViewModel;
+import android.content.Intent;
+import com.example.cafe_manager.ui.communication.ChatMessageActivity;
+import com.example.cafe_manager.util.RepositoryCallback;
+import com.example.cafe_manager.data.local.entity.ShiftEntity;
+
+public class MyShiftActivity extends AppCompatActivity {
+
+    private MyShiftViewModel viewModel;
+    private MyShiftAdapter adapter;
+    private TextView tvCount, tvEmpty;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_my_shift);
+
+        viewModel = new ViewModelProvider(this).get(MyShiftViewModel.class);
+
+        // Top bar
+        findViewById(R.id.btn_back).setOnClickListener(v -> finish());
+        ((TextView) findViewById(R.id.tv_title)).setText("Ca làm của tôi");
+
+        tvCount = findViewById(R.id.tv_shift_count);
+        tvEmpty = findViewById(R.id.tv_empty);
+
+        // RecyclerView
+        RecyclerView rv = findViewById(R.id.rv_my_shifts);
+        rv.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new MyShiftAdapter(new MyShiftAdapter.OnMyShiftActionListener() {
+            @Override
+            public void onCheckIn(int shiftId) {
+                viewModel.checkIn(shiftId);
+            }
+
+            @Override
+            public void onCheckOut(int shiftId) {
+                viewModel.checkOut(shiftId);
+            }
+
+            @Override
+            public void onChat(int shiftId) {
+                viewModel.getOrCreateShiftChatRoom(shiftId, new RepositoryCallback<Integer>() {
+                    @Override
+                    public void onSuccess(Integer roomId) {
+                        Intent intent = new Intent(MyShiftActivity.this, ChatMessageActivity.class);
+                        intent.putExtra("room_id", roomId);
+                        intent.putExtra("room_name", viewModel.getShiftName(shiftId));
+                        startActivity(intent);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Toast.makeText(MyShiftActivity.this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onLeaveRequest(ShiftEntity shift) {
+                if (shift == null) return;
+                long startAt = com.example.cafe_manager.util.ShiftTimeUtils.getShiftStartMillis(shift.getShiftDate(), shift.getStartTime());
+                long endAt = com.example.cafe_manager.util.ShiftTimeUtils.getShiftEndMillis(shift.getShiftDate(), shift.getStartTime(), shift.getEndTime());
+
+                Intent intent = new Intent(MyShiftActivity.this, com.example.cafe_manager.ui.leave.LeaveRequestActivity.class);
+                intent.putExtra("EXTRA_START_AT", startAt);
+                intent.putExtra("EXTRA_END_AT", endAt);
+                intent.putExtra("EXTRA_SHIFT_NAME", shift.getShiftName());
+                startActivity(intent);
+            }
+        });
+        rv.setAdapter(adapter);
+
+        // Observe
+        viewModel.getMyShifts().observe(this, items -> {
+            adapter.setItems(items);
+            int size = items != null ? items.size() : 0;
+            tvCount.setText("Tổng: " + size + " ca");
+            tvEmpty.setVisibility(size == 0 ? View.VISIBLE : View.GONE);
+        });
+
+        viewModel.getMessage().observe(this, msg -> {
+            if (msg != null) {
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+                viewModel.clearMessage();
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        viewModel.loadMyShifts(); // Refresh khi quay lại
+    }
+}

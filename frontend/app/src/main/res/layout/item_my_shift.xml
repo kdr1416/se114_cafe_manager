@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card"
+    android:padding="@dimen/spacing_lg"
+    android:layout_marginBottom="@dimen/spacing_md">
+
+    <!-- Row 1: Header (Name & Status) -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tv_shift_name_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_toStartOf="@+id/tv_shift_status"
+            android:layout_marginEnd="@dimen/spacing_sm"
+            style="@style/TextAppearance.Cafe.Subtitle"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:id="@+id/tv_shift_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            style="@style/TextAppearance.Cafe.Caption"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- Row 2: Time range -->
+    <TextView
+        android:id="@+id/tv_time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:textColor="@color/text_soft" />
+
+    <!-- Confirm status (Always hidden, kept for adapter reference) -->
+    <TextView
+        android:id="@+id/tv_confirm_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+    <!-- Attendance Status Badge -->
+    <TextView
+        android:id="@+id/tv_attendance_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="4dp"
+        android:background="@drawable/bg_badge_success"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:textColor="@color/success"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <!-- Attendance Details Box -->
+    <TextView
+        android:id="@+id/tv_attendance_details"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:padding="12dp"
+        android:background="@drawable/bg_media"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:textColor="@color/text_primary"
+        android:lineSpacingMultiplier="1.2"
+        android:visibility="gone" />
+
+    <!-- Row 3: Action Buttons (Width distributed equally using weight) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp"
+        android:weightSum="3">
+
+        <Button
+            android:id="@+id/btn_chat"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/height_button_sm"
+            android:layout_weight="1"
+            style="@style/Widget.Cafe.Button.Secondary"
+            android:text="Chat ca"
+            android:layout_marginEnd="6dp"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:paddingHorizontal="4dp"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btn_leave"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/height_button_sm"
+            android:layout_weight="1"
+            style="@style/Widget.Cafe.Button.Secondary"
+            android:text="Xin nghỉ"
+            android:layout_marginEnd="6dp"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:paddingHorizontal="4dp"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btn_action"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/height_button_sm"
+            android:layout_weight="1"
+            style="@style/Widget.Cafe.Button.Primary"
+            android:text="Check-in"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:paddingHorizontal="4dp"
+            android:textSize="12sp"
+            android:visibility="gone" />
+    </LinearLayout>
+</LinearLayout>

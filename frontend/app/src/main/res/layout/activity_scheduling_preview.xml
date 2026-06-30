@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_primary">
+
+    <include
+        layout="@layout/component_top_bar"
+        android:id="@+id/top_bar" />
+
+    <!-- Week navigation -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="@dimen/spacing_md"
+        android:background="@color/surface"
+        android:gravity="center_vertical"
+        android:layout_marginTop="@dimen/spacing_lg">
+
+        <ImageButton
+            android:id="@+id/btn_prev_week"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_chevron_left"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Tuần trước" />
+
+        <TextView
+            android:id="@+id/tv_week_range"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            style="@style/TextAppearance.Cafe.BodyBold" />
+
+        <ImageButton
+            android:id="@+id/btn_next_week"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_chevron_right"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Tuần sau" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_run_preview"
+        style="@style/Widget.Cafe.Button.Primary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/spacing_lg"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:text="Chạy phân lịch"
+        android:enabled="true" />
+
+    <ProgressBar
+        android:id="@+id/progressLoading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/spacing_xl"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tv_empty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Không có ca nào cần xếp lịch"
+        android:textColor="@color/text_soft"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/spacing_xl"
+        android:visibility="gone" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_suggestions"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="@dimen/spacing_lg"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="@dimen/spacing_lg"
+        android:background="@drawable/bg_card">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Tổng:"
+            android:textAppearance="@style/TextAppearance.Cafe.Body" />
+
+        <TextView
+            android:id="@+id/tv_total"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textAppearance="@style/TextAppearance.Cafe.Body"
+            android:textColor="@color/success" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_gravity="end"
+            android:gravity="end"
+            android:text="Đủ:"
+            android:textAppearance="@style/TextAppearance.Cafe.Body" />
+
+        <TextView
+            android:id="@+id/tv_fulfilled"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textAppearance="@style/TextAppearance.Cafe.Body"
+            android:textColor="@color/success"
+            android:layout_marginStart="@dimen/spacing_sm" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_gravity="end"
+            android:gravity="end"
+            android:text="Thiếu:"
+            android:textAppearance="@style/TextAppearance.Cafe.Body" />
+
+        <TextView
+            android:id="@+id/tv_missing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textAppearance="@style/TextAppearance.Cafe.Body"
+            android:textColor="@color/warning"
+            android:layout_marginStart="@dimen/spacing_sm" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_apply_all"
+        style="@style/Widget.Cafe.Button.Primary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/spacing_lg"
+        android:text="Áp dụng tất cả"
+        android:visibility="gone" />
+
+</LinearLayout>

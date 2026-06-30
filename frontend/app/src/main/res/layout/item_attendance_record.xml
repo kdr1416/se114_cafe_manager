@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card"
+    android:padding="@dimen/spacing_lg"
+    android:layout_marginBottom="@dimen/spacing_md">
+
+    <!-- Row 1: Date & Status Badge -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tv_record_date"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Thứ Sáu, 26/06/2026"
+            style="@style/TextAppearance.Cafe.Subtitle"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:id="@+id/tv_record_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Đúng giờ"
+            android:paddingHorizontal="@dimen/spacing_sm"
+            android:paddingVertical="2dp"
+            android:background="@drawable/bg_badge_success"
+            style="@style/TextAppearance.Cafe.Caption" />
+    </LinearLayout>
+
+    <!-- Row 2: Shift Name & Scheduled hours -->
+    <TextView
+        android:id="@+id/tv_record_shift_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ca Sáng (08:00 - 12:00) — 4.0h"
+        android:layout_marginTop="@dimen/spacing_xs"
+        style="@style/TextAppearance.Cafe.Body"
+        android:textColor="@color/text_soft" />
+
+    <!-- Divider -->
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/border"
+        android:layout_marginVertical="@dimen/spacing_sm" />
+
+    <!-- Row 3: Check-in & Check-out actual times -->
+    <TextView
+        android:id="@+id/tv_record_check_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📥 Check-in: 07:55  |  📤 Check-out: 12:05"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:textColor="@color/text_mute" />
+
+    <!-- Row 3.5: Order & Payment stats in shift -->
+    <TextView
+        android:id="@+id/tv_record_order_stats"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📦 0 đơn tạo  |  💵 0 thanh toán  |  💰 0đ"
+        android:layout_marginTop="@dimen/spacing_xs"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:textColor="@color/text_mute"
+        android:visibility="gone" />
+
+    <!-- Row 4: Late & Early leave alerts / Notes -->
+    <TextView
+        android:id="@+id/tv_record_notes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="⚠️ Đi muộn 10 phút"
+        android:layout_marginTop="@dimen/spacing_xs"
+        style="@style/TextAppearance.Cafe.Caption"
+        android:textColor="@color/warning"
+        android:visibility="gone" />
+</LinearLayout>

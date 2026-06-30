@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/bg_primary">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/spacing_lg">
+
+        <!-- Today's Shifts Title -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ca làm hôm nay"
+            android:textAppearance="@style/TextAppearance.Cafe.SectionLabel"
+            android:layout_marginBottom="@dimen/spacing_sm" />
+
+        <!-- Today's Shifts RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_today_shifts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"
+            tools:listitem="@layout/item_today_shift" />
+
+        <TextView
+            android:id="@+id/tv_no_shifts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Hôm nay bạn không có ca làm."
+            android:textAppearance="@style/TextAppearance.Cafe.Caption"
+            android:gravity="center"
+            android:paddingVertical="@dimen/spacing_xl"
+            android:visibility="gone" />
+
+        <!-- Monthly Stats Title -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Thống kê tháng này"
+            android:textAppearance="@style/TextAppearance.Cafe.SectionLabel"
+            android:layout_marginTop="@dimen/spacing_lg"
+            android:layout_marginBottom="@dimen/spacing_sm" />
+
+        <!-- Grid 2x2 for stats -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Row 1 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="2"
+                android:layout_marginBottom="@dimen/spacing_md">
+
+                <!-- Stat 1: Total Shifts -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card"
+                    android:padding="@dimen/spacing_lg"
+                    android:layout_marginEnd="@dimen/spacing_sm">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tổng số ca"
+                        android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                        android:textColor="@color/text_soft" />
+
+                    <TextView
+                        android:id="@+id/tv_stat_shifts"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.Cafe.Display"
+                        android:textColor="@color/accent"
+                        android:layout_marginTop="@dimen/spacing_xs"
+                        tools:text="18 ca" />
+                </LinearLayout>
+
+                <!-- Stat 2: Total Hours -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card"
+                    android:padding="@dimen/spacing_lg"
+                    android:layout_marginStart="@dimen/spacing_sm">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Giờ làm"
+                        android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                        android:textColor="@color/text_soft" />
+
+                    <TextView
+                        android:id="@+id/tv_stat_hours"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.Cafe.Display"
+                        android:textColor="@color/accent"
+                        android:layout_marginTop="@dimen/spacing_xs"
+                        tools:text="72.5h" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Row 2 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="2">
+
+                <!-- Stat 3: Total Orders -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card"
+                    android:padding="@dimen/spacing_lg"
+                    android:layout_marginEnd="@dimen/spacing_sm">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Đơn đã tạo"
+                        android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                        android:textColor="@color/text_soft" />
+
+                    <TextView
+                        android:id="@+id/tv_stat_orders"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.Cafe.Display"
+                        android:textColor="@color/accent"
+                        android:layout_marginTop="@dimen/spacing_xs"
+                        tools:text="45 đơn" />
+                </LinearLayout>
+
+                <!-- Stat 4: Total Revenue -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card"
+                    android:padding="@dimen/spacing_lg"
+                    android:layout_marginStart="@dimen/spacing_sm">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Doanh thu"
+                        android:textAppearance="@style/TextAppearance.Cafe.Caption"
+                        android:textColor="@color/text_soft" />
+
+                    <TextView
+                        android:id="@+id/tv_stat_revenue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.Cafe.Display"
+                        android:textColor="@color/accent"
+                        android:layout_marginTop="@dimen/spacing_xs"
+                        tools:text="5.4 tr" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
