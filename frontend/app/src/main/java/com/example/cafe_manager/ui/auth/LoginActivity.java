@@ -77,6 +77,15 @@ public class LoginActivity extends AppCompatActivity {
         btnResendOtp = findViewById(R.id.btn_resend_otp);
         btnConfirmOtp = findViewById(R.id.btn_confirm_otp);
         btnBackToLogin = findViewById(R.id.btn_back_to_login);
+
+        // Long click vào tiêu đề app để mở dialog cấu hình IP
+        TextView tvAppTitle = findViewById(R.id.tv_app_title);
+        if (tvAppTitle != null) {
+            tvAppTitle.setOnLongClickListener(v -> {
+                showIpConfigDialog();
+                return true;
+            });
+        }
     }
 
     private void setupInputListeners() {
@@ -256,6 +265,34 @@ public class LoginActivity extends AppCompatActivity {
                 | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         startActivity(intent);
         finish();
+    }
+
+    private void showIpConfigDialog() {
+        String currentIp = com.example.cafe_manager.data.remote.ApiClient.getServerIp(this);
+        
+        EditText etIp = new EditText(this);
+        etIp.setText(currentIp);
+        etIp.setHint("Ví dụ: 192.168.1.46:8080");
+        etIp.setSingleLine(true);
+        
+        int paddingPx = (int) (16 * getResources().getDisplayMetrics().density);
+        android.widget.FrameLayout container = new android.widget.FrameLayout(this);
+        container.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+        container.addView(etIp);
+
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Cấu hình IP máy chủ")
+                .setMessage("Nhập địa chỉ IP và cổng của máy tính chạy Backend:")
+                .setView(container)
+                .setPositiveButton("Lưu", (dialog, which) -> {
+                    String newIp = etIp.getText().toString().trim();
+                    if (!newIp.isEmpty()) {
+                        com.example.cafe_manager.data.remote.ApiClient.setServerIp(this, newIp);
+                        Toast.makeText(this, "Đã cập nhật IP máy chủ thành: " + newIp, Toast.LENGTH_LONG).show();
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 
     @Override

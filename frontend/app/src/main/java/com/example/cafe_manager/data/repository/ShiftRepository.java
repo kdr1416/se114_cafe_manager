@@ -17,6 +17,7 @@ import com.example.cafe_manager.data.remote.CloseShiftRequest;
 import com.example.cafe_manager.data.remote.CreateShiftRequest;
 import com.example.cafe_manager.data.remote.OpenShiftRequest;
 import com.example.cafe_manager.data.remote.ShiftAssignmentResponse;
+import com.example.cafe_manager.data.remote.ShiftWithAssignmentsResponse;
 import com.example.cafe_manager.data.remote.ShiftApiService;
 import com.example.cafe_manager.data.remote.ShiftResponse;
 import com.example.cafe_manager.data.remote.ShiftTemplateResponse;
@@ -208,7 +209,6 @@ public class ShiftRepository {
                 request.setEndTime(shift.getEndTime());
                 retrofit2.Response<ShiftResponse> response = apiService.createShift(request).execute();
                 if (response.isSuccessful() && response.body() != null) {
-                    refreshShifts();
                     exec.mainThread().execute(() -> callback.onSuccess((long) response.body().getShiftId()));
                 } else {
                     exec.mainThread().execute(() -> callback.onError(new Exception("Không thể tạo ca")));
@@ -240,6 +240,21 @@ public class ShiftRepository {
         });
     }
 
+    public void createShiftsBulk(List<CreateShiftRequest> requests, RepositoryCallback<List<ShiftResponse>> callback) {
+        exec.diskIO().execute(() -> {
+            try {
+                retrofit2.Response<List<ShiftResponse>> response = apiService.createShiftsBulk(requests).execute();
+                if (response.isSuccessful() && response.body() != null) {
+                    exec.mainThread().execute(() -> callback.onSuccess(response.body()));
+                } else {
+                    exec.mainThread().execute(() -> callback.onError(new Exception("Không thể tạo hàng loạt ca: " + response.code())));
+                }
+            } catch (Exception e) {
+                exec.mainThread().execute(() -> callback.onError(e));
+            }
+        });
+    }
+
     public void openShiftWithCash(int shiftId, double openingCash, int userId, RepositoryCallback<Void> callback) {
         exec.diskIO().execute(() -> {
             try {
@@ -247,7 +262,6 @@ public class ShiftRepository {
                 request.setOpeningCash(openingCash);
                 retrofit2.Response<ShiftResponse> response = apiService.openShift(shiftId, request).execute();
                 if (response.isSuccessful()) {
-                    refreshShifts();
                     exec.mainThread().execute(() -> callback.onSuccess(null));
                 } else {
                     exec.mainThread().execute(() -> callback.onError(new Exception("Không thể mở ca")));
@@ -263,7 +277,6 @@ public class ShiftRepository {
             try {
                 retrofit2.Response<ShiftResponse> response = apiService.publishShift(shiftId).execute();
                 if (response.isSuccessful()) {
-                    refreshShifts();
                     exec.mainThread().execute(() -> callback.onSuccess(null));
                 } else {
                     exec.mainThread().execute(() -> callback.onError(new Exception("Không thể phát hành ca: " + response.code())));
@@ -279,7 +292,6 @@ public class ShiftRepository {
             try {
                 retrofit2.Response<ShiftResponse> response = apiService.cancelShift(shiftId).execute();
                 if (response.isSuccessful()) {
-                    refreshShifts();
                     exec.mainThread().execute(() -> callback.onSuccess(null));
                 } else {
                     exec.mainThread().execute(() -> callback.onError(new Exception("Không thể hủy ca: " + response.code())));
@@ -310,19 +322,11 @@ public class ShiftRepository {
     public void removeAssignment(int assignmentId, RepositoryCallback<Void> callback) {
         exec.diskIO().execute(() -> {
             try {
-                // First get assignment to obtain shiftId and userId
-                retrofit2.Response<ShiftAssignmentResponse> getResp = apiService.getAssignment(assignmentId).execute();
-                if (!getResp.isSuccessful() || getResp.body() == null) {
-                    exec.mainThread().execute(() -> callback.onError(new Exception("Không tìm thấy phân công")));
-                    return;
-                }
-                ShiftAssignmentResponse assignment = getResp.body();
-                // Then delete
-                retrofit2.Response<Void> delResp = apiService.unassignStaff(assignment.getShiftId(), assignment.getUserId()).execute();
-                if (delResp.isSuccessful()) {
+                retrofit2.Response<Void> response = apiService.deleteAssignment(assignmentId).execute();
+                if (response.isSuccessful()) {
                     exec.mainThread().execute(() -> callback.onSuccess(null));
                 } else {
-                    exec.mainThread().execute(() -> callback.onError(new Exception("Không thể hủy phân công")));
+                    exec.mainThread().execute(() -> callback.onError(new Exception("Không thể hủy phân công: " + response.code())));
                 }
             } catch (Exception e) {
                 exec.mainThread().execute(() -> callback.onError(e));
@@ -369,6 +373,21 @@ public class ShiftRepository {
                     exec.mainThread().execute(() -> callback.onSuccess(response.body()));
                 } else {
                     exec.mainThread().execute(() -> callback.onError(new Exception("Không thể tải danh sách phân công: " + response.code())));
+                }
+            } catch (Exception e) {
+                exec.mainThread().execute(() -> callback.onError(e));
+            }
+        });
+    }
+
+    public void getShiftsForWeek(long weekStart, RepositoryCallback<List<ShiftWithAssignmentsResponse>> callback) {
+        exec.diskIO().execute(() -> {
+            try {
+                retrofit2.Response<List<ShiftWithAssignmentsResponse>> response = apiService.getShiftsForWeek(weekStart).execute();
+                if (response.isSuccessful() && response.body() != null) {
+                    exec.mainThread().execute(() -> callback.onSuccess(response.body()));
+                } else {
+                    exec.mainThread().execute(() -> callback.onError(new Exception("Lỗi tải lịch tuần: " + response.code())));
                 }
             } catch (Exception e) {
                 exec.mainThread().execute(() -> callback.onError(e));

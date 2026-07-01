@@ -60,34 +60,19 @@ public class ShiftReportRepository {
         apiService.closeShift(shiftId, request).enqueue(new Callback<ShiftResponse>() {
             @Override
             public void onResponse(Call<ShiftResponse> call, Response<ShiftResponse> response) {
-                if (response.isSuccessful()) {
-                    // Fetch report to extract cash session info
-                    apiService.getShiftReport(shiftId).enqueue(new Callback<ShiftReportResponse>() {
-                        @Override
-                        public void onResponse(Call<ShiftReportResponse> callReport, Response<ShiftReportResponse> responseReport) {
-                            if (responseReport.isSuccessful() && responseReport.body() != null) {
-                                ShiftReportResponse report = responseReport.body();
-                                ShiftCashSessionEntity session = new ShiftCashSessionEntity();
-                                session.setShiftId(shiftId);
-                                session.setOpeningCash(report.getOpeningCash() != null ? report.getOpeningCash() : 0.0);
-                                session.setClosingCash(report.getClosingCash() != null ? report.getClosingCash() : 0.0);
-                                session.setExpectedCash(report.getExpectedCash() != null ? report.getExpectedCash() : 0.0);
-                                session.setActualCash(report.getClosingCash() != null ? report.getClosingCash() : 0.0);
-                                session.setCashDifference(report.getCashDifference() != null ? report.getCashDifference() : 0.0);
-                                session.setStatus(report.getStatus());
-                                session.setClosedBy(closedBy);
-                                session.setClosedAt(System.currentTimeMillis());
-                                callback.onSuccess(session);
-                            } else {
-                                callback.onError(new Exception("Lỗi khi tải báo cáo đóng ca: " + responseReport.code()));
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<ShiftReportResponse> callReport, Throwable t) {
-                            callback.onError(new Exception("Lỗi kết nối khi tải báo cáo đóng ca: " + t.getMessage(), t));
-                        }
-                    });
+                if (response.isSuccessful() && response.body() != null) {
+                    ShiftResponse shift = response.body();
+                    ShiftCashSessionEntity session = new ShiftCashSessionEntity();
+                    session.setShiftId(shiftId);
+                    session.setOpeningCash(shift.getOpeningCash() != null ? shift.getOpeningCash() : 0.0);
+                    session.setClosingCash(shift.getClosingCash() != null ? shift.getClosingCash() : 0.0);
+                    session.setExpectedCash(shift.getClosingCash() != null ? shift.getClosingCash() : 0.0);
+                    session.setActualCash(shift.getClosingCash() != null ? shift.getClosingCash() : 0.0);
+                    session.setCashDifference(0.0);
+                    session.setStatus(shift.getStatus());
+                    session.setClosedBy(closedBy);
+                    session.setClosedAt(System.currentTimeMillis());
+                    callback.onSuccess(session);
                 } else {
                     String errorMsg = "Lỗi khi đóng ca";
                     try {

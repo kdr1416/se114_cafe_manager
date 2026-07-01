@@ -76,43 +76,31 @@ public class MenuRepository {
     }
 
     public LiveData<List<ProductEntity>> getProductsByCategory(int categoryId) {
-        MutableLiveData<List<ProductEntity>> liveData = new MutableLiveData<>();
-        menuApiService.getProducts(categoryId, true).enqueue(new Callback<List<ProductEntity>>() {
-            @Override
-            public void onResponse(Call<List<ProductEntity>> call, Response<List<ProductEntity>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    liveData.postValue(response.body());
-                } else {
-                    showError(parseError(response));
+        return androidx.lifecycle.Transformations.map(activeProductsLive, products -> {
+            java.util.List<ProductEntity> filtered = new java.util.ArrayList<>();
+            if (products != null) {
+                for (ProductEntity p : products) {
+                    if (p.getCategoryId() == categoryId) {
+                        filtered.add(p);
+                    }
                 }
             }
-
-            @Override
-            public void onFailure(Call<List<ProductEntity>> call, Throwable t) {
-                showError(new NetworkException("Không có kết nối mạng", t));
-            }
+            return filtered;
         });
-        return liveData;
     }
 
     public LiveData<List<ProductEntity>> getProductsByCategoryIncludingInactive(int categoryId) {
-        MutableLiveData<List<ProductEntity>> liveData = new MutableLiveData<>();
-        menuApiService.getProducts(categoryId, null).enqueue(new Callback<List<ProductEntity>>() {
-            @Override
-            public void onResponse(Call<List<ProductEntity>> call, Response<List<ProductEntity>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    liveData.postValue(response.body());
-                } else {
-                    showError(parseError(response));
+        return androidx.lifecycle.Transformations.map(allProductsLive, products -> {
+            java.util.List<ProductEntity> filtered = new java.util.ArrayList<>();
+            if (products != null) {
+                for (ProductEntity p : products) {
+                    if (p.getCategoryId() == categoryId) {
+                        filtered.add(p);
+                    }
                 }
             }
-
-            @Override
-            public void onFailure(Call<List<ProductEntity>> call, Throwable t) {
-                showError(new NetworkException("Không có kết nối mạng", t));
-            }
+            return filtered;
         });
-        return liveData;
     }
 
     public void refreshActiveCategories() {

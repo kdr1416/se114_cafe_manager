@@ -41,10 +41,11 @@ public class ChatWebSocketClient {
         return instance;
     }
 
-    public void connect(String token) {
+    public void connect(android.content.Context context, String token) {
         if (connected) return;
 
-        String wsUrl = BuildConfig.BASE_URL.replace("http", "ws") + "ws?token=" + token;
+        String baseUrl = com.example.cafe_manager.data.remote.ApiClient.getServerUrl(context);
+        String wsUrl = baseUrl.replace("http", "ws") + "ws?token=" + token;
         Log.d(TAG, "Connecting to WebSocket at: " + wsUrl);
 
         try {
