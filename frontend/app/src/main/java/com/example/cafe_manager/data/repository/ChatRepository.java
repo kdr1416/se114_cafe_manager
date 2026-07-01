@@ -497,7 +497,7 @@ public class ChatRepository {
     // ── WebSocket connection helpers ──
 
     public void connectWebSocket(String token) {
-        webSocketClient.connect(token);
+        webSocketClient.connect(appContext, token);
     }
 
     public void disconnectWebSocket() {

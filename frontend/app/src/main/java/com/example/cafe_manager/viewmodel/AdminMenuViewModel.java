@@ -101,4 +101,11 @@ public class AdminMenuViewModel extends AndroidViewModel {
     public void toggleActive(int productId, boolean newActive) {
         menuRepository.updateProductActiveStatus(productId, newActive);
     }
+
+    public void refreshData() {
+        menuRepository.refreshActiveCategories();
+        menuRepository.refreshAllCategories();
+        menuRepository.refreshActiveProducts();
+        menuRepository.refreshAllProducts();
+    }
 }

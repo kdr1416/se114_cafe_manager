@@ -17,6 +17,9 @@ import com.example.cafe_manager.data.local.entity.UserEntity;
 import com.example.cafe_manager.data.repository.ShiftRepository;
 import com.example.cafe_manager.data.repository.AuthRepository;
 import com.example.cafe_manager.data.remote.ShiftAssignmentResponse;
+import com.example.cafe_manager.data.remote.ShiftWithAssignmentsResponse;
+import com.example.cafe_manager.data.remote.CreateShiftRequest;
+import com.example.cafe_manager.data.remote.ShiftResponse;
 import com.example.cafe_manager.data.repository.ChatRepository;
 import com.example.cafe_manager.manager.SessionManager;
 import com.example.cafe_manager.util.AppExecutors;
@@ -39,10 +42,12 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
 
     private final MutableLiveData<Long> selectedDate = new MutableLiveData<>();
     private final LiveData<List<ShiftEntity>> rawShifts;
-    private final MediatorLiveData<List<ShiftDisplayItem>> shiftsLive = new MediatorLiveData<>();
+    private final LiveData<List<ShiftDisplayItem>> shiftsLive;
     private final LiveData<List<ShiftTemplateEntity>> templatesLive;
     private final MutableLiveData<String> statusFilter = new MutableLiveData<>("ALL");
     private final MutableLiveData<String> messageLive = new MutableLiveData<>();
+    private final MutableLiveData<List<ShiftDisplayItem>> weekShiftsLive = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
 
     // ── Inner classes ──
 
@@ -108,10 +113,16 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
         rawShifts = Transformations.switchMap(selectedDate,
                 date -> shiftRepository.getShiftsByDate(date));
 
-        // Enrich và lọc mỗi shift
-        shiftsLive.addSource(rawShifts, shifts -> fetchAssignmentCountsForShifts(shifts));
-        shiftsLive.addSource(statusFilter, filter -> reloadAndFilterShifts());
-        shiftsLive.addSource(templatesLive, templates -> reloadAndFilterShifts());
+        // shiftsLive đơn giản chỉ nạp danh sách ca cho selectedDate mà không cần nạp phân công
+        shiftsLive = Transformations.map(rawShifts, shifts -> {
+            List<ShiftDisplayItem> items = new ArrayList<>();
+            if (shifts != null) {
+                for (ShiftEntity s : shifts) {
+                    items.add(new ShiftDisplayItem(s, 0, 0, new ArrayList<>()));
+                }
+            }
+            return items;
+        });
 
         // Mặc định chọn hôm nay
         Calendar cal = Calendar.getInstance();
@@ -126,85 +137,13 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
         shiftRepository.refreshShiftsFromApi(null);
     }
 
-    private final java.util.Map<Integer, List<String>> shiftAssignmentStaffNames = new java.util.HashMap<>();
 
-    private void fetchAssignmentCountsForShifts(List<ShiftEntity> shifts) {
-        if (shifts == null || shifts.isEmpty()) {
-            shiftAssignmentStaffNames.clear();
-            reloadAndFilterShifts();
-            return;
-        }
-
-        final int total = shifts.size();
-        final java.util.concurrent.atomic.AtomicInteger completed = new java.util.concurrent.atomic.AtomicInteger(0);
-
-        for (ShiftEntity s : shifts) {
-            shiftRepository.getAssignmentsForShift(s.getShiftId(), new RepositoryCallback<List<ShiftAssignmentResponse>>() {
-                @Override
-                public void onSuccess(List<ShiftAssignmentResponse> result) {
-                    List<String> names = new ArrayList<>();
-                    if (result != null) {
-                        for (ShiftAssignmentResponse r : result) {
-                            if (r.getFullName() != null) {
-                                names.add(r.getFullName());
-                            }
-                        }
-                    }
-                    shiftAssignmentStaffNames.put(s.getShiftId(), names);
-                    if (completed.incrementAndGet() == total) {
-                        reloadAndFilterShifts();
-                    }
-                }
-
-                @Override
-                public void onError(Exception e) {
-                    shiftAssignmentStaffNames.put(s.getShiftId(), new ArrayList<>());
-                    if (completed.incrementAndGet() == total) {
-                        reloadAndFilterShifts();
-                    }
-                }
-            });
-        }
-    }
-
-    private void reloadAndFilterShifts() {
-        List<ShiftEntity> shifts = rawShifts.getValue();
-        String filter = statusFilter.getValue();
-        if (shifts == null) {
-            shiftsLive.setValue(null);
-            return;
-        }
-
-        List<ShiftTemplateEntity> templates = templatesLive.getValue();
-        List<ShiftDisplayItem> items = new ArrayList<>();
-        for (ShiftEntity s : shifts) {
-            // Lọc theo status
-            if (filter != null && !"ALL".equals(filter)) {
-                if (!filter.equals(s.getStatus())) {
-                    continue;
-                }
-            }
-
-            List<String> names = shiftAssignmentStaffNames.get(s.getShiftId());
-            if (names == null) names = new ArrayList<>();
-            int count = names.size();
-            int minStaff = 0;
-            if (s.getTemplateId() != null && templates != null) {
-                for (ShiftTemplateEntity t : templates) {
-                    if (t.getTemplateId() == s.getTemplateId()) {
-                        minStaff = t.getMinStaff();
-                        break;
-                    }
-                }
-            }
-            items.add(new ShiftDisplayItem(s, count, minStaff, names));
-        }
-        shiftsLive.setValue(items);
-    }
 
     // ── Getters ──
 
     public LiveData<List<ShiftDisplayItem>> getShifts() { return shiftsLive; }
+    public LiveData<List<ShiftDisplayItem>> getWeekShiftsLive() { return weekShiftsLive; }
+    public LiveData<Boolean> getIsLoading() { return isLoading; }
     public LiveData<List<ShiftTemplateEntity>> getTemplates() { return templatesLive; }
     public LiveData<String> getMessage() { return messageLive; }
     public void clearMessage() { messageLive.setValue(null); }
@@ -215,15 +154,13 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
         return d != null ? d : System.currentTimeMillis();
     }
 
-    // ── Date ──
-
     public void setDate(long dateMidnight) {
         selectedDate.setValue(dateMidnight);
-        shiftRepository.refreshShiftsFromApi(null);
+        loadShiftsForWeek(dateMidnight);
     }
 
     public void refresh() {
-        shiftRepository.refreshShiftsFromApi(null);
+        loadShiftsForWeek(getSelectedDate());
     }
 
     // ── Tạo ca từ template ──
@@ -504,44 +441,30 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
         Long date = selectedDate.getValue();
         if (date == null) { messageLive.setValue("Chưa chọn ngày."); return; }
 
-        createShiftsRecursively(templates, date, 0, 0);
-    }
-
-    private void createShiftsRecursively(List<ShiftTemplateEntity> templates, long date, int index, int successCount) {
-        if (index >= templates.size()) {
-            shiftRepository.refreshShiftsFromApi(new RepositoryCallback<Void>() {
-                @Override
-                public void onSuccess(Void result) {
-                    messageLive.setValue("Đã tạo " + successCount + " ca làm việc.");
-                }
-
-                @Override
-                public void onError(Exception e) {
-                    messageLive.setValue("Đã tạo " + successCount + " ca làm việc (Lỗi đồng bộ: " + e.getMessage() + ")");
-                }
-            });
-            return;
+        List<CreateShiftRequest> requests = new ArrayList<>();
+        for (ShiftTemplateEntity t : templates) {
+            CreateShiftRequest req = new CreateShiftRequest();
+            req.setTemplateId(t.getTemplateId());
+            req.setShiftName(t.getTemplateName());
+            req.setShiftDate(date);
+            req.setStartTime(t.getStartTime());
+            req.setEndTime(t.getEndTime());
+            requests.add(req);
         }
 
-        ShiftTemplateEntity t = templates.get(index);
-        ShiftEntity shift = new ShiftEntity();
-        shift.setTemplateId(t.getTemplateId());
-        shift.setShiftName(t.getTemplateName());
-        shift.setShiftDate(date);
-        shift.setStartTime(t.getStartTime());
-        shift.setEndTime(t.getEndTime());
-        shift.setStatus(Constants.SHIFT_DRAFT);
-        shift.setCreatedAt(System.currentTimeMillis());
-
-        shiftRepository.insertShiftNoRefresh(shift, new RepositoryCallback<Long>() {
+        isLoading.setValue(true);
+        shiftRepository.createShiftsBulk(requests, new RepositoryCallback<List<ShiftResponse>>() {
             @Override
-            public void onSuccess(Long result) {
-                createShiftsRecursively(templates, date, index + 1, successCount + 1);
+            public void onSuccess(List<ShiftResponse> result) {
+                isLoading.setValue(false);
+                messageLive.setValue("Đã tạo " + result.size() + " ca làm việc.");
+                loadShiftsForWeek(getSelectedDate());
             }
 
             @Override
             public void onError(Exception e) {
-                createShiftsRecursively(templates, date, index + 1, successCount);
+                isLoading.setValue(false);
+                messageLive.setValue("Lỗi tạo hàng loạt ca: " + e.getMessage());
             }
         });
     }
@@ -552,63 +475,58 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
             return;
         }
 
-        List<ShiftDisplayItem> currentItems = shiftsLive.getValue();
+        List<ShiftDisplayItem> currentItems = weekShiftsLive.getValue();
         if (currentItems == null || currentItems.isEmpty()) {
             messageLive.setValue("Ngày nguồn không có ca nào để sao chép.");
             return;
         }
 
-        List<ShiftEntity> shiftsToCopy = new ArrayList<>();
+        List<CreateShiftRequest> requests = new ArrayList<>();
+        Calendar calTarget = Calendar.getInstance();
+        calTarget.setTimeInMillis(sourceDate);
+        int targetYear = calTarget.get(Calendar.YEAR);
+        int targetMonth = calTarget.get(Calendar.MONTH);
+        int targetDay = calTarget.get(Calendar.DAY_OF_MONTH);
+
+        Calendar calShift = Calendar.getInstance();
+
         for (ShiftDisplayItem item : currentItems) {
             if (item.shift != null && !Constants.SHIFT_CANCELLED.equals(item.shift.getStatus())) {
-                shiftsToCopy.add(item.shift);
+                calShift.setTimeInMillis(item.shift.getShiftDate());
+                boolean sameDay = calShift.get(Calendar.YEAR) == targetYear &&
+                                  calShift.get(Calendar.MONTH) == targetMonth &&
+                                  calShift.get(Calendar.DAY_OF_MONTH) == targetDay;
+                if (sameDay) {
+                    CreateShiftRequest req = new CreateShiftRequest();
+                    req.setTemplateId(item.shift.getTemplateId());
+                    req.setShiftName(item.shift.getShiftName());
+                    req.setShiftDate(targetDate);
+                    req.setStartTime(item.shift.getStartTime());
+                    req.setEndTime(item.shift.getEndTime());
+                    requests.add(req);
+                }
             }
         }
 
-        if (shiftsToCopy.isEmpty()) {
+        if (requests.isEmpty()) {
             messageLive.setValue("Ngày nguồn không có ca hợp lệ để sao chép.");
             return;
         }
 
-        copyShiftsRecursively(shiftsToCopy, targetDate, 0, 0);
-    }
-
-    private void copyShiftsRecursively(List<ShiftEntity> sourceShifts, long targetDate, int index, int successCount) {
-        if (index >= sourceShifts.size()) {
-            selectedDate.setValue(targetDate);
-            shiftRepository.refreshShiftsFromApi(new RepositoryCallback<Void>() {
-                @Override
-                public void onSuccess(Void result) {
-                    messageLive.setValue("Đã sao chép " + successCount + " ca làm việc (chỉ khung ca).");
-                }
-
-                @Override
-                public void onError(Exception e) {
-                    messageLive.setValue("Đã sao chép " + successCount + " ca làm việc (Lỗi đồng bộ: " + e.getMessage() + ")");
-                }
-            });
-            return;
-        }
-
-        ShiftEntity src = sourceShifts.get(index);
-        ShiftEntity newShift = new ShiftEntity();
-        newShift.setTemplateId(src.getTemplateId());
-        newShift.setShiftName(src.getShiftName());
-        newShift.setShiftDate(targetDate);
-        newShift.setStartTime(src.getStartTime());
-        newShift.setEndTime(src.getEndTime());
-        newShift.setStatus(Constants.SHIFT_DRAFT);
-        newShift.setCreatedAt(System.currentTimeMillis());
-
-        shiftRepository.insertShiftNoRefresh(newShift, new RepositoryCallback<Long>() {
+        isLoading.setValue(true);
+        shiftRepository.createShiftsBulk(requests, new RepositoryCallback<List<ShiftResponse>>() {
             @Override
-            public void onSuccess(Long result) {
-                copyShiftsRecursively(sourceShifts, targetDate, index + 1, successCount + 1);
+            public void onSuccess(List<ShiftResponse> result) {
+                isLoading.setValue(false);
+                selectedDate.setValue(targetDate);
+                messageLive.setValue("Đã sao chép " + result.size() + " ca làm việc (chỉ khung ca).");
+                loadShiftsForWeek(targetDate);
             }
 
             @Override
             public void onError(Exception e) {
-                copyShiftsRecursively(sourceShifts, targetDate, index + 1, successCount);
+                isLoading.setValue(false);
+                messageLive.setValue("Lỗi sao chép lịch: " + e.getMessage());
             }
         });
     }
@@ -641,84 +559,129 @@ public class ShiftScheduleViewModel extends AndroidViewModel {
         });
     }
 
-    public LiveData<List<ShiftDisplayItem>> loadShiftsForDate(long date) {
-        MediatorLiveData<List<ShiftDisplayItem>> result = new MediatorLiveData<>();
-        LiveData<List<ShiftEntity>> rawDayShifts = shiftRepository.getShiftsByDate(date);
+    public void loadShiftsForWeek(long weekStart) {
+        isLoading.setValue(true);
+        long normalizedWeekStart = com.example.cafe_manager.util.WeekNavigationHelper.getWeekStart(weekStart);
+        shiftRepository.getShiftsForWeek(normalizedWeekStart, new RepositoryCallback<List<ShiftWithAssignmentsResponse>>() {
+            @Override
+            public void onSuccess(List<ShiftWithAssignmentsResponse> result) {
+                isLoading.setValue(false);
+                if (result == null) {
+                    weekShiftsLive.setValue(new ArrayList<>());
+                    return;
+                }
 
-        Runnable reloadFilter = () -> {
-            List<ShiftEntity> shifts = rawDayShifts.getValue();
-            if (shifts == null) {
-                result.setValue(new ArrayList<>());
-                return;
-            }
-            final int total = shifts.size();
-            if (total == 0) {
-                result.setValue(new ArrayList<>());
-                return;
-            }
+                String filter = statusFilter.getValue();
+                List<ShiftDisplayItem> items = new ArrayList<>();
+                for (ShiftWithAssignmentsResponse r : result) {
+                    if (filter != null && !"ALL".equals(filter) && !filter.equals(r.getStatus())) {
+                        continue;
+                    }
 
-            final java.util.Map<Integer, List<String>> staffNamesMap = new java.util.HashMap<>();
-            List<ShiftTemplateEntity> templates = templatesLive.getValue();
+                    ShiftEntity entity = new ShiftEntity();
+                    entity.setShiftId(r.getShiftId());
+                    entity.setShiftName(r.getShiftName());
+                    entity.setShiftDate(r.getShiftDate());
+                    entity.setStartTime(r.getStartTime());
+                    entity.setEndTime(r.getEndTime());
+                    entity.setStatus(r.getStatus());
+                    entity.setTemplateId(r.getTemplateId());
 
-            // 1. Post immediately so shifts show up instantly on the UI
-            postEnrichedItems(result, shifts, staffNamesMap, templates);
-
-            // 2. Fetch assignment counts asynchronously and update dynamically
-            for (ShiftEntity s : shifts) {
-                shiftRepository.getAssignmentsForShift(s.getShiftId(), new RepositoryCallback<List<ShiftAssignmentResponse>>() {
-                    @Override
-                    public void onSuccess(List<ShiftAssignmentResponse> assignmentList) {
-                        List<String> names = new ArrayList<>();
-                        if (assignmentList != null) {
-                            for (ShiftAssignmentResponse r : assignmentList) {
-                                if (r.getFullName() != null) {
-                                    names.add(r.getFullName());
-                                }
+                    List<String> names = new ArrayList<>();
+                    if (r.getAssignedStaff() != null) {
+                        for (ShiftWithAssignmentsResponse.AssignedStaffDto s : r.getAssignedStaff()) {
+                            if (s.getFullName() != null) {
+                                names.add(s.getFullName());
                             }
                         }
-                        staffNamesMap.put(s.getShiftId(), names);
-                        postEnrichedItems(result, shifts, staffNamesMap, templates);
                     }
+                    items.add(new ShiftDisplayItem(entity, r.getAssignedCount(), r.getMinStaff(), names));
+                }
 
-                    @Override
-                    public void onError(Exception e) {
-                        // Keep default of empty
-                    }
+                // Sắp xếp ca theo ngày tăng dần, sau đó theo giờ bắt đầu tăng dần
+                java.util.Collections.sort(items, (a, b) -> {
+                    int dateCmp = Long.compare(a.shift.getShiftDate(), b.shift.getShiftDate());
+                    if (dateCmp != 0) return dateCmp;
+                    return a.shift.getStartTime().compareTo(b.shift.getStartTime());
                 });
+
+                weekShiftsLive.setValue(items);
             }
-        };
 
-        result.addSource(rawDayShifts, shifts -> reloadFilter.run());
-        result.addSource(statusFilter, filter -> reloadFilter.run());
-        result.addSource(templatesLive, templates -> reloadFilter.run());
-
-        return result;
+            @Override
+            public void onError(Exception e) {
+                isLoading.setValue(false);
+                messageLive.setValue("Không thể tải lịch tuần: " + e.getMessage());
+            }
+        });
     }
 
-    private void postEnrichedItems(MediatorLiveData<List<ShiftDisplayItem>> liveData,
-                                   List<ShiftEntity> shifts,
-                                   java.util.Map<Integer, List<String>> staffNamesMap,
-                                   List<ShiftTemplateEntity> templates) {
-        String filter = statusFilter.getValue();
-        List<ShiftDisplayItem> items = new ArrayList<>();
-        for (ShiftEntity s : shifts) {
-            if (filter != null && !"ALL".equals(filter) && !filter.equals(s.getStatus())) {
-                continue;
+    public void optimisticallyUpdateShiftStatus(int shiftId, String newStatus) {
+        List<ShiftDisplayItem> current = weekShiftsLive.getValue();
+        if (current == null) return;
+        List<ShiftDisplayItem> updated = new ArrayList<>();
+        for (ShiftDisplayItem item : current) {
+            if (item.shift.getShiftId() == shiftId) {
+                ShiftEntity updatedShift = new ShiftEntity();
+                updatedShift.setShiftId(item.shift.getShiftId());
+                updatedShift.setShiftName(item.shift.getShiftName());
+                updatedShift.setShiftDate(item.shift.getShiftDate());
+                updatedShift.setStartTime(item.shift.getStartTime());
+                updatedShift.setEndTime(item.shift.getEndTime());
+                updatedShift.setTemplateId(item.shift.getTemplateId());
+                updatedShift.setStatus(newStatus);
+                updated.add(new ShiftDisplayItem(
+                    updatedShift,
+                    item.assignedCount,
+                    item.minStaff,
+                    item.assignedStaffNames
+                ));
+            } else {
+                updated.add(item);
             }
-            List<String> names = staffNamesMap.get(s.getShiftId());
-            if (names == null) names = new ArrayList<>();
-            int count = names.size();
-            int minStaff = 0;
-            if (s.getTemplateId() != null && templates != null) {
-                for (ShiftTemplateEntity t : templates) {
-                    if (t.getTemplateId() == s.getTemplateId()) {
-                        minStaff = t.getMinStaff();
-                        break;
-                    }
-                }
-            }
-            items.add(new ShiftDisplayItem(s, count, minStaff, names));
         }
-        liveData.setValue(items);
+        weekShiftsLive.setValue(updated);
+    }
+
+    public void optimisticallyAddStaff(int shiftId, String staffName) {
+        List<ShiftDisplayItem> current = weekShiftsLive.getValue();
+        if (current == null) return;
+        List<ShiftDisplayItem> updated = new ArrayList<>();
+        for (ShiftDisplayItem item : current) {
+            if (item.shift.getShiftId() == shiftId) {
+                List<String> newNames = new ArrayList<>(item.assignedStaffNames);
+                newNames.add(staffName);
+                updated.add(new ShiftDisplayItem(
+                    item.shift,
+                    item.assignedCount + 1,
+                    item.minStaff,
+                    newNames
+                ));
+            } else {
+                updated.add(item);
+            }
+        }
+        weekShiftsLive.setValue(updated);
+    }
+
+    public void optimisticallyRemoveStaff(int shiftId, String staffName) {
+        List<ShiftDisplayItem> current = weekShiftsLive.getValue();
+        if (current == null) return;
+        List<ShiftDisplayItem> updated = new ArrayList<>();
+        for (ShiftDisplayItem item : current) {
+            if (item.shift.getShiftId() == shiftId) {
+                List<String> newNames = new ArrayList<>(item.assignedStaffNames);
+                newNames.remove(staffName);
+                updated.add(new ShiftDisplayItem(
+                    item.shift,
+                    Math.max(0, item.assignedCount - 1),
+                    item.minStaff,
+                    newNames
+                ));
+            } else {
+                updated.add(item);
+            }
+        }
+        weekShiftsLive.setValue(updated);
     }
 }

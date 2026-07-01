@@ -32,11 +32,17 @@ public interface ShiftApiService {
     @GET("api/v1/shifts")
     Call<List<ShiftResponse>> getShifts(@Query("date") String date, @Query("status") String status);
 
+    @GET("api/v1/shifts/week")
+    Call<List<ShiftWithAssignmentsResponse>> getShiftsForWeek(@Query("weekStart") long weekStart);
+
     @GET("api/v1/shifts/{id}")
     Call<ShiftResponse> getShiftById(@Path("id") int id);
 
     @POST("api/v1/shifts")
     Call<ShiftResponse> createShift(@Body CreateShiftRequest request);
+
+    @POST("api/v1/shifts/bulk")
+    Call<List<ShiftResponse>> createShiftsBulk(@Body List<CreateShiftRequest> requests);
 
     @PUT("api/v1/shifts/{id}/publish")
     Call<ShiftResponse> publishShift(@Path("id") int id);
@@ -55,6 +61,9 @@ public interface ShiftApiService {
 
     @DELETE("api/v1/shifts/{id}/assign/{userId}")
     Call<Void> unassignStaff(@Path("id") int id, @Path("userId") int userId);
+
+    @DELETE("api/v1/shifts/assignments/{assignmentId}")
+    Call<Void> deleteAssignment(@Path("assignmentId") int assignmentId);
 
     @GET("api/v1/shifts/{id}/report")
     Call<ShiftReportResponse> getShiftReport(@Path("id") int id);

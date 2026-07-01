@@ -70,6 +70,14 @@ public class AdminMenuActivity extends AppCompatActivity {
         setupViewModel();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (viewModel != null) {
+            viewModel.refreshData();
+        }
+    }
+
     private void setupTopBar() {
         View topBar = findViewById(R.id.top_bar);
         TextView title = topBar.findViewById(R.id.tv_title);

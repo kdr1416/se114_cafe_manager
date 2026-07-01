@@ -35,13 +35,12 @@ public class AuthInterceptor implements Interceptor {
         Response response = chain.proceed(request);
 
         if (response.code() == 401) {
-            // Token hết hạn hoặc không hợp lệ -> xóa session
+            // Token hết hạn hoặc không hợp lệ -> xóa session và chuyển hướng ngay về màn hình Đăng nhập
             sessionManager.logout();
             
-            // Gửi broadcast để các Activity nhận biết và quay về màn hình đăng nhập
-            Intent intent = new Intent("com.example.cafe_manager.ACTION_LOGOUT");
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            context.sendBroadcast(intent);
+            Intent loginIntent = new Intent(context, com.example.cafe_manager.ui.auth.LoginActivity.class);
+            loginIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            context.startActivity(loginIntent);
         }
 
         return response;

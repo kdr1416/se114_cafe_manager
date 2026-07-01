@@ -57,9 +57,6 @@ public class ShiftScheduleActivity extends AppCompatActivity {
     private LinearLayout layoutPublishBar, layoutNormalMode;
     private TextView tvSelectionCount;
 
-    private final List<LiveData<List<ShiftScheduleViewModel.ShiftDisplayItem>>> dayLiveDatas = new ArrayList<>();
-    private final MediatorLiveData<List<ShiftScheduleViewModel.ShiftDisplayItem>> weekShiftsMediator = new MediatorLiveData<>();
-    private final List<List<ShiftScheduleViewModel.ShiftDisplayItem>> weekDaysShifts = new ArrayList<>();
     private final java.util.Locale localeVi = new java.util.Locale("vi", "VN");
     private final SimpleDateFormat sdf =
             new SimpleDateFormat("EEEE, dd/MM/yyyy", Locale.forLanguageTag("vi-VN"));
@@ -69,9 +66,6 @@ public class ShiftScheduleActivity extends AppCompatActivity {
 
     {
         sdf.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
-        for (int i = 0; i < 7; i++) {
-            weekDaysShifts.add(new ArrayList<>());
-        }
     }
 
     @Override
@@ -105,13 +99,13 @@ public class ShiftScheduleActivity extends AppCompatActivity {
             currentWeekStart = WeekNavigationHelper.addWeeks(currentWeekStart, -1);
             tvWeekRange.setText(WeekNavigationHelper.formatWeekRange(currentWeekStart));
             viewModel.setDate(currentWeekStart);
-            loadShiftsForWeek(currentWeekStart);
+            viewModel.loadShiftsForWeek(currentWeekStart);
         });
         btnNextWeek.setOnClickListener(v -> {
             currentWeekStart = WeekNavigationHelper.addWeeks(currentWeekStart, 1);
             tvWeekRange.setText(WeekNavigationHelper.formatWeekRange(currentWeekStart));
             viewModel.setDate(currentWeekStart);
-            loadShiftsForWeek(currentWeekStart);
+            viewModel.loadShiftsForWeek(currentWeekStart);
         });
 
         // Date selector click
@@ -123,6 +117,7 @@ public class ShiftScheduleActivity extends AppCompatActivity {
         adapter = new ShiftScheduleAdapter(new ShiftScheduleAdapter.OnShiftActionListener() {
             @Override
             public void onPublish(ShiftEntity shift) {
+                viewModel.optimisticallyUpdateShiftStatus(shift.getShiftId(), "PUBLISHED");
                 viewModel.publishShift(shift.getShiftId());
             }
 
@@ -155,7 +150,10 @@ public class ShiftScheduleActivity extends AppCompatActivity {
                 new AlertDialog.Builder(ShiftScheduleActivity.this)
                         .setTitle("Hủy ca?")
                         .setMessage("Bạn có chắc muốn hủy ca \"" + shift.getShiftName() + "\"?")
-                        .setPositiveButton("Hủy ca", (d, w) -> viewModel.cancelShift(shift.getShiftId()))
+                        .setPositiveButton("Hủy ca", (d, w) -> {
+                            viewModel.optimisticallyUpdateShiftStatus(shift.getShiftId(), "CANCELLED");
+                            viewModel.cancelShift(shift.getShiftId());
+                        })
                         .setNegativeButton("Quay lại", null)
                         .show();
             }
@@ -186,14 +184,14 @@ public class ShiftScheduleActivity extends AppCompatActivity {
         rv.setAdapter(adapter);
 
         // Observe week shifts instead of daily shifts
-        weekShiftsMediator.observe(this, items -> {
+        viewModel.getWeekShiftsLive().observe(this, items -> {
             List<ShiftScheduleViewModel.DisplayItem> withHeaders = insertDayHeaders(items);
             adapter.submitList(withHeaders);
             boolean empty = items == null || items.isEmpty();
             tvEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
         });
 
-        loadShiftsForWeek(currentWeekStart);
+        viewModel.loadShiftsForWeek(currentWeekStart);
 
         // QUAN TRỌNG: Observe templates để kích hoạt load dữ liệu từ DB (Sửa lỗi Spinner trống)
         viewModel.getTemplates().observe(this, templates -> {
@@ -230,6 +228,7 @@ public class ShiftScheduleActivity extends AppCompatActivity {
                 filter = Constants.SHIFT_CLOSED;
             }
             viewModel.setStatusFilter(filter);
+            viewModel.loadShiftsForWeek(currentWeekStart);
             updateShiftChips(filter, chipAll, chipDraft, chipPublished, chipInProgress, chipClosed);
         };
 
@@ -368,8 +367,7 @@ public class ShiftScheduleActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // Refresh khi quay lại từ ShiftCloseActivity
-        viewModel.setDate(viewModel.getSelectedDate());
-        loadShiftsForWeek(currentWeekStart);
+        viewModel.loadShiftsForWeek(currentWeekStart);
     }
 
     private void showDatePicker() {
@@ -387,50 +385,9 @@ public class ShiftScheduleActivity extends AppCompatActivity {
             // Đồng bộ thanh chuyển tuần
             currentWeekStart = WeekNavigationHelper.getWeekStart(date);
             tvWeekRange.setText(WeekNavigationHelper.formatWeekRange(currentWeekStart));
-            loadShiftsForWeek(currentWeekStart);
+            viewModel.loadShiftsForWeek(currentWeekStart);
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH))
                 .show();
-    }
-
-    private void loadShiftsForWeek(long weekStart) {
-        // Hủy đăng ký các LiveData cũ
-        for (LiveData<?> ld : dayLiveDatas) {
-            weekShiftsMediator.removeSource(ld);
-        }
-        dayLiveDatas.clear();
-
-        for (int i = 0; i < 7; i++) {
-            weekDaysShifts.get(i).clear();
-        }
-
-        for (int i = 0; i < 7; i++) {
-            final int dayIndex = i;
-            Calendar cal = Calendar.getInstance();
-            cal.setTimeInMillis(weekStart);
-            cal.add(Calendar.DATE, dayIndex);
-            long dateEpoch = cal.getTimeInMillis();
-
-            LiveData<List<ShiftScheduleViewModel.ShiftDisplayItem>> dayLive = viewModel.loadShiftsForDate(dateEpoch);
-            dayLiveDatas.add(dayLive);
-
-            weekShiftsMediator.addSource(dayLive, dayShifts -> {
-                weekDaysShifts.set(dayIndex, dayShifts != null ? dayShifts : new ArrayList<>());
-
-                List<ShiftScheduleViewModel.ShiftDisplayItem> combined = new ArrayList<>();
-                for (List<ShiftScheduleViewModel.ShiftDisplayItem> list : weekDaysShifts) {
-                    combined.addAll(list);
-                }
-
-                // Sắp xếp ca theo ngày tăng dần, sau đó theo giờ bắt đầu tăng dần
-                java.util.Collections.sort(combined, (a, b) -> {
-                    int dateCmp = Long.compare(a.shift.getShiftDate(), b.shift.getShiftDate());
-                    if (dateCmp != 0) return dateCmp;
-                    return a.shift.getStartTime().compareTo(b.shift.getStartTime());
-                });
-
-                weekShiftsMediator.setValue(combined);
-            });
-        }
     }
 
     private void showCreateShiftDialog() {
@@ -494,6 +451,7 @@ public class ShiftScheduleActivity extends AppCompatActivity {
                     }
                     try {
                         double cash = Double.parseDouble(text);
+                        viewModel.optimisticallyUpdateShiftStatus(shift.getShiftId(), "IN_PROGRESS");
                         viewModel.openShiftWithCash(shift.getShiftId(), cash);
                     } catch (NumberFormatException e) {
                         Toast.makeText(this, "Số tiền không hợp lệ.", Toast.LENGTH_SHORT).show();
@@ -568,11 +526,13 @@ public class ShiftScheduleActivity extends AppCompatActivity {
                         UserEntity u = users.get(i);
                         if (!originalChecked[i] && checked[i]) {
                             // Thêm mới
+                            viewModel.optimisticallyAddStaff(shift.getShiftId(), u.getFullName());
                             viewModel.assignStaff(shift.getShiftId(), u.getUserId());
                         } else if (originalChecked[i] && !checked[i]) {
                             // Xóa
                             for (ShiftAssignmentEntity a : assigned) {
                                 if (a.getUserId() == u.getUserId()) {
+                                    viewModel.optimisticallyRemoveStaff(shift.getShiftId(), u.getFullName());
                                     viewModel.removeAssignment(a.getAssignmentId());
                                     break;
                                 }

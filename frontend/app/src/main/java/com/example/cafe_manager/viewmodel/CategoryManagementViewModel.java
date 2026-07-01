@@ -52,4 +52,9 @@ public class CategoryManagementViewModel extends AndroidViewModel {
                 () -> message.setValue("Không thể xoá danh mục đang chứa món ăn")
         );
     }
+
+    public void refreshData() {
+        repository.refreshAllCategories();
+        repository.refreshActiveCategories();
+    }
 }
